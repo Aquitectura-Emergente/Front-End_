@@ -2,8 +2,9 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { DataService, UserProfile } from '../../../../core/services/data.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { UserFacade } from '../../../../contexts/iam/application/user-facade';
+import { UserProfile } from '../../../../contexts/iam/domain/user.model';
+import { AuthService } from '../../../../contexts/iam/application/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
@@ -13,7 +14,7 @@ import { ToastService } from '../../../../core/services/toast.service';
   styleUrl: './profile.scss',
 })
 export class Profile implements OnInit {
-  private data    = inject(DataService);
+  private userFacade = inject(UserFacade);
   private auth    = inject(AuthService);
   private toast   = inject(ToastService);
 
@@ -38,7 +39,7 @@ export class Profile implements OnInit {
   showConfirmPw = false;
 
   ngOnInit(): void {
-    this.data.getUserProfile().subscribe(p => {
+    this.userFacade.profile().subscribe(p => {
       this.profile.set(p);
       if (p) {
         this.editName     = p.name     ?? '';
@@ -53,7 +54,7 @@ export class Profile implements OnInit {
     const p = this.profile();
     if (!p) return;
     this.saving.set(true);
-    this.data.updateUser(p.id, {
+    this.userFacade.update(p.id, {
       name:     this.editName,
       phone:    this.editPhone,
       location: this.editLocation,
@@ -62,7 +63,7 @@ export class Profile implements OnInit {
       if (updated) {
         this.profile.set({ ...p, name: this.editName, phone: this.editPhone, location: this.editLocation });
         // Reflect the new name (and initials) in the topbar immediately.
-        const initials = this.editName.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const initials = this.userFacade.initialsOf(this.editName);
         this.auth.updateCurrentUser({ name: this.editName, initials });
         this.toast.success('Profile updated successfully');
       } else {
@@ -83,7 +84,7 @@ export class Profile implements OnInit {
     const p = this.profile();
     if (!p) return;
     this.changingPw.set(true);
-    this.data.changePassword(p.id, this.currentPassword, this.newPassword).subscribe(ok => {
+    this.userFacade.changePassword(p.id, this.currentPassword, this.newPassword).subscribe(ok => {
       this.changingPw.set(false);
       if (ok) {
         this.currentPassword    = '';

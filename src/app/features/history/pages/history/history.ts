@@ -1,6 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { DataService, HistoryItem, TechWorkOrder } from '../../../../core/services/data.service';
+import { WorkOrderFacade } from '../../../../contexts/fieldservice/application/work-order-facade';
+import { HistoryItem } from '../../../../contexts/fieldservice/domain/work-order.model';
+import { TechWorkOrder } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
 import { WorkOrderDetailModal } from '../../../../shared/components/work-order-detail-modal/work-order-detail-modal';
 
 @Component({
@@ -10,7 +12,7 @@ import { WorkOrderDetailModal } from '../../../../shared/components/work-order-d
   styleUrl: './history.scss',
 })
 export class History implements OnInit {
-  private data = inject(DataService);
+  private workOrderFacade = inject(WorkOrderFacade);
 
   // Full result set for the current status filter; type/tech/date + pagination
   // are applied client-side so the counter/paginator match what is shown.
@@ -74,7 +76,7 @@ export class History implements OnInit {
     // Only status is filtered server-side; the full matching set is loaded so
     // type/technician/date and pagination can be computed client-side honestly.
     const status = this.selectedStatus() !== 'all' ? this.selectedStatus() : undefined;
-    this.data.getHistory(status).subscribe(rows => {
+    this.workOrderFacade.history(status).subscribe(rows => {
       this.allItems.set(rows);
       this.loading.set(false);
     });
@@ -116,7 +118,7 @@ export class History implements OnInit {
     this.showDetailModal.set(true);
     if (item.workOrderId) {
       this.detailLoading.set(true);
-      this.data.getWorkOrderDetail(item.workOrderId).subscribe(order => {
+      this.workOrderFacade.fullDetail(item.workOrderId).subscribe(order => {
         this.detailOrder.set(order ?? this.fallbackOrder(item));
         this.detailLoading.set(false);
       });

@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { TechWorkOrder } from '../../../core/services/data.service';
+import { TechWorkOrder } from '../../../contexts/fieldservice/domain/tech-work-order.model';
+import { initialsFrom } from '../../../contexts/iam/domain/initials';
 
 /**
  * Read-only work-order detail rendered as a centered modal.
@@ -48,7 +49,6 @@ export class WorkOrderDetailModal {
   }
 
   protected initials(name: string | undefined): string {
-    if (!name) return '?';
-    return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return initialsFrom(name);
   }
 }

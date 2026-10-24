@@ -2,8 +2,8 @@ import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, Subject } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
-import { environment } from '../../../environments/environment';
-import { Reading } from './data.service';
+import { environment } from '../../../../environments/environment';
+import { Reading } from '../domain/reading.model';
 
 /**
  * Real-time telemetry over STOMP/WebSocket (backend SimpleBroker).

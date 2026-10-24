@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../contexts/iam/application/auth.service';
 import { ToastService } from '../services/toast.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -21,7 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
       // Session expired / token invalid / account deactivated → force sign out
-      // instead of silently showing empty screens (DataService swallows errors).
+      // instead of silently showing empty screens (`unwrap` swallows errors).
       // Skip the auth endpoints so a bad login/refresh doesn't trigger a bounce.
       const isAuthCall = req.url.includes('/auth/login') || req.url.includes('/auth/refresh');
       if ((err.status === 401 || err.status === 403) && auth.isLoggedIn && !isAuthCall) {
