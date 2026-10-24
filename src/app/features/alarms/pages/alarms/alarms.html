@@ -138,9 +138,27 @@
           <span class="detail-label">{{ 'alarm_time' | t }}</span>
           <span>{{ detailAlarm()!.time }}</span>
         </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ 'alarm_status' | t }}</span>
+          @if (detailAlarm()!.resolved) {
+            <span>{{ 'alarm_resolved' | t }}{{ detailAlarm()!.resolvedAt ? ' — ' + detailAlarm()!.resolvedAt : '' }}</span>
+          } @else {
+            <span>{{ 'alarm_unresolved' | t }}</span>
+          }
+        </div>
       </div>
       <div class="modal__footer">
         <button class="btn btn--ghost" type="button" (click)="closeDetail()">{{ 'btn_close' | t }}</button>
+        @if (canResolve(detailAlarm()!)) {
+          <button
+            class="btn btn--resolve"
+            type="button"
+            (click)="resolveAlarm(detailAlarm()!.id)"
+          >
+            <i class="ph ph-check-circle" aria-hidden="true"></i>
+            {{ 'alarm_resolve' | t }}
+          </button>
+        }
       </div>
     </div>
   </div>

@@ -1,17 +1,5 @@
 import { RadiationLevel } from './radiation-level';
 
-/** Punto suelto del mapa (una lectura georreferenciada). */
-export interface RadiationPoint {
-  id: number;
-  latitude: number;
-  longitude: number;
-  location: string;
-  sensorId: string;
-  value: number;
-  level: RadiationLevel;
-  readingDate: string;
-}
-
 /** Última lectura de un sensor concreto, dentro de la agrupación por cliente. */
 export interface ClientDeviceReading {
   deviceId: number;

@@ -17,15 +17,6 @@ export class WorkOrderApi {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
-  list(status?: string, type?: string, search?: string): Observable<WorkOrder[]> {
-    return unwrap(
-      this.http.get<ApiResponse<WorkOrder[]>>(
-        `${this.base}/work-orders${queryString({ status, type, search })}`
-      ),
-      []
-    );
-  }
-
   listPaged(
     status?: string, type?: string, search?: string, page = 0, size = 10, sort?: string
   ): Observable<PageResponse<WorkOrder>> {
@@ -73,14 +64,4 @@ export class WorkOrderApi {
     );
   }
 
-  historyPaged(
-    status?: string, search?: string, page = 0, size = 10
-  ): Observable<PageResponse<HistoryItem>> {
-    return this.http.get<ApiResponse<PageResponse<HistoryItem>>>(
-      `${this.base}/history/paged${queryString({ page, size, status, search })}`
-    ).pipe(
-      map(r => r.data),
-      catchError(() => of(emptyPage<HistoryItem>(size)))
-    );
-  }
 }

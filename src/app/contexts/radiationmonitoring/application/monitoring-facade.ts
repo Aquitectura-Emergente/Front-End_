@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MonitoringApi } from '../infrastructure/monitoring-api';
 import { DashboardStats, LatestWorkOrder, Alert, ChartData } from '../domain/dashboard.model';
-import { RadiationPoint, ClientRadiationPoint } from '../domain/radiation-map.model';
+import { ClientRadiationPoint } from '../domain/radiation-map.model';
 import { RadiationLevel, levelByValue, colorForLevel } from '../domain/radiation-level';
 
 /**
@@ -30,10 +30,6 @@ export class MonitoringFacade {
 
   chartData(): Observable<ChartData | null> {
     return this.api.chartData();
-  }
-
-  radiationPoints(): Observable<RadiationPoint[]> {
-    return this.api.radiationMap();
   }
 
   radiationByClient(): Observable<ClientRadiationPoint[]> {

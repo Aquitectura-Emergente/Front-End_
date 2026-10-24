@@ -12,8 +12,3 @@ export type WorkOrderStatus = 'completed' | 'in-progress' | 'pending' | 'cancell
 export function isOpen(status: string): boolean {
   return status === 'pending' || status === 'in-progress';
 }
-
-/** Estados finales: ya no admiten cambios. */
-export function isTerminal(status: string): boolean {
-  return status === 'completed' || status === 'cancelled';
-}

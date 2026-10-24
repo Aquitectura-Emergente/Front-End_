@@ -6,7 +6,6 @@ import {
   WorkOrder, WorkOrderDetail, CreateWorkOrderPayload, UpdateWorkOrderPayload, HistoryItem,
 } from '../domain/work-order.model';
 import { TechWorkOrder } from '../domain/tech-work-order.model';
-import { isOpen, isTerminal } from '../domain/work-order-status';
 
 /**
  * Punto de entrada del contexto fieldservice, lado administración.
@@ -18,10 +17,6 @@ import { isOpen, isTerminal } from '../domain/work-order-status';
 @Injectable({ providedIn: 'root' })
 export class WorkOrderFacade {
   private api = inject(WorkOrderApi);
-
-  all(status?: string, type?: string, search?: string): Observable<WorkOrder[]> {
-    return this.api.list(status, type, search);
-  }
 
   paged(
     status?: string, type?: string, search?: string, page = 0, size = 10, sort?: string
@@ -51,20 +46,5 @@ export class WorkOrderFacade {
 
   history(status?: string, search?: string): Observable<HistoryItem[]> {
     return this.api.history(status, search);
-  }
-
-  historyPaged(
-    status?: string, search?: string, page = 0, size = 10
-  ): Observable<PageResponse<HistoryItem>> {
-    return this.api.historyPaged(status, search, page, size);
-  }
-
-  /** Reglas de dominio del estado, para que las pantallas no las repitan. */
-  isOpen(status: string): boolean {
-    return isOpen(status);
-  }
-
-  isTerminal(status: string): boolean {
-    return isTerminal(status);
   }
 }

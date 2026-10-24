@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse, unwrap, unwrapOrNull, queryString } from '../../../core/http/api-response';
+import { ApiResponse, unwrap, unwrapOrNull } from '../../../core/http/api-response';
 import { User, CreateUserPayload, UpdateUserPayload, UserProfile } from '../domain/user.model';
 
 /** Acceso HTTP a los endpoints de usuarios del contexto iam. */
@@ -12,11 +12,8 @@ export class UserApi {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
-  list(role?: string): Observable<User[]> {
-    return unwrap(
-      this.http.get<ApiResponse<User[]>>(`${this.base}/users${queryString({ role })}`),
-      []
-    );
+  list(): Observable<User[]> {
+    return unwrap(this.http.get<ApiResponse<User[]>>(`${this.base}/users`), []);
   }
 
   byId(id: number | string): Observable<User | null> {

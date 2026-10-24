@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, unwrap, unwrapOrNull } from '../../../core/http/api-response';
 import { DashboardStats, LatestWorkOrder, Alert, ChartData } from '../domain/dashboard.model';
-import { RadiationPoint, ClientRadiationPoint } from '../domain/radiation-map.model';
+import { ClientRadiationPoint } from '../domain/radiation-map.model';
 
 /** Acceso HTTP al dashboard y al mapa de radiación. */
 @Injectable({ providedIn: 'root' })
@@ -29,10 +29,6 @@ export class MonitoringApi {
 
   chartData(): Observable<ChartData | null> {
     return unwrapOrNull(this.http.get<ApiResponse<ChartData>>(`${this.base}/chart-data`));
-  }
-
-  radiationMap(): Observable<RadiationPoint[]> {
-    return unwrap(this.http.get<ApiResponse<RadiationPoint[]>>(`${this.base}/radiation-map`), []);
   }
 
   radiationMapByClient(): Observable<ClientRadiationPoint[]> {

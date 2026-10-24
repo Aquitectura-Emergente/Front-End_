@@ -8,8 +8,8 @@ import { User, CreateUserPayload, UpdateUserPayload, UserProfile } from '../doma
  * Punto de entrada del contexto iam para la capa de presentación.
  *
  * Las pantallas hablan con esta fachada, nunca con `UserApi` ni con HttpClient
- * directamente. Los filtros por rol se exponen con nombre propio para que las
- * páginas no repartan literales como 'Client' por todo el código.
+ * directamente. El filtrado por rol se hace en cliente (las pantallas piden
+ * todos los usuarios y filtran), que es como funcionaba el DataService original.
  */
 @Injectable({ providedIn: 'root' })
 export class UserFacade {
@@ -17,18 +17,6 @@ export class UserFacade {
 
   all(): Observable<User[]> {
     return this.api.list();
-  }
-
-  byRole(role: string): Observable<User[]> {
-    return this.api.list(role);
-  }
-
-  clients(): Observable<User[]> {
-    return this.api.list('Client');
-  }
-
-  technicians(): Observable<User[]> {
-    return this.api.list('Technician');
   }
 
   byId(id: number | string): Observable<User | null> {

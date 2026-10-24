@@ -128,6 +128,11 @@ export class Alarms implements OnInit {
     this.showDetail.set(false);
   }
 
+  /** El modal solo ofrece resolver si la regla de dominio lo permite. */
+  canResolve(alarm: AlarmItem): boolean {
+    return this.alarmFacade.canResolve(alarm);
+  }
+
   resolveAlarm(id: number | string): void {
     this.alarmFacade.resolve(id).subscribe(updated => {
       if (updated) {

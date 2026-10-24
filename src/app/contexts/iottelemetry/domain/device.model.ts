@@ -47,8 +47,3 @@ export interface DiscoverableDevice {
  * Son vocabularios distintos y no deben unificarse.
  */
 export type DeviceStatus = Device['status'];
-
-/** Un sensor sin cliente no tiene coordenadas ni topic por cliente. */
-export function isUnregistered(device: Device): boolean {
-  return device.status === 'unregistered';
-}

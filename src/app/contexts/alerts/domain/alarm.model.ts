@@ -30,7 +30,12 @@ export interface CreateAlarmPayload {
 
 export type AlarmType = AlarmItem['type'];
 
-/** Una alarma resuelta ya no admite resolverse de nuevo. */
+/**
+ * Una alarma ya resuelta no se vuelve a resolver.
+ *
+ * El modal de detalle pregunta esto para decidir si ofrece el botón. El backend
+ * también lo valida; aquí evita ofrecer una acción que iba a fallar.
+ */
 export function canResolve(alarm: AlarmItem): boolean {
   return !alarm.resolved;
 }

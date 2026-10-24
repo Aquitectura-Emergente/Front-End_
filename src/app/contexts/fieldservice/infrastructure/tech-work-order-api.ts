@@ -8,7 +8,6 @@ import {
 } from '../../../core/http/api-response';
 import { HistoryItem } from '../domain/work-order.model';
 import { TechWorkOrder, PatchTechWorkOrderBody } from '../domain/tech-work-order.model';
-import { WorkOrderStatus } from '../domain/work-order-status';
 
 /** Acceso HTTP a las órdenes y el historial del técnico (`/tech/**`). */
 @Injectable({ providedIn: 'root' })
@@ -33,19 +32,6 @@ export class TechWorkOrderApi {
   patch(id: number | string, body: PatchTechWorkOrderBody): Observable<TechWorkOrder | null> {
     return unwrapOrNull(
       this.http.patch<ApiResponse<TechWorkOrder>>(`${this.base}/tech/work-orders/${id}`, body)
-    );
-  }
-
-  updateStatus(id: number | string, status: WorkOrderStatus): Observable<TechWorkOrder | null> {
-    return this.patch(id, { status });
-  }
-
-  history(status?: string, search?: string): Observable<HistoryItem[]> {
-    return unwrap(
-      this.http.get<ApiResponse<HistoryItem[]>>(
-        `${this.base}/tech/history${queryString({ status, search })}`
-      ),
-      []
     );
   }
 
