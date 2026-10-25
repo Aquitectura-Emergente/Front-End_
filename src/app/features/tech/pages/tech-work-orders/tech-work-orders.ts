@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { LanguageService } from '../../../../core/services/language.service';
-import { DataService, TechWorkOrder } from '../../../../core/services/data.service';
+import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
+import { TechWorkOrder } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
 
 @Component({
   selector: 'app-tech-work-orders',
@@ -14,12 +15,12 @@ import { DataService, TechWorkOrder } from '../../../../core/services/data.servi
   styleUrl: './tech-work-orders.scss',
 })
 export class TechWorkOrders {
-  private data       = inject(DataService);
+  private techWorkOrders = inject(TechWorkOrderFacade);
   private platformId = inject(PLATFORM_ID);
   protected lang     = inject(LanguageService);
 
   // Backend already filters by the logged-in technician's JWT token
-  private allOrders = toSignal(this.data.getTechWorkOrders(), { initialValue: [] as TechWorkOrder[] });
+  private allOrders = toSignal(this.techWorkOrders.all(), { initialValue: [] as TechWorkOrder[] });
 
   protected search        = signal('');
   protected statusFilter  = signal('all');
@@ -33,7 +34,7 @@ export class TechWorkOrders {
 
   // Active orders only — Completed/Cancelled live exclusively in History.
   protected myOrders = computed(() =>
-    this.allOrders().filter(o => o.status === 'pending' || o.status === 'in-progress')
+    this.allOrders().filter(o => this.techWorkOrders.isOpen(o.status))
   );
 
   protected filtered = computed(() => {

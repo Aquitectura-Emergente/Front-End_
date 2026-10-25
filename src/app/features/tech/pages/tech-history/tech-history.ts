@@ -1,7 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { DataService, HistoryItem, TechWorkOrder } from '../../../../core/services/data.service';
+import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
+import { HistoryItem } from '../../../../contexts/fieldservice/domain/work-order.model';
+import { TechWorkOrder } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
 import { WorkOrderDetailModal } from '../../../../shared/components/work-order-detail-modal/work-order-detail-modal';
 
 @Component({
@@ -11,7 +13,7 @@ import { WorkOrderDetailModal } from '../../../../shared/components/work-order-d
   styleUrl: './tech-history.scss',
 })
 export class TechHistory implements OnInit {
-  private data = inject(DataService);
+  private techWorkOrders = inject(TechWorkOrderFacade);
 
   protected items      = signal<HistoryItem[]>([]);
   protected loading    = signal(true);
@@ -37,7 +39,7 @@ export class TechHistory implements OnInit {
   private loadItems(): void {
     this.loading.set(true);
     const status = this.statusFilter() !== 'all' ? this.statusFilter() : undefined;
-    this.data.getTechHistoryPaged(status, undefined, this.currentPage(), this.pageSize).subscribe(response => {
+    this.techWorkOrders.historyPaged(status, undefined, this.currentPage(), this.pageSize).subscribe(response => {
       let content = response.content;
       const type = this.typeFilter();
       const from = this.dateFrom();
@@ -90,7 +92,7 @@ export class TechHistory implements OnInit {
     this.showDetailModal.set(true);
     if (item.workOrderId) {
       this.detailLoading.set(true);
-      this.data.getTechWorkOrderById(item.workOrderId).subscribe(order => {
+      this.techWorkOrders.byId(item.workOrderId).subscribe(order => {
         this.detailOrder.set(order ?? this.fallbackOrder(item));
         this.detailLoading.set(false);
       });

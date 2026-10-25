@@ -3,35 +3,22 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { map, catchError, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../../core/http/api-response';
+import { AuthUser, LoginResponse, WebRole, isWebRole } from '../domain/auth-user.model';
 
-export interface AuthUser {
-  id: number;
-  email: string;
-  name: string;
-  initials: string;
-  role: 'admin' | 'technician';
-  technicianId?: number;
-}
-
-interface LoginResponse {
-  token: string;
-  email: string;
-  name: string;
-  initials: string;
-  role: string;
-  userId: number;
-  technicianId: number | null;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-}
+export { type AuthUser } from '../domain/auth-user.model';
 
 const STORAGE_KEY  = 'emsafe_user';
 const TOKEN_KEY    = 'emsafe_token';
 
+/**
+ * Sesión del portal web: login, logout y el usuario actual como signal.
+ *
+ * El token y el usuario se persisten en localStorage, siempre tras la guarda
+ * `isPlatformBrowser` (los restos de SSR siguen en el repo aunque el build de
+ * esta rama ya sea SPA estática).
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http       = inject(HttpClient);
@@ -43,7 +30,7 @@ export class AuthService {
   readonly currentUser = this._user.asReadonly();
 
   get isLoggedIn(): boolean { return this._user() !== null; }
-  get role(): 'admin' | 'technician' | null { return this._user()?.role ?? null; }
+  get role(): WebRole | null { return this._user()?.role ?? null; }
 
   getToken(): string | null {
     if (!isPlatformBrowser(this.platformId)) return null;
@@ -57,16 +44,16 @@ export class AuthService {
     ).pipe(
       map(res => {
         const lr = res.data;
-        const role = lr.role as 'admin' | 'technician';
 
-        if (role !== 'admin' && role !== 'technician') return false;
+        // El portal web es solo para admin y técnico; CLIENT entra por el móvil.
+        if (!isWebRole(lr.role)) return false;
 
         const user: AuthUser = {
           id:           lr.userId,
           email:        lr.email,
           name:         lr.name,
           initials:     lr.initials,
-          role,
+          role:         lr.role,
           technicianId: lr.technicianId ?? undefined,
         };
 

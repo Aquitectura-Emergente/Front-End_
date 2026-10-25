@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { LanguageService } from '../../../../core/services/language.service';
-import { DataService, TechWorkOrder } from '../../../../core/services/data.service';
+import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
+import { TechWorkOrder } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
 
 const DAY_NAMES_EN  = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const MONTH_EN = ['January','February','March','April','May','June','July',
@@ -34,10 +35,10 @@ type ServiceKey  = 'Installation' | 'Maintenance' | 'Collection';
   styleUrl: './tech-schedule.scss',
 })
 export class TechSchedule {
-  private data  = inject(DataService);
+  private techWorkOrders = inject(TechWorkOrderFacade);
   protected lang = inject(LanguageService);
 
-  private allOrders = toSignal(this.data.getTechWorkOrders(), { initialValue: [] as TechWorkOrder[] });
+  private allOrders = toSignal(this.techWorkOrders.all(), { initialValue: [] as TechWorkOrder[] });
 
   // ── Navigation ──────────────────────────────────────────────────────────────
   private readonly _today = new Date();

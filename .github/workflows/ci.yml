@@ -1,20 +1,24 @@
-# CI del frontend: compila la SPA de Angular.
+# CI del frontend: ejecuta los tests y compila la SPA de Angular.
 # El despliegue NO va aquí: la VM de Oracle construye la imagen por SSH
 # (ver Back-End/deploy/README.md). El workflow *.disabled es el antiguo de
 # Azure App Service, conservado como referencia histórica.
+#
+# Los tests son un gate real: si fallan, no se compila. Hasta el 2026-10-23
+# este workflow solo compilaba, así que los 5 specs que llevaban meses rotos
+# (NG0201, les faltaba provideRouter) pasaban desapercibidos.
 
 name: CI — Front-End
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'refactor/**']
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
 
 jobs:
   build:
-    name: Compilar SPA
+    name: Tests y compilación
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +31,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+
+      - name: Tests unitarios
+        run: npm test
 
       - name: Compilar (producción)
         run: npm run build

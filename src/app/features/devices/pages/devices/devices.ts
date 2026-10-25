@@ -3,7 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LowerCasePipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { DataService, Device, User } from '../../../../core/services/data.service';
+import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
+import { Device } from '../../../../contexts/iottelemetry/domain/device.model';
+import { UserFacade } from '../../../../contexts/iam/application/user-facade';
+import { User } from '../../../../contexts/iam/domain/user.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ActivityService } from '../../../../core/services/activity.service';
 
@@ -16,7 +19,8 @@ type DeviceStatus = 'active' | 'inactive' | 'in-maintenance' | 'requires-mainten
   styleUrl: './devices.scss',
 })
 export class Devices implements OnInit {
-  private data     = inject(DataService);
+  private deviceFacade = inject(DeviceFacade);
+  private userFacade   = inject(UserFacade);
   private toast    = inject(ToastService);
   private activity = inject(ActivityService);
   private router   = inject(Router);
@@ -91,14 +95,14 @@ export class Devices implements OnInit {
 
   ngOnInit(): void {
     this.loadDevices();
-    this.data.getUsers().subscribe(users => {
+    this.userFacade.all().subscribe(users => {
       this.clients.set(users.filter(u => u.role === 'Client'));
     });
   }
 
   private loadDevices(): void {
     this.loading.set(true);
-    this.data.getDevices().subscribe(list => {
+    this.deviceFacade.all().subscribe(list => {
       this.devices.set(list);
       this.loading.set(false);
     });
@@ -167,7 +171,7 @@ export class Devices implements OnInit {
 
     const editing = this.editingDevice();
     if (editing) {
-      this.data.updateDevice(editing.id, payload).subscribe(updated => {
+      this.deviceFacade.update(editing.id, payload).subscribe(updated => {
         if (updated) {
           this.activity.log('Device updated', this.formName);
           this.toast.success('Device updated successfully');
@@ -178,7 +182,7 @@ export class Devices implements OnInit {
         }
       });
     } else {
-      this.data.createDevice(payload).subscribe(created => {
+      this.deviceFacade.create(payload).subscribe(created => {
         if (created) {
           this.activity.log('Device created', this.formName);
           this.toast.success('Device created successfully');
@@ -205,7 +209,7 @@ export class Devices implements OnInit {
   confirmDelete(): void {
     const id = this.deleteDeviceId();
     if (id == null) return;
-    this.data.deleteDevice(id).subscribe(() => {
+    this.deviceFacade.remove(id).subscribe(() => {
       this.activity.log('Device deleted');
       this.toast.success('Device deleted');
       this.closeDeleteConfirm();

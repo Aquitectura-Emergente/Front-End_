@@ -1,7 +1,10 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { DataService, User, Device } from '../../../../core/services/data.service';
+import { UserFacade } from '../../../../contexts/iam/application/user-facade';
+import { User } from '../../../../contexts/iam/domain/user.model';
+import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
+import { Device } from '../../../../contexts/iottelemetry/domain/device.model';
 
 /**
  * Read-only client profile: client data + all of its devices (any status).
@@ -15,7 +18,8 @@ import { DataService, User, Device } from '../../../../core/services/data.servic
 })
 export class ViewClient implements OnInit {
   private route = inject(ActivatedRoute);
-  private data  = inject(DataService);
+  private userFacade   = inject(UserFacade);
+  private deviceFacade = inject(DeviceFacade);
 
   client  = signal<User | null>(null);
   devices = signal<Device[]>([]);
@@ -24,11 +28,11 @@ export class ViewClient implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) { this.loading.set(false); return; }
-    this.data.getUserById(id).subscribe(u => {
+    this.userFacade.byId(id).subscribe(u => {
       this.client.set(u);
       this.loading.set(false);
     });
-    this.data.getDevices(id).subscribe(d => this.devices.set(d));
+    this.deviceFacade.ofClient(id).subscribe(d => this.devices.set(d));
   }
 
   protected deviceStatusLabel(status: string): string {
@@ -43,7 +47,6 @@ export class ViewClient implements OnInit {
   }
 
   protected initials(name: string | undefined): string {
-    if (!name) return '?';
-    return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return this.userFacade.initialsOf(name);
   }
 }

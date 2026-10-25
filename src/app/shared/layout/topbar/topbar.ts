@@ -2,7 +2,7 @@ import { Component, inject, signal, HostListener } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LanguageService } from '../../../core/services/language.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../../contexts/iam/application/auth.service';
 import { ThemeService, FontSize } from '../../../core/services/theme.service';
 import { ActivityService } from '../../../core/services/activity.service';
 import { LayoutService } from '../../../core/services/layout.service';

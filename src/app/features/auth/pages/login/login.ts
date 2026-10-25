@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { LanguageService } from '../../../../core/services/language.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService } from '../../../../contexts/iam/application/auth.service';
 
 @Component({
   selector: 'app-login',
