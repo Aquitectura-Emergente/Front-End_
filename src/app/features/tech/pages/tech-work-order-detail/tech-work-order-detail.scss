@@ -74,7 +74,7 @@
   color: #fff;
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -94,7 +94,7 @@
   color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -155,7 +155,7 @@
   text-align: right;
 }
 
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 // ── PENDING ───────────────────────────────────────────────────────────────────
 .pending-layout {
@@ -208,7 +208,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-button);
     font-size: 13px;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--font-body);
     color: var(--color-text-primary);
     background: var(--color-surface);
     outline: none;
@@ -332,7 +332,7 @@
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -486,7 +486,7 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .sensor-loc {
@@ -540,7 +540,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   resize: vertical;
   outline: none;
@@ -559,7 +559,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   background: var(--color-surface);
   outline: none;
@@ -755,7 +755,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
 }
 
 .d-input--req { border-color: var(--color-primary); }

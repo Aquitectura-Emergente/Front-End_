@@ -94,7 +94,7 @@
 }
 
 .muted { color: var(--color-text-secondary); font-size: 13px; }
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 @media (max-width: 640px) {
   .stats { grid-template-columns: 1fr; }

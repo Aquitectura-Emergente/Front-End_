@@ -128,7 +128,7 @@ export class WorkOrders implements OnInit {
   regionalChart  = { type: 'bar', height: 130, toolbar: { show: false }, background: 'transparent' } as const;
   regionalXAxis: { categories: string[]; labels: object; axisBorder: object; axisTicks: object } = {
     categories: ['Lima', 'Arequipa', 'Trujillo', 'Cusco', 'Piura'],
-    labels: { style: { colors: '#6b7280', fontSize: '12px', fontFamily: 'Manrope, sans-serif' } },
+    labels: { style: { colors: '#6b7280', fontSize: '12px', fontFamily: 'Inter, sans-serif' } },
     axisBorder: { show: false },
     axisTicks:  { show: false },
   };

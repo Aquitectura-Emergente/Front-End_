@@ -58,7 +58,7 @@
   background: transparent;
   padding: 9px 0;
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   outline: none;
   &::placeholder { color: var(--color-text-secondary); }
@@ -90,7 +90,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   font-weight: 500;
   cursor: pointer;
   outline: none;
@@ -221,7 +221,7 @@
 
 /* ── Utility ─────────────────────────────────────── */
 .text-sec { color: var(--color-text-secondary); font-size: 13px; }
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 /* ── 3-dot menu ──────────────────────────────────── */
 .menu-wrap {
@@ -259,7 +259,7 @@
   border-radius: 7px;
   font-size: 13px;
   font-weight: 500;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   cursor: pointer;
   text-decoration: none;
@@ -346,7 +346,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   border: 1px solid transparent;
   transition: 160ms ease;
@@ -548,7 +548,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   transition: 160ms ease;
 

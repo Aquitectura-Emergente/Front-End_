@@ -101,7 +101,7 @@
   border-radius: 7px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   border: none;
   background: transparent;
@@ -139,7 +139,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   min-width: 220px;
   transition: 160ms ease;
@@ -182,7 +182,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   border: 1px solid transparent;
   transition: 160ms ease;
@@ -350,7 +350,7 @@
   gap: 8px;
   padding: 9px 14px;
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   font-weight: 500;
   color: var(--color-text-primary);
   background: transparent;
@@ -571,7 +571,7 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   text-align: center;
   transition: 160ms ease;
 

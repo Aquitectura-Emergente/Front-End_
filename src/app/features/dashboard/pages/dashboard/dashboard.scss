@@ -179,7 +179,7 @@
 }
 
 .metric-card__value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 32px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -295,7 +295,7 @@
 
 .radiation-value {
   font-weight: 700;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .radiation-value--safe    { color: var(--color-success); }

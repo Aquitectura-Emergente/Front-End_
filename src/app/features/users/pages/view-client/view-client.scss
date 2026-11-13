@@ -77,7 +77,7 @@
 .vc-cell { display: flex; flex-direction: column; gap: 2px; }
 .vc-k { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
 .vc-v { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 .vc-notes { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); p { margin: 4px 0 0; font-size: 14px; } }
 

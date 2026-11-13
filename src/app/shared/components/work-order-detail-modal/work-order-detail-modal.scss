@@ -109,7 +109,7 @@
 .wod-cell { display: flex; flex-direction: column; gap: 2px; }
 .wod-k { font-size: 11px; color: var(--color-text-secondary); }
 .wod-v { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
-.mono  { font-family: 'IBM Plex Mono', monospace; }
+.mono  { font-family: var(--font-mono); }
 
 .wod-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .tool-chip {

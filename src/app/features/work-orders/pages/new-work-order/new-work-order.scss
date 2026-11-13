@@ -124,7 +124,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   transition: 160ms ease;
 
@@ -187,7 +187,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   appearance: none;
   cursor: pointer;
@@ -228,7 +228,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   resize: vertical;
   min-height: 110px;
@@ -270,7 +270,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
   i { font-size: 17px; }
