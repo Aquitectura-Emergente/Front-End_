@@ -20,6 +20,10 @@ export class DeviceFacade {
     return this.api.list();
   }
 
+  byId(id: number | string): Observable<Device | null> {
+    return this.api.byId(id);
+  }
+
   ofClient(clientId: number | string): Observable<Device[]> {
     return this.api.list(clientId);
   }
@@ -45,7 +49,7 @@ export class DeviceFacade {
     return this.realtime.readings();
   }
 
-  /** Altas de sensores aún sin cliente (descubrimiento durante la instalación). */
+  /** Lecturas de dispositivos en stock, para reconocerlos durante la instalación. */
   discoveries(): Observable<Reading> {
     return this.realtime.discovery();
   }

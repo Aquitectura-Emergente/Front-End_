@@ -7,10 +7,15 @@ import { DeviceFacade } from '../../../../contexts/devicemanagement/application/
 import {
   Device, DeviceStatus, DeviceType, DEVICE_TYPES, EDITABLE_DEVICE_STATUSES, UNLINK_CLIENT, typeLabelFor,
 } from '../../../../contexts/devicemanagement/domain/device.model';
+import { DeviceManagementFacade } from '../../../../contexts/devicemanagement/application/device-management-facade';
+import {
+  DeviceStatusView, LIFECYCLE_STATUSES, LifecycleStatus, canDelete,
+} from '../../../../contexts/devicemanagement/domain/device-status.model';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { User } from '../../../../contexts/iam/domain/user.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ActivityService } from '../../../../core/services/activity.service';
+import { timeAgo } from '../../../../core/utils/time';
 
 @Component({
   selector: 'app-devices',
@@ -20,12 +25,15 @@ import { ActivityService } from '../../../../core/services/activity.service';
 })
 export class Devices implements OnInit {
   private deviceFacade = inject(DeviceFacade);
+  private dm           = inject(DeviceManagementFacade);
   private userFacade   = inject(UserFacade);
   private toast    = inject(ToastService);
   private activity = inject(ActivityService);
   private router   = inject(Router);
 
   devices       = signal<Device[]>([]);
+  /** Estado de Device Management por serial. */
+  dmStatus      = signal<Map<string, DeviceStatusView>>(new Map());
   clients       = signal<User[]>([]);
   loading       = signal(true);
   showModal     = signal(false);
@@ -42,6 +50,8 @@ export class Devices implements OnInit {
   searchQuery    = signal('');
   filterType     = signal('all');
   filterStatus   = signal('all');
+  filterLifecycle = signal<'all' | LifecycleStatus>('all');
+  readonly lifecycleStatuses = LIFECYCLE_STATUSES;
 
   // Pagination
   readonly pageSize = 10;
@@ -64,12 +74,24 @@ export class Devices implements OnInit {
     const q   = this.searchQuery().toLowerCase();
     const ty  = this.filterType();
     const st  = this.filterStatus();
+    const lc  = this.filterLifecycle();
     return this.devices().filter(d => {
+      const s = this.statusOf(d);
       const matchQ  = !q || d.name.toLowerCase().includes(q) || (d.serialNumber ?? '').toLowerCase().includes(q);
-      const matchTy = ty === 'all' || d.type === ty;
+      const matchTy = ty === 'all' || s?.deviceType === ty;
       const matchSt = st === 'all' || d.status === st;
-      return matchQ && matchTy && matchSt;
+      const matchLc = lc === 'all' || s?.lifecycleStatus === lc;
+      return matchQ && matchTy && matchSt && matchLc;
     });
+  });
+
+  /** Resumen del inventario por ciclo de vida. */
+  lifecycleCounts = computed(() => {
+    const counts: Record<LifecycleStatus, number> = { IN_STOCK: 0, INSTALLED: 0, RETIRED: 0 };
+    for (const s of this.dmStatus().values()) {
+      if (s.lifecycleStatus) counts[s.lifecycleStatus]++;
+    }
+    return counts;
   });
 
   totalPages  = computed(() => Math.ceil(this.filtered().length / this.pageSize));
@@ -77,9 +99,6 @@ export class Devices implements OnInit {
     const start = this.currentPage() * this.pageSize;
     return this.filtered().slice(start, start + this.pageSize);
   });
-
-  // Unique types for the filter dropdown
-  uniqueTypes   = computed(() => [...new Set(this.devices().map(d => d.type))]);
 
   pagesArray(): number[] {
     return Array.from({ length: this.totalPages() }, (_, i) => i);
@@ -105,7 +124,29 @@ export class Devices implements OnInit {
     this.deviceFacade.all().subscribe(list => {
       this.devices.set(list);
       this.loading.set(false);
+      this.dm.statuses(list.map(d => d.serialNumber)).subscribe(m => this.dmStatus.set(m));
     });
+  }
+
+  statusOf(d: Device): DeviceStatusView | undefined {
+    return d.serialNumber ? this.dmStatus().get(d.serialNumber) : undefined;
+  }
+
+  canDeleteDevice(d: Device): boolean {
+    return canDelete(this.statusOf(d));
+  }
+
+  openDetail(d: Device): void {
+    this.openMenuId.set(null);
+    this.router.navigate(['/admin/devices', d.id]);
+  }
+
+  lifecycleKey(status: LifecycleStatus | null | undefined): string {
+    return status ? 'dm_lc_' + status : 'dm_unknown';
+  }
+
+  ago(iso: string | null | undefined): string {
+    return timeAgo(iso);
   }
 
   onSearchChange(): void {
@@ -208,8 +249,13 @@ export class Devices implements OnInit {
     }
   }
 
-  openDeleteConfirm(id: number | string): void {
-    this.deleteDeviceId.set(id);
+  openDeleteConfirm(device: Device): void {
+    if (!this.canDeleteDevice(device)) {
+      this.openMenuId.set(null);
+      this.toast.error('An installed device cannot be deleted. Unlink it or retire it first.');
+      return;
+    }
+    this.deleteDeviceId.set(device.id);
     this.showDeleteModal.set(true);
     this.openMenuId.set(null);
   }
@@ -276,11 +322,5 @@ export class Devices implements OnInit {
 
   deviceTypeKey(type: DeviceType): string {
     return 'dev_type_' + type;
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '—';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

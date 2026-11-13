@@ -1,0 +1,201 @@
+<section class="detail">
+  <a class="back" routerLink="/admin/devices">
+    <i class="ph ph-arrow-left" aria-hidden="true"></i>{{ 'dev_title' | t }}
+  </a>
+
+  @if (loading()) {
+    <div class="loading-state"><i class="ph ph-circle-notch ph-spin"></i></div>
+  } @else if (!device()) {
+    <p class="muted">{{ 'dev_noDevices' | t }}</p>
+  } @else {
+    @let d = device()!;
+    @let s = status();
+
+    <header class="detail__header">
+      <div>
+        <h2 class="detail__title">{{ d.name }}</h2>
+        <p class="detail__sub mono">{{ d.serialNumber || '—' }}</p>
+      </div>
+      @if (s) {
+        <div class="badges">
+          <span class="pill">{{ 'dev_type_' + s.deviceType | t }}</span>
+          <span class="pill pill--{{ (s.lifecycleStatus ?? 'unknown') | lowercase }}">{{ lifecycleKey(s.lifecycleStatus) | t }}</span>
+          @if (s.connectivity) {
+            <span class="pill pill--{{ s.connectivity | lowercase }}">{{ 'dm_conn_' + s.connectivity | t }}</span>
+          }
+        </div>
+      }
+    </header>
+
+    @if (!d.serialNumber) {
+      <p class="notice">{{ 'dm_noSerial' | t }}</p>
+    } @else if (!s) {
+      <p class="notice">{{ 'dm_statusUnavailable' | t }}</p>
+    } @else {
+      <!-- Resumen -->
+      <div class="facts">
+        <div class="fact"><span>{{ 'dev_client' | t }}</span><strong>{{ d.clientName || '—' }}</strong></div>
+        <div class="fact"><span>{{ 'client_location' | t }}</span><strong>{{ d.location || '—' }}</strong></div>
+        <div class="fact"><span>{{ 'dm_zone' | t }}</span><strong>{{ s.plantZoneId != null ? '#' + s.plantZoneId : '—' }}</strong></div>
+        <div class="fact"><span>{{ 'dm_lastSeen' | t }}</span><strong [title]="when(s.lastSeenAt)">{{ ago(s.lastSeenAt) }}</strong></div>
+        <div class="fact"><span>{{ 'dm_edgeNode' | t }}</span><strong class="mono">{{ s.connectivityEdgeNodeId || '—' }}</strong></div>
+        <div class="fact"><span>{{ 'dm_firmware' | t }}</span><strong class="mono">{{ s.firmwareVersion || '—' }}</strong></div>
+        <div class="fact"><span>{{ 'dm_battery' | t }}</span><strong>{{ s.batteryLevel != null ? s.batteryLevel + '%' : '—' }}</strong></div>
+        <div class="fact"><span>{{ 'dev_installDate' | t }}</span><strong>{{ d.installDate || '—' }}</strong></div>
+      </div>
+
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab" [class.tab--on]="tab() === 'config'" (click)="setTab('config')">{{ 'dm_tab_config' | t }}</button>
+        <button type="button" role="tab" class="tab" [class.tab--on]="tab() === 'lifecycle'" (click)="setTab('lifecycle')">{{ 'dm_lifecycle' | t }}</button>
+        <button type="button" role="tab" class="tab" [class.tab--on]="tab() === 'audit'" (click)="setTab('audit')">{{ 'dm_tab_audit' | t }}</button>
+        <button type="button" role="tab" class="tab" [class.tab--on]="tab() === 'telemetry'" (click)="setTab('telemetry')">{{ 'dm_tab_telemetry' | t }}</button>
+      </nav>
+
+      <div class="panel">
+        @switch (tab()) {
+          @case ('config') {
+            @if (config(); as c) {
+              <p class="muted">{{ 'dm_cfg_version' | t }} {{ c.configVersion }} · {{ when(c.updatedAt) }}</p>
+              <div class="threshold">
+                <div>
+                  <span class="label">{{ 'dm_cfg_threshold' | t }}</span>
+                  <strong class="mono">{{ c.alertThresholdUT | number: '1.0-2' }} µT</strong>
+                </div>
+                <span class="pill">
+                  <i class="ph ph-lock-simple" aria-hidden="true"></i>
+                  {{ (c.definedBy === 'SSO_RESPONSIBLE' ? 'dm_cfg_bySso' : 'dm_cfg_byDefault') | t }}
+                </span>
+              </div>
+              <form class="form" (ngSubmit)="saveConfig()">
+                <label class="field">
+                  <span class="label">{{ 'dm_cfg_sampling' | t }}</span>
+                  <input class="input mono" type="number" name="sampling" [(ngModel)]="formSampling"
+                         [min]="samplingLimits.min" [max]="samplingLimits.max" step="100" />
+                  <small class="muted">{{ samplingLimits.min }} – {{ samplingLimits.max | number }} ms</small>
+                </label>
+                <label class="field">
+                  <span class="label">{{ 'dm_cfg_inactivity' | t }}</span>
+                  <input class="input mono" type="number" name="inactivity" [(ngModel)]="formInactivity"
+                         [min]="inactivityLimits.min" [max]="inactivityLimits.max" />
+                  <small class="muted">{{ inactivityLimits.min }} – {{ inactivityLimits.max | number }} s</small>
+                </label>
+                <div class="form__actions">
+                  <button class="btn btn--primary" type="submit" [disabled]="savingConfig()">
+                    <i class="ph ph-floppy-disk" aria-hidden="true"></i>{{ 'btn_saveChanges' | t }}
+                  </button>
+                </div>
+              </form>
+              <p class="muted">{{ 'dm_cfg_nextSync' | t }}</p>
+            } @else {
+              <p class="muted">{{ 'dm_statusUnavailable' | t }}</p>
+            }
+          }
+
+          @case ('lifecycle') {
+            <p>{{ 'dm_lc_current' | t }}: <strong>{{ lifecycleKey(s.lifecycleStatus) | t }}</strong></p>
+            @if (targets().length) {
+              <div class="choices">
+                @for (t of targets(); track t) {
+                  <label class="choice" [class.choice--on]="lifecycleTarget() === t">
+                    <input type="radio" name="lc" [value]="t" [checked]="lifecycleTarget() === t" (change)="lifecycleTarget.set(t)" />
+                    {{ lifecycleKey(t) | t }}
+                  </label>
+                }
+              </div>
+              @if (lifecycleTarget() === 'RETIRED') {
+                <p class="notice">{{ 'dm_lc_retireWarn' | t }}</p>
+              }
+              <button class="btn btn--primary" type="button" [disabled]="!lifecycleTarget() || savingLifecycle()" (click)="changeLifecycle()">
+                {{ 'btn_confirm' | t }}
+              </button>
+            } @else {
+              <p class="muted">{{ 'dm_lc_final' | t }}</p>
+            }
+          }
+
+          @case ('audit') {
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>{{ 'dm_audit_when' | t }}</th>
+                    <th>{{ 'dm_audit_type' | t }}</th>
+                    <th>{{ 'dm_audit_change' | t }}</th>
+                    <th>{{ 'dm_audit_actor' | t }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (e of audit().content; track e.id) {
+                    <tr>
+                      <td class="nowrap">{{ when(e.occurredAt) }}</td>
+                      <td><span class="pill">{{ 'dm_audit_' + e.entryType | t }}</span></td>
+                      <td>
+                        @if (e.field) { <span class="mono">{{ e.field }}</span>: }
+                        @if (e.oldValue != null) { <span class="old">{{ e.oldValue }}</span> → }
+                        <span>{{ e.newValue ?? '' }}</span>
+                        @if (e.details) { <small class="muted"> {{ e.details }}</small> }
+                      </td>
+                      <td class="muted">{{ e.actor || '—' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="muted">{{ 'dm_empty' | t }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (audit().totalPages > 1) {
+              <div class="pager">
+                <button class="btn btn--ghost" type="button" [disabled]="auditPage() === 0" (click)="loadAudit(auditPage() - 1)">
+                  <i class="ph ph-caret-left"></i>
+                </button>
+                <span class="muted">{{ auditPage() + 1 }} / {{ audit().totalPages }}</span>
+                <button class="btn btn--ghost" type="button" [disabled]="audit().last" (click)="loadAudit(auditPage() + 1)">
+                  <i class="ph ph-caret-right"></i>
+                </button>
+              </div>
+            }
+          }
+
+          @case ('telemetry') {
+            <div class="toolbar">
+              <select class="input" name="routing" [(ngModel)]="routing" (ngModelChange)="loadTelemetry()">
+                <option value="">{{ 'filter_all' | t }}</option>
+                @for (r of routings; track r) {
+                  <option [value]="r">{{ 'dm_route_' + r | t }}</option>
+                }
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>{{ 'dm_tel_captured' | t }}</th>
+                    <th>µT</th>
+                    <th>{{ 'dm_tel_origin' | t }}</th>
+                    <th>{{ 'dm_tel_quality' | t }}</th>
+                    <th>{{ 'dm_tel_routing' | t }}</th>
+                    <th>{{ 'dm_edgeNode' | t }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of telemetry(); track r.id) {
+                    <tr>
+                      <td class="nowrap">{{ when(r.capturedAt) }}</td>
+                      <td class="mono">{{ r.magneticFluxDensityUT | number: '1.0-3' }}</td>
+                      <td>{{ 'dm_origin_' + r.origin | t }}</td>
+                      <td><span class="pill pill--{{ r.quality | lowercase }}">{{ r.quality }}</span></td>
+                      <td [title]="r.routingDetail ?? ''">{{ 'dm_route_' + r.routing | t }}</td>
+                      <td class="mono muted">{{ r.edgeNodeId || '—' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="6" class="muted">{{ 'dm_empty' | t }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+</section>

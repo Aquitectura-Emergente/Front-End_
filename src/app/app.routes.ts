@@ -24,6 +24,7 @@ import { TechHistory }         from './features/tech/pages/tech-history/tech-his
 
 import { Profile }       from './features/profile/pages/profile/profile';
 import { Devices }       from './features/devices/pages/devices/devices';
+import { DeviceDetail }  from './features/devices/pages/device-detail/device-detail';
 import { Alarms }        from './features/alarms/pages/alarms/alarms';
 import { MapRadiation }  from './features/map-radiation/pages/map-radiation/map-radiation';
 import { PlantConfig }   from './features/plant-config/pages/plant-config/plant-config';
@@ -52,6 +53,7 @@ export const routes: Routes = [
       { path: 'users/view-client/:id',     component: ViewClient },
       { path: 'profile',                   component: Profile },
       { path: 'devices',                   component: Devices },
+      { path: 'devices/:id',               component: DeviceDetail },
       { path: 'alarms',                    component: Alarms },
       { path: 'map-radiation',             component: MapRadiation },
     ],
