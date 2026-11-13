@@ -9,6 +9,7 @@ import { SsoLayout }      from './layouts/sso-layout/sso-layout';
 import { Login }          from './features/auth/pages/login/login';
 import { Dashboard }      from './features/dashboard/pages/dashboard/dashboard';
 import { WorkOrders }     from './features/work-orders/pages/work-orders/work-orders';
+import { WorkOrdersCalendar } from './features/work-orders/pages/work-orders-calendar/work-orders-calendar';
 import { NewWorkOrder }   from './features/work-orders/pages/new-work-order/new-work-order';
 import { History }        from './features/history/pages/history/history';
 import { Users }          from './features/users/pages/users/users';
@@ -45,6 +46,7 @@ export const routes: Routes = [
       { path: 'work-orders',               component: WorkOrders },
       { path: 'work-orders/new',           component: NewWorkOrder },
       { path: 'work-orders/edit/:id',      component: NewWorkOrder },
+      { path: 'calendar',                  component: WorkOrdersCalendar },
       { path: 'history',                   component: History },
       { path: 'users',                     component: Users },
       { path: 'users/new-admin',           component: NewAdmin },

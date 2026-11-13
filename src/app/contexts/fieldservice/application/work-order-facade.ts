@@ -18,6 +18,10 @@ import { TechWorkOrder } from '../domain/tech-work-order.model';
 export class WorkOrderFacade {
   private api = inject(WorkOrderApi);
 
+  all(status?: string, type?: string): Observable<WorkOrder[]> {
+    return this.api.list(status, type);
+  }
+
   paged(
     status?: string, type?: string, search?: string, page = 0, size = 10, sort?: string
   ): Observable<PageResponse<WorkOrder>> {
