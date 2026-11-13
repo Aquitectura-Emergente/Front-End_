@@ -5,7 +5,7 @@ import { LowerCasePipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
 import {
-  Device, DeviceStatus, DeviceType, DEVICE_TYPES, EDITABLE_DEVICE_STATUSES, UNLINK_CLIENT, typeLabelFor,
+  Device, DeviceStatus, DeviceType, DEVICE_TYPES, EDITABLE_DEVICE_STATUSES, UNLINK_CLIENT, isEditableStatus, typeLabelFor,
 } from '../../../../contexts/devicemanagement/domain/device.model';
 import { DeviceManagementFacade } from '../../../../contexts/devicemanagement/application/device-management-facade';
 import {
@@ -15,6 +15,7 @@ import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { User } from '../../../../contexts/iam/domain/user.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ActivityService } from '../../../../core/services/activity.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { timeAgo } from '../../../../core/utils/time';
 
 @Component({
@@ -29,6 +30,7 @@ export class Devices implements OnInit {
   private userFacade   = inject(UserFacade);
   private toast    = inject(ToastService);
   private activity = inject(ActivityService);
+  private lang     = inject(LanguageService);
   private router   = inject(Router);
 
   devices       = signal<Device[]>([]);
@@ -59,6 +61,7 @@ export class Devices implements OnInit {
 
   readonly deviceTypes = DEVICE_TYPES;
   readonly editableStatuses = EDITABLE_DEVICE_STATUSES;
+  readonly isEditableStatus = isEditableStatus;
 
   // Modal form fields
   formName        = '';
@@ -252,7 +255,7 @@ export class Devices implements OnInit {
   openDeleteConfirm(device: Device): void {
     if (!this.canDeleteDevice(device)) {
       this.openMenuId.set(null);
-      this.toast.error('An installed device cannot be deleted. Unlink it or retire it first.');
+      this.toast.error(this.lang.t('dm_deleteBlocked'));
       return;
     }
     this.deleteDeviceId.set(device.id);
@@ -306,6 +309,7 @@ export class Devices implements OnInit {
       'unregistered':         'unregistered',
       'in-maintenance':       'in-maintenance',
       'requires-maintenance': 'requires-maintenance',
+      'inactive':             'inactive',
     };
     return map[status] ?? 'unregistered';
   }
@@ -316,6 +320,7 @@ export class Devices implements OnInit {
       'unregistered':         'dev_unregistered',
       'in-maintenance':       'dev_inMaintenance',
       'requires-maintenance': 'dev_requiresMaintenance',
+      'inactive':             'dev_inactive',
     };
     return map[status] ?? 'dev_unregistered';
   }

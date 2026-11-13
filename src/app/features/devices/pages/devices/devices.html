@@ -300,8 +300,8 @@
               <div class="form-group">
                 <label class="form-label">{{ 'th_status' | t }}</label>
                 <select class="form-input" [(ngModel)]="formStatus" name="formStatus">
-                  @if (d.status === 'unregistered') {
-                    <option value="unregistered">{{ 'dev_unregistered' | t }}</option>
+                  @if (!isEditableStatus(d.status)) {
+                    <option [value]="d.status">{{ statusKey(d.status) | t }}</option>
                   }
                   @for (st of editableStatuses; track st) {
                     <option [value]="st">{{ statusKey(st) | t }}</option>

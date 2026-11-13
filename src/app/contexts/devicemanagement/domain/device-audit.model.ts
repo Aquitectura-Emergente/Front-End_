@@ -7,7 +7,8 @@ export type AuditEntryType =
   | 'ZONE_CHANGED'
   | 'PLUG_COMMAND'
   | 'PLUG_STATE'
-  | 'DEVICE_TYPE_MISMATCH';
+  | 'DEVICE_TYPE_MISMATCH'
+  | 'DEVICE_LENT';
 
 /** Entrada de la auditoría append-only del dispositivo. */
 export interface AuditEntryView {

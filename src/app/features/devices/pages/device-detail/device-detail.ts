@@ -157,6 +157,13 @@ export class DeviceDetail implements OnInit {
     this.dm.telemetry(this.serial, this.routing || undefined).subscribe(r => this.telemetry.set(r));
   }
 
+  /** Etiqueta del evento; si el backend agrega un tipo nuevo, se muestra legible en vez de la clave. */
+  auditLabel(type: string): string {
+    const key = 'dm_audit_' + type;
+    const label = this.lang.t(key);
+    return label === key ? type.charAt(0) + type.slice(1).toLowerCase().replace(/_/g, ' ') : label;
+  }
+
   lifecycleKey(status: LifecycleStatus | null | undefined): string {
     return status ? 'dm_lc_' + status : 'dm_unknown';
   }

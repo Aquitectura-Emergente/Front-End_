@@ -32,7 +32,11 @@ export function lifecycleTargets(current: LifecycleStatus | null): LifecycleStat
   return LIFECYCLE_STATUSES.filter(s => s !== from);
 }
 
-/** Solo se borra lo que no está instalado; un instalado primero se desvincula o se retira. */
+/**
+ * Solo se borra lo que no está instalado; un instalado primero pasa a stock o
+ * se retira. El backend omite los nulos, así que un ciclo ausente llega como
+ * `undefined` y tampoco se borra.
+ */
 export function canDelete(status: DeviceStatusView | null | undefined): boolean {
-  return !!status && status.lifecycleStatus !== null && status.lifecycleStatus !== 'INSTALLED';
+  return status?.lifecycleStatus != null && status.lifecycleStatus !== 'INSTALLED';
 }

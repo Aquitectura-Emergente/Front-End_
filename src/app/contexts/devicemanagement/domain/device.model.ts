@@ -4,7 +4,8 @@ export interface Device {
   name: string;
   type: string;
   location: string;
-  status: 'active' | 'unregistered' | 'requires-maintenance' | 'in-maintenance';
+  /** `inactive` solo aparece en datos antiguos; se muestra pero ya no se asigna. */
+  status: 'active' | 'unregistered' | 'requires-maintenance' | 'in-maintenance' | 'inactive';
   serialNumber: string;
   installDate: string;
   createdAt: string;
@@ -70,3 +71,8 @@ export type DeviceStatus = Device['status'];
 
 /** Estados que el admin puede fijar a mano; `unregistered` lo decide el backend. */
 export const EDITABLE_DEVICE_STATUSES: readonly DeviceStatus[] = ['active', 'requires-maintenance', 'in-maintenance'];
+
+/** Un estado fuera de esta lista (en stock o antiguo) se muestra al editar pero no se ofrece. */
+export function isEditableStatus(status: string): boolean {
+  return (EDITABLE_DEVICE_STATUSES as readonly string[]).includes(status);
+}

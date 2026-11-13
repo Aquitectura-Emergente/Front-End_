@@ -128,7 +128,7 @@
                   @for (e of audit().content; track e.id) {
                     <tr>
                       <td class="nowrap">{{ when(e.occurredAt) }}</td>
-                      <td><span class="pill">{{ 'dm_audit_' + e.entryType | t }}</span></td>
+                      <td><span class="pill">{{ auditLabel(e.entryType) }}</span></td>
                       <td>
                         @if (e.field) { <span class="mono">{{ e.field }}</span>: }
                         @if (e.oldValue != null) { <span class="old">{{ e.oldValue }}</span> → }

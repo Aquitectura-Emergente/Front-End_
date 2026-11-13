@@ -36,4 +36,9 @@ describe('canDelete', () => {
     expect(canDelete(null)).toBe(false);
     expect(canDelete(view(null))).toBe(false);
   });
+
+  it('un ciclo de vida omitido por el backend (campo ausente) tampoco se borra', () => {
+    const { lifecycleStatus: _omitted, ...rest } = view('IN_STOCK');
+    expect(canDelete(rest as DeviceStatusView)).toBe(false);
+  });
 });
