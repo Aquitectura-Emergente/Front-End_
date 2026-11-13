@@ -4,13 +4,13 @@ import { Router } from '@angular/router';
 import { LowerCasePipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
-import { Device } from '../../../../contexts/devicemanagement/domain/device.model';
+import {
+  Device, DeviceStatus, DeviceType, DEVICE_TYPES, EDITABLE_DEVICE_STATUSES, UNLINK_CLIENT, typeLabelFor,
+} from '../../../../contexts/devicemanagement/domain/device.model';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { User } from '../../../../contexts/iam/domain/user.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ActivityService } from '../../../../core/services/activity.service';
-
-type DeviceStatus = 'active' | 'inactive' | 'in-maintenance' | 'requires-maintenance' | 'collecting';
 
 @Component({
   selector: 'app-devices',
@@ -47,13 +47,13 @@ export class Devices implements OnInit {
   readonly pageSize = 10;
   currentPage = signal(0);
 
-  // Canonical device types
-  readonly deviceTypes = ['Sensor', 'Gateway', 'Monitor', 'Controller', 'Plug', 'Actuator'];
+  readonly deviceTypes = DEVICE_TYPES;
+  readonly editableStatuses = EDITABLE_DEVICE_STATUSES;
 
   // Modal form fields
   formName        = '';
-  formType        = 'Sensor';
-  formClient      = '';
+  formDeviceType: DeviceType = 'FIXED_SENSOR';
+  formClientId: number | null = null;
   formLocation    = '';
   formStatus: DeviceStatus = 'active';
   formSerial      = '';
@@ -130,8 +130,8 @@ export class Devices implements OnInit {
   openCreate(): void {
     this.editingDevice.set(null);
     this.formName        = '';
-    this.formType        = 'Sensor';
-    this.formClient      = '';
+    this.formDeviceType  = 'FIXED_SENSOR';
+    this.formClientId    = null;
     this.formLocation    = '';
     this.formStatus      = 'active';
     this.formSerial      = '';
@@ -143,10 +143,9 @@ export class Devices implements OnInit {
   openEdit(d: Device): void {
     this.editingDevice.set(d);
     this.formName        = d.name;
-    this.formType        = d.type;
-    this.formClient      = d.clientName ?? d.client ?? '';
+    this.formClientId    = d.clientId ?? null;
     this.formLocation    = d.location;
-    this.formStatus      = d.status as DeviceStatus;
+    this.formStatus      = d.status;
     this.formSerial      = d.serialNumber;
     this.formInstallDate = d.installDate ?? '';
     this.openMenuId.set(null);
@@ -158,19 +157,23 @@ export class Devices implements OnInit {
   }
 
   saveDevice(): void {
-    const selectedClient = this.clients().find(c => c.name === this.formClient);
-    const payload = {
-      name:         this.formName,
-      type:         this.formType,
-      location:     this.formLocation,
-      status:       this.formStatus,
-      serialNumber: this.formSerial,
-      installDate:  this.formInstallDate,
-      clientId:     selectedClient ? selectedClient.id : null,
-    };
-
     const editing = this.editingDevice();
+    if (!this.formName.trim() || (!editing && !this.formSerial.trim())) {
+      this.toast.error('Name and serial number are required');
+      return;
+    }
+
     if (editing) {
+      // El serial identifica al equipo en Device Management y no se edita.
+      // Sin cliente se envía 0, que es lo que el backend entiende como desvincular.
+      const payload = {
+        name:        this.formName,
+        type:        editing.type,
+        location:    this.formLocation,
+        status:      this.formStatus,
+        installDate: this.formInstallDate || undefined,
+        clientId:    this.formClientId ?? UNLINK_CLIENT,
+      };
       this.deviceFacade.update(editing.id, payload).subscribe(updated => {
         if (updated) {
           this.activity.log('Device updated', this.formName);
@@ -182,6 +185,16 @@ export class Devices implements OnInit {
         }
       });
     } else {
+      // Sin cliente queda en stock; el estado operativo lo decide el backend.
+      const payload = {
+        name:         this.formName,
+        type:         typeLabelFor(this.formDeviceType),
+        deviceType:   this.formDeviceType,
+        location:     this.formLocation,
+        serialNumber: this.formSerial.trim(),
+        installDate:  this.formInstallDate || undefined,
+        clientId:     this.formClientId,
+      };
       this.deviceFacade.create(payload).subscribe(created => {
         if (created) {
           this.activity.log('Device created', this.formName);
@@ -244,23 +257,25 @@ export class Devices implements OnInit {
   statusClass(status: string): string {
     const map: Record<string, string> = {
       'active':               'active',
-      'inactive':             'inactive',
+      'unregistered':         'unregistered',
       'in-maintenance':       'in-maintenance',
       'requires-maintenance': 'requires-maintenance',
-      'collecting':           'collecting',
     };
-    return map[status] ?? 'inactive';
+    return map[status] ?? 'unregistered';
   }
 
-  statusKey(status: string): string {
+  statusKey(status: DeviceStatus | string): string {
     const map: Record<string, string> = {
       'active':               'dev_active',
-      'inactive':             'dev_inactive',
+      'unregistered':         'dev_unregistered',
       'in-maintenance':       'dev_inMaintenance',
       'requires-maintenance': 'dev_requiresMaintenance',
-      'collecting':           'dev_collecting',
     };
-    return map[status] ?? 'dev_inactive';
+    return map[status] ?? 'dev_unregistered';
+  }
+
+  deviceTypeKey(type: DeviceType): string {
+    return 'dev_type_' + type;
   }
 
   formatDate(dateStr: string): string {

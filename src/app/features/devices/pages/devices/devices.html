@@ -23,7 +23,7 @@
         <span class="filter-group__label">{{ 'dev_type' | t }}</span>
         <select class="filter-select" [(ngModel)]="filterType" (ngModelChange)="onFilterChange()">
           <option value="all">{{ 'filter_all' | t }}</option>
-          @for (ty of deviceTypes; track ty) {
+          @for (ty of uniqueTypes(); track ty) {
             <option [value]="ty">{{ ty }}</option>
           }
         </select>
@@ -33,10 +33,9 @@
         <select class="filter-select" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
           <option value="all">{{ 'filter_all' | t }}</option>
           <option value="active">{{ 'dev_active' | t }}</option>
-          <option value="inactive">{{ 'dev_inactive' | t }}</option>
+          <option value="unregistered">{{ 'dev_unregistered' | t }}</option>
           <option value="in-maintenance">{{ 'dev_inMaintenance' | t }}</option>
           <option value="requires-maintenance">{{ 'dev_requiresMaintenance' | t }}</option>
-          <option value="collecting">{{ 'dev_collecting' | t }}</option>
         </select>
       </div>
     </div>
@@ -207,24 +206,25 @@
 
             <div class="form-group">
               <label class="form-label">{{ 'dev_type' | t }}</label>
-              <select class="form-input" [(ngModel)]="formType" name="formType">
-                <option value="Sensor">{{ 'dev_sensor' | t }}</option>
-                <option value="Gateway">{{ 'dev_gateway' | t }}</option>
-                <option value="Monitor">{{ 'dev_monitor' | t }}</option>
-                <option value="Controller">{{ 'dev_controller' | t }}</option>
-                <option value="Plug">{{ 'dev_plug' | t }}</option>
-                <option value="Actuator">{{ 'dev_actuator' | t }}</option>
-              </select>
+              @if (editingDevice(); as d) {
+                <input class="form-input" type="text" [value]="d.type" name="formTypeRo" disabled />
+              } @else {
+                <select class="form-input" [(ngModel)]="formDeviceType" name="formDeviceType">
+                  @for (ty of deviceTypes; track ty) {
+                    <option [value]="ty">{{ deviceTypeKey(ty) | t }}</option>
+                  }
+                </select>
+              }
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">{{ 'dev_client' | t }}</label>
-              <select class="form-input" [(ngModel)]="formClient" name="formClient">
-                <option value="">— {{ 'dev_filterByClient' | t }} —</option>
+              <select class="form-input" [(ngModel)]="formClientId" name="formClientId">
+                <option [ngValue]="null">— {{ 'dev_noClientStock' | t }} —</option>
                 @for (c of clients(); track c.id) {
-                  <option [value]="c.name">{{ c.name }}</option>
+                  <option [ngValue]="c.id">{{ c.name }}</option>
                 }
               </select>
             </div>
@@ -242,16 +242,19 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">{{ 'th_status' | t }}</label>
-              <select class="form-input" [(ngModel)]="formStatus" name="formStatus">
-                <option value="active">{{ 'dev_active' | t }}</option>
-                <option value="inactive">{{ 'dev_inactive' | t }}</option>
-                <option value="in-maintenance">{{ 'dev_inMaintenance' | t }}</option>
-                <option value="requires-maintenance">{{ 'dev_requiresMaintenance' | t }}</option>
-                <option value="collecting">{{ 'dev_collecting' | t }}</option>
-              </select>
-            </div>
+            @if (editingDevice(); as d) {
+              <div class="form-group">
+                <label class="form-label">{{ 'th_status' | t }}</label>
+                <select class="form-input" [(ngModel)]="formStatus" name="formStatus">
+                  @if (d.status === 'unregistered') {
+                    <option value="unregistered">{{ 'dev_unregistered' | t }}</option>
+                  }
+                  @for (st of editableStatuses; track st) {
+                    <option [value]="st">{{ statusKey(st) | t }}</option>
+                  }
+                </select>
+              </div>
+            }
 
             <div class="form-group">
               <label class="form-label">{{ 'dev_installDate' | t }}</label>
@@ -266,13 +269,15 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ 'dev_serial' | t }}</label>
+              <label class="form-label">{{ 'dev_serial' | t }} *</label>
               <input
-                class="form-input"
+                class="form-input mono"
                 type="text"
                 [(ngModel)]="formSerial"
                 name="formSerial"
                 [placeholder]="'dev_serial' | t"
+                [disabled]="!!editingDevice()"
+                required
               />
             </div>
           </div>

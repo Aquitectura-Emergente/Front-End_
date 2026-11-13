@@ -95,7 +95,7 @@
               </div>
             </td>
             <td>
-              <span class="role-badge role-badge--{{ user.role.toLowerCase() }}">{{ user.role }}</span>
+              <span class="role-badge role-badge--{{ user.role.toLowerCase() }}">{{ roleKey(user.role) | t }}</span>
             </td>
             <td class="email-cell">{{ user.email }}</td>
             <td>

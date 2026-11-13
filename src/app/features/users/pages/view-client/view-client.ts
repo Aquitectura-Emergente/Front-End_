@@ -40,8 +40,7 @@ export class ViewClient implements OnInit {
       'active': 'Active',
       'in-maintenance': 'In Maintenance',
       'requires-maintenance': 'Requires Maintenance',
-      'collecting': 'Collecting',
-      'inactive': 'Inactive',
+      'unregistered': 'In Stock',
     };
     return map[status] ?? status;
   }

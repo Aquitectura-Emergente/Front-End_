@@ -43,7 +43,7 @@ export class TechWorkOrderDetail implements OnDestroy {
   protected saving = signal(false);
 
   readonly sensorTypes = ['Sensor', 'Gateway', 'Monitor', 'Controller', 'Plug', 'Actuator'];
-  readonly deviceStatuses = ['active', 'in-maintenance', 'requires-maintenance', 'collecting'];
+  readonly deviceStatuses = ['active', 'in-maintenance', 'requires-maintenance'];
 
   // Leaflet map (geocoded from the order location)
   private mapEl = viewChild<ElementRef<HTMLDivElement>>('woMapEl');
@@ -312,8 +312,7 @@ export class TechWorkOrderDetail implements OnDestroy {
       'active': 'Active',
       'in-maintenance': 'In Maintenance',
       'requires-maintenance': 'Requires Maintenance',
-      'collecting': 'Collecting',
-      'inactive': 'Inactive',
+      'unregistered': 'In Stock',
     };
     return map[status] ?? status;
   }

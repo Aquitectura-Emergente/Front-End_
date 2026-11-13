@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
-import { User } from '../../../../contexts/iam/domain/user.model';
+import { User, isManagedByPanel } from '../../../../contexts/iam/domain/user.model';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { LanguageService } from '../../../../core/services/language.service';
@@ -91,9 +91,13 @@ export class Users implements OnInit {
 
   ngOnInit(): void {
     this.userFacade.all().subscribe(users => {
-      this._allUsers.set(users);
+      this._allUsers.set(users.filter(isManagedByPanel));
       this.loading.set(false);
     });
+  }
+
+  roleKey(role: string): string {
+    return 'role_' + role;
   }
 
   setTab(tab: RoleFilter): void {

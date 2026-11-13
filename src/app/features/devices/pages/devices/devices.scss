@@ -194,6 +194,7 @@
   &--monitor    { background: rgba(20, 184, 166, 0.1);  color: #0d9488; }
   &--controller { background: rgba(245, 158, 11, 0.1);  color: #d97706; }
   &--plug       { background: rgba(22, 163, 74, 0.1);   color: #16a34a; }
+  &--dosimeter  { background: rgba(57, 213, 255, 0.12); color: #0891b2; }
   &--actuator   { background: rgba(220, 38, 38, 0.1);   color: #dc2626; }
 }
 
@@ -213,10 +214,9 @@
   }
 
   &--active               { color: #16a34a; .dot { background: #16a34a; } }
-  &--inactive             { color: var(--color-text-secondary); .dot { background: #9ca3af; } }
+  &--unregistered         { color: var(--color-text-secondary); .dot { background: #9ca3af; } }
   &--in-maintenance       { color: #d97706; .dot { background: #d97706; } }
   &--requires-maintenance { color: #dc2626; .dot { background: #dc2626; } }
-  &--collecting           { color: #ca8a04; .dot { background: #ca8a04; } }
 }
 
 /* ── Utility ─────────────────────────────────────── */

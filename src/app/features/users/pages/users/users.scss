@@ -270,6 +270,7 @@
 
   &--admin       { background: rgba(26, 110, 255, 0.12); color: var(--color-primary); }
   &--technician  { background: rgba(16, 185, 129, 0.12); color: #059669; }
+  &--ssoresponsible { background: rgba(57, 213, 255, 0.14); color: #0891b2; }
   &--client      { background: rgba(249, 115, 22, 0.12); color: #ea580c; }
 }
 
@@ -298,6 +299,7 @@
   &--admin       { background: rgba(26, 110, 255, 0.1); color: var(--color-primary); }
   &--technician  { background: rgba(16, 185, 129, 0.1); color: #059669; }
   &--client      { background: rgba(249, 115, 22, 0.1); color: #ea580c; }
+  &--ssoresponsible { background: rgba(57, 213, 255, 0.12); color: #0891b2; }
 }
 
 /* ── Status dot ──────────────────────────────────── */

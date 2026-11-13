@@ -1,10 +1,13 @@
-/** Usuario gestionado desde el portal (admin, técnico o cliente). */
+/**
+ * Cuenta de la plataforma. `Worker` y `SsoResponsible` son cuentas industriales
+ * ligadas a un cliente empresa mediante `organizationId`.
+ */
 export interface User {
   id: number;
   name: string;
   initials: string;
   joinDate: string;
-  role: 'Admin' | 'Technician' | 'Client';
+  role: UserRole;
   email: string;
   status: 'active' | 'inactive' | 'pending';
   phone?: string;
@@ -20,6 +23,7 @@ export interface User {
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  organizationId?: number | null;
 }
 
 export interface CreateUserPayload {
@@ -27,7 +31,9 @@ export interface CreateUserPayload {
   initials?: string;
   email: string;
   password: string;
-  role: 'ADMIN' | 'TECHNICIAN' | 'CLIENT';
+  role: 'ADMIN' | 'TECHNICIAN' | 'CLIENT' | 'SSO_RESPONSIBLE';
+  /** Obligatorio para SSO_RESPONSIBLE: id del cliente empresa. */
+  organizationId?: number;
   phone?: string;
   location?: string;
   specialty?: string;
@@ -77,4 +83,9 @@ export interface UserProfile {
  */
 export type UserStatus = User['status'];
 
-export type UserRole = User['role'];
+export type UserRole = 'Admin' | 'Technician' | 'Client' | 'Worker' | 'SsoResponsible';
+
+/** Los operarios los gestiona el responsable de SSO de su empresa, no este panel. */
+export function isManagedByPanel(user: Pick<User, 'role'>): boolean {
+  return user.role !== 'Worker';
+}
