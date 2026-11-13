@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/media/*",
+      "/*.css",
+      "/*.js",
+      "/*.json",
+      "/*.ico",
+      "/*.png",
+      "/*.jpg",
+      "/*.svg",
+      "/*.webp",
+      "/*.woff",
+      "/*.woff2",
+      "/*.ttf"
+    ]
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  }
+}
