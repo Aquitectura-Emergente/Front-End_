@@ -9,7 +9,7 @@ import { debounceTime } from 'rxjs/operators';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { MonitoringFacade } from '../../../../contexts/radiationmonitoring/application/monitoring-facade';
 import { ClientRadiationPoint, ClientDeviceReading } from '../../../../contexts/radiationmonitoring/domain/radiation-map.model';
-import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
+import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
 
 @Component({
   selector: 'app-map-radiation',

@@ -6,7 +6,7 @@ import { Device, CreateDevicePayload, DiscoverableDevice } from '../domain/devic
 import { Reading } from '../domain/reading.model';
 
 /**
- * Punto de entrada del contexto iottelemetry para la presentación.
+ * Punto de entrada del contexto devicemanagement para la presentación.
  *
  * Reúne el CRUD de dispositivos (HTTP) y los flujos en vivo (STOMP), que son
  * dos caras de lo mismo: el estado de la flota de sensores.

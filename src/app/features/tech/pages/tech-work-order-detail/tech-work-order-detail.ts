@@ -10,9 +10,9 @@ import { switchMap } from 'rxjs';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
 import { TechWorkOrder, PatchTechWorkOrderBody } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
-import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
-import { Device } from '../../../../contexts/iottelemetry/domain/device.model';
-import { Reading } from '../../../../contexts/iottelemetry/domain/reading.model';
+import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
+import { Device } from '../../../../contexts/devicemanagement/domain/device.model';
+import { Reading } from '../../../../contexts/devicemanagement/domain/reading.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AddressLookupService } from '../../../../core/services/address-lookup.service';
 

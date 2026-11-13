@@ -3,8 +3,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { User } from '../../../../contexts/iam/domain/user.model';
-import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
-import { Device } from '../../../../contexts/iottelemetry/domain/device.model';
+import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
+import { Device } from '../../../../contexts/devicemanagement/domain/device.model';
 
 /**
  * Read-only client profile: client data + all of its devices (any status).

@@ -72,7 +72,7 @@ export interface UserProfile {
 
 /**
  * "active" no significa lo mismo en cada contexto: aquí es *cuenta habilitada*,
- * mientras que en iottelemetry es *sensor instalado y reportando*. Por eso los
+ * mientras que en devicemanagement es *sensor instalado y reportando*. Por eso los
  * estados de usuario y de dispositivo son tipos separados y no se unifican.
  */
 export type UserStatus = User['status'];
