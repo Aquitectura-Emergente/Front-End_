@@ -1,0 +1,53 @@
+# Despliegue del portal web a Azure Static Web Apps.
+#
+# Se dispara SOLO en main: develop es la linea de trabajo y main es la que
+# publica. Un push a main publica a produccion en ~2 minutos.
+#
+# Requiere un unico secreto en el repo:
+#   AZURE_STATIC_WEB_APPS_API_TOKEN
+# Se obtiene con:
+#   az staticwebapp secrets list -g emsafe-rg -n emsafe-web --query properties.apiKey -o tsv
+# No hace falta service principal: el token sale del propio recurso, que es lo
+# que permite automatizar esto en un tenant que prohibe registrar aplicaciones.
+#
+# La configuracion 'azure' de angular.json sustituye environment.ts por
+# environment.azure.ts, que apunta a la Container App del backend. Si cambia el
+# dominio del backend hay que editar ese archivo: el host queda compilado dentro
+# del bundle y no se puede cambiar desde Azure.
+
+name: Deploy — Azure Static Web Apps
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    name: Construir y publicar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Construir (configuracion azure)
+        run: npx ng build --configuration azure
+
+      - name: Publicar en Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          # Ya construimos arriba, asi que Oryx no debe volver a construir.
+          skip_app_build: true
+          skip_api_build: true
+          # Carpeta del builder de Angular: dist/<proyecto>/browser
+          app_location: dist/emsafe-admin/browser
+          output_location: ''
