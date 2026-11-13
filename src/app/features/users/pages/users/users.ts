@@ -3,12 +3,12 @@ import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
-import { User, isManagedByPanel } from '../../../../contexts/iam/domain/user.model';
+import { User, isCompanyClient, isManagedByPanel } from '../../../../contexts/iam/domain/user.model';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { LanguageService } from '../../../../core/services/language.service';
 
-type RoleFilter = 'all' | 'Admin' | 'Technician' | 'Client';
+type RoleFilter = 'all' | 'Admin' | 'Technician' | 'Client' | 'Company' | 'SsoResponsible';
 
 @Component({
   selector: 'app-users',
@@ -40,7 +40,7 @@ export class Users implements OnInit {
     const q   = this.searchQuery().toLowerCase().trim();
 
     if (tab !== 'all') {
-      list = list.filter(u => u.role === tab);
+      list = tab === 'Company' ? list.filter(isCompanyClient) : list.filter(u => u.role === tab);
     }
     if (q) {
       list = list.filter(u =>
@@ -100,6 +100,12 @@ export class Users implements OnInit {
     return 'role_' + role;
   }
 
+  /** Empresa a la que pertenece una cuenta SSO. */
+  orgName(user: User): string {
+    if (user.organizationId == null) return '';
+    return this._allUsers().find(u => u.id === user.organizationId)?.name ?? `#${user.organizationId}`;
+  }
+
   setTab(tab: RoleFilter): void {
     this.activeTab.set(tab);
     this.currentPage.set(0);
@@ -113,13 +119,14 @@ export class Users implements OnInit {
     this.showAddModal.set(false);
   }
 
-  // Clients are not created from the web (they self-register from mobile and an
-  // admin activates them), so the Add modal only offers Admin/Technician.
-  addUser(type: 'Admin' | 'Technician'): void {
+  // Los clientes se registran desde la app móvil y un admin los activa, así que
+  // aquí solo se crean admins, técnicos y responsables SSO de una empresa.
+  addUser(type: 'Admin' | 'Technician' | 'SsoResponsible'): void {
     this.showAddModal.set(false);
     const routes: Record<string, string> = {
-      Admin:      '/admin/users/new-admin',
-      Technician: '/admin/users/new-technician',
+      Admin:          '/admin/users/new-admin',
+      Technician:     '/admin/users/new-technician',
+      SsoResponsible: '/admin/users/new-sso-responsible',
     };
     this.router.navigate([routes[type]]);
   }
@@ -130,6 +137,7 @@ export class Users implements OnInit {
       Admin:      `/admin/users/edit-admin/${user.id}`,
       Technician: `/admin/users/edit-technician/${user.id}`,
       Client:     `/admin/users/edit-client/${user.id}`,
+      SsoResponsible: `/admin/users/edit-sso-responsible/${user.id}`,
     };
     this.router.navigate([routes[user.role]]);
   }

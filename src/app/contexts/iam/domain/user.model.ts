@@ -89,3 +89,8 @@ export type UserRole = 'Admin' | 'Technician' | 'Client' | 'Worker' | 'SsoRespon
 export function isManagedByPanel(user: Pick<User, 'role'>): boolean {
   return user.role !== 'Worker';
 }
+
+/** Cliente empresa: el que puede tener plantas, responsables SSO y operarios. */
+export function isCompanyClient(user: Pick<User, 'role' | 'clientType'>): boolean {
+  return user.role === 'Client' && (user.clientType ?? '').toLowerCase() === 'company';
+}

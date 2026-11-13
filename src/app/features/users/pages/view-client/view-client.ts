@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
-import { User } from '../../../../contexts/iam/domain/user.model';
+import { User, isCompanyClient } from '../../../../contexts/iam/domain/user.model';
 import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
 import { Device } from '../../../../contexts/devicemanagement/domain/device.model';
 
 /**
- * Read-only client profile: client data + all of its devices (any status).
- * Reached from the Devices and Users "View Client" actions.
+ * Ficha de solo lectura del cliente: sus datos, sus dispositivos y, si es una
+ * empresa, sus responsables de SSO.
  */
 @Component({
   selector: 'app-view-client',
@@ -23,6 +23,7 @@ export class ViewClient implements OnInit {
 
   client  = signal<User | null>(null);
   devices = signal<Device[]>([]);
+  ssoOfficers = signal<User[]>([]);
   loading = signal(true);
 
   ngOnInit(): void {
@@ -31,6 +32,11 @@ export class ViewClient implements OnInit {
     this.userFacade.byId(id).subscribe(u => {
       this.client.set(u);
       this.loading.set(false);
+      if (u && isCompanyClient(u)) {
+        this.userFacade.all().subscribe(list =>
+          this.ssoOfficers.set(list.filter(x => x.role === 'SsoResponsible' && x.organizationId === u.id))
+        );
+      }
     });
     this.deviceFacade.ofClient(id).subscribe(d => this.devices.set(d));
   }
@@ -43,6 +49,10 @@ export class ViewClient implements OnInit {
       'unregistered': 'In Stock',
     };
     return map[status] ?? status;
+  }
+
+  protected isCompany(c: User): boolean {
+    return isCompanyClient(c);
   }
 
   protected initials(name: string | undefined): string {

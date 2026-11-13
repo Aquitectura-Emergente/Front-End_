@@ -136,3 +136,13 @@
   .vc-card__head { flex-wrap: wrap; }
   .status-dot { margin-left: 0; }
 }
+
+.vc-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  .vc-section-title { margin: 0; }
+}

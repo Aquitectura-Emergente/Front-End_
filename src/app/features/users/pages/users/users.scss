@@ -597,6 +597,7 @@
   &--admin  { background: rgba(26, 110, 255, 0.1); i { color: var(--color-primary); } }
   &--tech   { background: rgba(16, 185, 129, 0.1); i { color: #059669; } }
   &--client { background: rgba(249, 115, 22, 0.1);  i { color: #ea580c; } }
+  &--sso    { background: rgba(57, 213, 255, 0.12); i { color: #0891b2; } }
 }
 
 .user-type-btn__label {
