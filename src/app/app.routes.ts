@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard, techGuard } from './core/guards/auth.guard';
+import { adminGuard, techGuard, ssoGuard } from './core/guards/auth.guard';
 
 import { AdminLayout }    from './layouts/admin-layout/admin-layout';
 import { TechLayout }     from './layouts/tech-layout/tech-layout';
+import { SsoLayout }      from './layouts/sso-layout/sso-layout';
 
 import { Login }          from './features/auth/pages/login/login';
 import { Dashboard }      from './features/dashboard/pages/dashboard/dashboard';
@@ -25,6 +26,7 @@ import { Profile }       from './features/profile/pages/profile/profile';
 import { Devices }       from './features/devices/pages/devices/devices';
 import { Alarms }        from './features/alarms/pages/alarms/alarms';
 import { MapRadiation }  from './features/map-radiation/pages/map-radiation/map-radiation';
+import { PlantConfig }   from './features/plant-config/pages/plant-config/plant-config';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -65,6 +67,19 @@ export const routes: Routes = [
       { path: 'work-orders/:id', component: TechWorkOrderDetail },
       { path: 'history',         component: TechHistory },
       { path: 'profile',         component: Profile },
+    ],
+  },
+
+  // Portal del responsable de SSO (segmento industrial). El ADMIN no entra
+  // aquí: el backend exige una organización asignada para todo lo industrial y
+  // la cuenta de admin no tiene ninguna (ver ssoGuard).
+  {
+    path: 'sso',
+    component: SsoLayout,
+    canActivate: [ssoGuard],
+    children: [
+      { path: '',        component: PlantConfig },
+      { path: 'profile', component: Profile },
     ],
   },
 

@@ -55,7 +55,7 @@
       <div class="profile">
         <div class="profile__meta">
           <h3>{{ auth.currentUser()?.name ?? 'User' }}</h3>
-          <span>{{ auth.currentUser()?.role === 'admin' ? ('topbar_role' | t) : ('topbar_role_tech' | t) }}</span>
+          <span>{{ roleLabelKey | t }}</span>
         </div>
         <div class="avatar" aria-hidden="true">{{ auth.currentUser()?.initials ?? '?' }}</div>
         <i class="ph ph-caret-down profile-caret" [class.rotated]="showProfileMenu()" aria-hidden="true"></i>

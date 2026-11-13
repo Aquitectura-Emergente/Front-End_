@@ -1,0 +1,282 @@
+<section class="plant">
+  <header class="plant__header">
+    <div>
+      <h1>{{ 'plant_title' | t }}</h1>
+      <p class="subtitle">{{ 'plant_subtitle' | t }}</p>
+    </div>
+  </header>
+
+  @if (awaitingEdgeCount() > 0) {
+    <p class="banner banner--warn" role="status">
+      <i class="ph ph-warning" aria-hidden="true"></i>
+      <span>{{ awaitingEdgeCount() }} · {{ 'plant_zones_awaitingEdge' | t }}</span>
+    </p>
+  }
+
+  <nav class="tabs" role="tablist" aria-label="Plant configuration sections">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'zones'"
+            [class.active]="tab() === 'zones'" (click)="setTab('zones')">
+      {{ 'plant_tab_zones' | t }} ({{ zones().length }})
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'positions'"
+            [class.active]="tab() === 'positions'" (click)="setTab('positions')">
+      {{ 'plant_tab_positions' | t }} ({{ positions().length }})
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'edges'"
+            [class.active]="tab() === 'edges'" (click)="setTab('edges')">
+      {{ 'plant_tab_edges' | t }} ({{ edges().length }})
+    </button>
+  </nav>
+
+  @if (loading()) {
+    <p class="empty">…</p>
+  } @else {
+
+    <!-- ── Zonas ───────────────────────────────────────────────────────── -->
+    @if (tab() === 'zones') {
+      <div class="toolbar">
+        <button type="button" class="btn btn--primary" (click)="openZoneForm()">
+          <i class="ph ph-plus" aria-hidden="true"></i> {{ 'plant_zones_new' | t }}
+        </button>
+      </div>
+
+      @if (zones().length === 0) {
+        <p class="empty">{{ 'plant_zones_empty' | t }}</p>
+      } @else {
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>{{ 'plant_zones_name' | t }}</th>
+              <th>{{ 'plant_zones_edge' | t }}</th>
+              <th class="num">{{ 'plant_zones_positions' | t }}</th>
+              <th class="num">{{ 'plant_zones_devices' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (zone of zones(); track zone.id) {
+              <tr>
+                <td>
+                  <strong>{{ zone.name }}</strong>
+                  @if (zone.description) { <span class="muted">{{ zone.description }}</span> }
+                </td>
+                <td>
+                  @if (zone.edgeSerialNumber) {
+                    <span class="pill" [class.pill--off]="zone.edgeStatus === 'INACTIVE'">
+                      {{ zone.edgeSerialNumber }}
+                    </span>
+                  } @else {
+                    <span class="muted muted--warn">{{ 'plant_zones_awaitingEdge' | t }}</span>
+                  }
+                </td>
+                <td class="num">{{ zone.jobPositionCount }}</td>
+                <td class="num">{{ zone.deviceCount }}</td>
+                <td class="actions">
+                  <button type="button" class="btn btn--ghost" (click)="openZoneForm(zone)">
+                    {{ 'plant_action_edit' | t }}
+                  </button>
+                  @if (canDeleteZone(zone)) {
+                    <button type="button" class="btn btn--danger" (click)="deleteZone(zone)">
+                      {{ 'plant_action_delete' | t }}
+                    </button>
+                  } @else {
+                    <span class="muted" [title]="zoneBlockerKey(zone)! | t">
+                      {{ zoneBlockerKey(zone)! | t }}
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- ── Puestos de trabajo ──────────────────────────────────────────── -->
+    @if (tab() === 'positions') {
+      <div class="toolbar">
+        <button type="button" class="btn btn--primary"
+                [disabled]="zones().length === 0" (click)="openPositionForm()">
+          <i class="ph ph-plus" aria-hidden="true"></i> {{ 'plant_positions_new' | t }}
+        </button>
+        @if (zones().length === 0) {
+          <span class="muted muted--warn">{{ 'plant_positions_needsZone' | t }}</span>
+        }
+      </div>
+
+      @if (positions().length === 0) {
+        <p class="empty">{{ 'plant_positions_empty' | t }}</p>
+      } @else {
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>{{ 'plant_zones_name' | t }}</th>
+              <th>{{ 'plant_positions_zone' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (position of positions(); track position.id) {
+              <tr>
+                <td>
+                  <strong>{{ position.name }}</strong>
+                  @if (position.description) { <span class="muted">{{ position.description }}</span> }
+                </td>
+                <td>{{ position.plantZoneName }}</td>
+                <td class="actions">
+                  <button type="button" class="btn btn--ghost" (click)="openPositionForm(position)">
+                    {{ 'plant_action_edit' | t }}
+                  </button>
+                  <button type="button" class="btn btn--danger" (click)="deletePosition(position)">
+                    {{ 'plant_action_delete' | t }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- ── Nodos edge ──────────────────────────────────────────────────── -->
+    @if (tab() === 'edges') {
+      <div class="toolbar">
+        <button type="button" class="btn btn--primary"
+                [disabled]="availableZones().length === 0" (click)="openEdgeForm()">
+          <i class="ph ph-plus" aria-hidden="true"></i> {{ 'plant_edges_new' | t }}
+        </button>
+        @if (availableZones().length === 0 && zones().length > 0) {
+          <span class="muted">{{ 'plant_edges_allZonesTaken' | t }}</span>
+        }
+      </div>
+
+      @if (edges().length === 0) {
+        <p class="empty">{{ 'plant_edges_empty' | t }}</p>
+      } @else {
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>{{ 'plant_edges_serial' | t }}</th>
+              <th>{{ 'plant_positions_zone' | t }}</th>
+              <th>{{ 'plant_edges_status' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (edge of edges(); track edge.id) {
+              <tr>
+                <td><strong>{{ edge.serialNumber }}</strong></td>
+                <td>{{ edge.plantZoneName }}</td>
+                <td>
+                  <span class="pill" [class.pill--off]="edge.status === 'INACTIVE'">
+                    {{ (edge.status === 'ACTIVE' ? 'plant_edges_statusActive' : 'plant_edges_statusInactive') | t }}
+                  </span>
+                </td>
+                <td class="actions">
+                  @if (canActivateEdge(edge)) {
+                    <button type="button" class="btn btn--ghost" (click)="activateEdge(edge)">
+                      {{ 'plant_edges_activate' | t }}
+                    </button>
+                  }
+                  @if (canDeactivateEdge(edge)) {
+                    <button type="button" class="btn btn--ghost" (click)="deactivateEdge(edge)">
+                      {{ 'plant_edges_deactivate' | t }}
+                    </button>
+                  }
+                  <button type="button" class="btn btn--danger" (click)="deleteEdge(edge)">
+                    {{ 'plant_action_delete' | t }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  }
+
+  <!-- ── Formulario de zona ────────────────────────────────────────────── -->
+  @if (showZoneForm()) {
+    <div class="modal-backdrop" (click)="closeZoneForm()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'plant_zones_new' | t }}</h2>
+      <label>
+        <span>{{ 'plant_zones_name' | t }}</span>
+        <input type="text" [(ngModel)]="zoneName" name="zoneName" autocomplete="off" />
+      </label>
+      <label>
+        <span>{{ 'plant_zones_description' | t }}</span>
+        <input type="text" [(ngModel)]="zoneDescription" name="zoneDescription" autocomplete="off" />
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeZoneForm()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="saveZone()">
+          {{ 'plant_action_save' | t }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Formulario de puesto ──────────────────────────────────────────── -->
+  @if (showPositionForm()) {
+    <div class="modal-backdrop" (click)="closePositionForm()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'plant_positions_new' | t }}</h2>
+      <label>
+        <span>{{ 'plant_positions_zone' | t }}</span>
+        <select [(ngModel)]="positionZoneId" name="positionZoneId">
+          @for (zone of zones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>{{ 'plant_zones_name' | t }}</span>
+        <input type="text" [(ngModel)]="positionName" name="positionName" autocomplete="off" />
+      </label>
+      <label>
+        <span>{{ 'plant_zones_description' | t }}</span>
+        <input type="text" [(ngModel)]="positionDescription" name="positionDescription" autocomplete="off" />
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closePositionForm()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="savePosition()">
+          {{ 'plant_action_save' | t }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Formulario de edge ────────────────────────────────────────────── -->
+  @if (showEdgeForm()) {
+    <div class="modal-backdrop" (click)="closeEdgeForm()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'plant_edges_new' | t }}</h2>
+      <label>
+        <span>{{ 'plant_positions_zone' | t }}</span>
+        <select [(ngModel)]="edgeZoneId" name="edgeZoneId">
+          @for (zone of availableZones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>{{ 'plant_edges_serial' | t }}</span>
+        <input type="text" [(ngModel)]="edgeSerial" name="edgeSerial" autocomplete="off"
+               placeholder="EDGE-PLANTA-01" />
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeEdgeForm()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="declareEdge()">
+          {{ 'plant_action_save' | t }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

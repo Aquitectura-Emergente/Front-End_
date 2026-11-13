@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { LanguageService } from '../../../../core/services/language.service';
 import { AuthService } from '../../../../contexts/iam/application/auth.service';
+import { homeRouteFor } from '../../../../contexts/iam/domain/auth-user.model';
 
 @Component({
   selector: 'app-login',
@@ -25,8 +26,7 @@ export class Login {
 
   constructor() {
     const user = this.auth.currentUser();
-    if (user?.role === 'admin')      this.router.navigate(['/admin']);
-    else if (user?.role === 'technician') this.router.navigate(['/tech']);
+    if (user) this.router.navigate([homeRouteFor(user.role)]);
   }
 
   protected togglePass(): void {
@@ -48,8 +48,7 @@ export class Login {
         return;
       }
       const role = this.auth.role;
-      if (role === 'admin')      this.router.navigate(['/admin']);
-      else if (role === 'technician') this.router.navigate(['/tech']);
+      if (role) this.router.navigate([homeRouteFor(role)]);
     });
   }
 }
