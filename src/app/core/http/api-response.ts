@@ -55,3 +55,15 @@ export function queryString(params: Record<string, string | number | undefined>)
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
   return parts.length ? '?' + parts.join('&') : '';
 }
+
+/** Resultado de una escritura: conserva el mensaje del backend cuando falla. */
+export type MutationResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+export function toResult<T>(obs: Observable<ApiResponse<T>>): Observable<MutationResult<T>> {
+  return obs.pipe(
+    map(r => ({ ok: true as const, data: r.data })),
+    catchError((err: { error?: { message?: string }; message?: string }) =>
+      of({ ok: false as const, error: err?.error?.message || err?.message || 'Request failed' })
+    )
+  );
+}

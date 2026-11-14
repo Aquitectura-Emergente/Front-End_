@@ -18,5 +18,6 @@ export interface Reading {
   longitude?: number;
   clientId?: number;
   clientName?: string;
+  plug?: string;
   recordedAt?: string;
 }

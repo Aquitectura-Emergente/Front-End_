@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LanguageService } from '../../../core/services/language.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { AuthService } from '../../../contexts/iam/application/auth.service';
+import { homeRouteFor } from '../../../contexts/iam/domain/auth-user.model';
 import { ThemeService, FontSize } from '../../../core/services/theme.service';
 import { ActivityService } from '../../../core/services/activity.service';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -56,9 +57,25 @@ export class Topbar {
     this.theme.toggleDarkMode();
   }
 
+  /**
+   * El perfil vive dentro del árbol de cada rol, así que la ruta se deriva de
+   * `homeRouteFor` en vez de encadenar ternarios. Antes era
+   * `admin ? '/admin/profile' : '/tech/profile'`, y al añadir el portal de SSO
+   * eso mandaba al responsable a `/tech/profile`, donde el `techGuard` lo
+   * rechazaba y acababa de vuelta en el login.
+   */
   get profileRoute(): string {
-    return this.auth.currentUser()?.role === 'admin'
-      ? '/admin/profile'
-      : '/tech/profile';
+    const role = this.auth.currentUser()?.role;
+    return role ? `${homeRouteFor(role)}/profile` : '/login';
+  }
+
+  /** Etiqueta del rol bajo el nombre. Un ternario no da para tres roles. */
+  get roleLabelKey(): string {
+    switch (this.auth.currentUser()?.role) {
+      case 'admin': return 'topbar_role';
+      case 'technician': return 'topbar_role_tech';
+      case 'sso_responsible': return 'topbar_role_sso';
+      default: return 'topbar_role';
+    }
   }
 }

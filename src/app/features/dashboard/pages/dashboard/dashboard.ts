@@ -1,11 +1,13 @@
-import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, debounceTime, of, startWith, switchMap } from 'rxjs';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MonitoringFacade } from '../../../../contexts/radiationmonitoring/application/monitoring-facade';
 import { WorkOrderFacade } from '../../../../contexts/fieldservice/application/work-order-facade';
+import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
 import { LanguageService } from '../../../../core/services/language.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
@@ -19,11 +21,19 @@ export class Dashboard implements OnInit {
   protected lang = inject(LanguageService);
   private monitoring     = inject(MonitoringFacade);
   private workOrderFacade = inject(WorkOrderFacade);
+  private deviceFacade   = inject(DeviceFacade);
   private platformId = inject(PLATFORM_ID);
 
-  stats = toSignal(this.monitoring.stats());
+  /** Emite al iniciar y, en el navegador, tras cada ráfaga de lecturas en vivo (/topic/readings). */
+  private refresh$: Observable<unknown> = (isPlatformBrowser(this.platformId)
+    ? this.deviceFacade.readings().pipe(debounceTime(1500), startWith(null))
+    : of(null)
+  );
+
+  stats = toSignal(this.refresh$.pipe(switchMap(() => this.monitoring.stats())));
   latestOrders = toSignal(this.monitoring.latestWorkOrders());
-  alerts = toSignal(this.monitoring.alerts());
+  alerts = toSignal(this.refresh$.pipe(switchMap(() => this.monitoring.alerts())));
+  private destroyRef = inject(DestroyRef);
 
   // Charts only render once data has loaded — fixes blank charts when
   // navigating back to the dashboard (the chart mounts with data present).
@@ -84,7 +94,7 @@ export class Dashboard implements OnInit {
   radiationTrendsMarkers = { size: 0 };
 
   ngOnInit(): void {
-    this.monitoring.chartData().subscribe(c => {
+    this.refresh$.pipe(switchMap(() => this.monitoring.chartData()), takeUntilDestroyed(this.destroyRef)).subscribe(c => {
       if (!c) return;
       // Split single series into 3 proportionally: 45% install, 35% maint, 20% collect
       const base = c.systemActivity.series;

@@ -1,18 +1,21 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard, techGuard } from './core/guards/auth.guard';
+import { adminGuard, techGuard, ssoGuard } from './core/guards/auth.guard';
 
 import { AdminLayout }    from './layouts/admin-layout/admin-layout';
 import { TechLayout }     from './layouts/tech-layout/tech-layout';
+import { SsoLayout }      from './layouts/sso-layout/sso-layout';
 
 import { Login }          from './features/auth/pages/login/login';
 import { Dashboard }      from './features/dashboard/pages/dashboard/dashboard';
 import { WorkOrders }     from './features/work-orders/pages/work-orders/work-orders';
+import { WorkOrdersCalendar } from './features/work-orders/pages/work-orders-calendar/work-orders-calendar';
 import { NewWorkOrder }   from './features/work-orders/pages/new-work-order/new-work-order';
 import { History }        from './features/history/pages/history/history';
 import { Users }          from './features/users/pages/users/users';
 import { NewAdmin }       from './features/users/pages/new-admin/new-admin';
 import { NewTechnician }  from './features/users/pages/new-technician/new-technician';
+import { NewSsoResponsible } from './features/users/pages/new-sso-responsible/new-sso-responsible';
 import { EditClient }     from './features/users/pages/edit-client/edit-client';
 import { ViewClient }     from './features/users/pages/view-client/view-client';
 
@@ -23,8 +26,11 @@ import { TechHistory }         from './features/tech/pages/tech-history/tech-his
 
 import { Profile }       from './features/profile/pages/profile/profile';
 import { Devices }       from './features/devices/pages/devices/devices';
+import { DeviceDetail }  from './features/devices/pages/device-detail/device-detail';
+import { EdgeNodes }     from './features/edge-nodes/pages/edge-nodes/edge-nodes';
 import { Alarms }        from './features/alarms/pages/alarms/alarms';
 import { MapRadiation }  from './features/map-radiation/pages/map-radiation/map-radiation';
+import { PlantConfig }   from './features/plant-config/pages/plant-config/plant-config';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -40,16 +46,21 @@ export const routes: Routes = [
       { path: 'work-orders',               component: WorkOrders },
       { path: 'work-orders/new',           component: NewWorkOrder },
       { path: 'work-orders/edit/:id',      component: NewWorkOrder },
+      { path: 'calendar',                  component: WorkOrdersCalendar },
       { path: 'history',                   component: History },
       { path: 'users',                     component: Users },
       { path: 'users/new-admin',           component: NewAdmin },
       { path: 'users/new-technician',      component: NewTechnician },
       { path: 'users/edit-admin/:id',      component: NewAdmin },
       { path: 'users/edit-technician/:id', component: NewTechnician },
+      { path: 'users/new-sso-responsible',       component: NewSsoResponsible },
+      { path: 'users/edit-sso-responsible/:id',  component: NewSsoResponsible },
       { path: 'users/edit-client/:id',     component: EditClient },
       { path: 'users/view-client/:id',     component: ViewClient },
       { path: 'profile',                   component: Profile },
       { path: 'devices',                   component: Devices },
+      { path: 'devices/:id',               component: DeviceDetail },
+      { path: 'edge-nodes',                component: EdgeNodes },
       { path: 'alarms',                    component: Alarms },
       { path: 'map-radiation',             component: MapRadiation },
     ],
@@ -65,6 +76,19 @@ export const routes: Routes = [
       { path: 'work-orders/:id', component: TechWorkOrderDetail },
       { path: 'history',         component: TechHistory },
       { path: 'profile',         component: Profile },
+    ],
+  },
+
+  // Portal del responsable de SSO (segmento industrial). El ADMIN no entra
+  // aquí: el backend exige una organización asignada para todo lo industrial y
+  // la cuenta de admin no tiene ninguna (ver ssoGuard).
+  {
+    path: 'sso',
+    component: SsoLayout,
+    canActivate: [ssoGuard],
+    children: [
+      { path: '',        component: PlantConfig },
+      { path: 'profile', component: Profile },
     ],
   },
 
