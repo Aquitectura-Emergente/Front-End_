@@ -83,7 +83,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   cursor: pointer;
   transition: 160ms ease;
@@ -164,7 +164,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   appearance: none;
   outline: none;
   cursor: pointer;
@@ -195,7 +195,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   border: 1px solid transparent;
   transition: 160ms ease;

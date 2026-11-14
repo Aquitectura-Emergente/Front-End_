@@ -19,7 +19,11 @@ export class DeviceApi {
     );
   }
 
-  /** Sensores vistos por el edge y aún sin asignar: reclamables en una instalación. */
+  byId(id: number | string): Observable<Device | null> {
+    return unwrapOrNull(this.http.get<ApiResponse<Device>>(`${this.base}/devices/${id}`));
+  }
+
+  /** Dispositivos registrados en stock y sin cliente: reclamables en una instalación. */
   discoverable(): Observable<DiscoverableDevice[]> {
     return unwrap(
       this.http.get<ApiResponse<DiscoverableDevice[]>>(`${this.base}/tech/devices/discoverable`),

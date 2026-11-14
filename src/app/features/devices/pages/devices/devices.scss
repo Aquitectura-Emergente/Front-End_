@@ -58,7 +58,7 @@
   background: transparent;
   padding: 9px 0;
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   outline: none;
   &::placeholder { color: var(--color-text-secondary); }
@@ -90,7 +90,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   font-weight: 500;
   cursor: pointer;
   outline: none;
@@ -194,6 +194,7 @@
   &--monitor    { background: rgba(20, 184, 166, 0.1);  color: #0d9488; }
   &--controller { background: rgba(245, 158, 11, 0.1);  color: #d97706; }
   &--plug       { background: rgba(22, 163, 74, 0.1);   color: #16a34a; }
+  &--dosimeter  { background: rgba(57, 213, 255, 0.12); color: #0891b2; }
   &--actuator   { background: rgba(220, 38, 38, 0.1);   color: #dc2626; }
 }
 
@@ -213,15 +214,14 @@
   }
 
   &--active               { color: #16a34a; .dot { background: #16a34a; } }
-  &--inactive             { color: var(--color-text-secondary); .dot { background: #9ca3af; } }
+  &--unregistered         { color: var(--color-text-secondary); .dot { background: #9ca3af; } }
   &--in-maintenance       { color: #d97706; .dot { background: #d97706; } }
   &--requires-maintenance { color: #dc2626; .dot { background: #dc2626; } }
-  &--collecting           { color: #ca8a04; .dot { background: #ca8a04; } }
 }
 
 /* ── Utility ─────────────────────────────────────── */
 .text-sec { color: var(--color-text-secondary); font-size: 13px; }
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 /* ── 3-dot menu ──────────────────────────────────── */
 .menu-wrap {
@@ -259,7 +259,7 @@
   border-radius: 7px;
   font-size: 13px;
   font-weight: 500;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   cursor: pointer;
   text-decoration: none;
@@ -346,7 +346,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   border: 1px solid transparent;
   transition: 160ms ease;
@@ -548,7 +548,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   transition: 160ms ease;
 
@@ -582,4 +582,70 @@
   .toolbar__search { max-width: 100%; }
   .toolbar__filters { flex-direction: column; align-items: stretch; }
   .filter-group { justify-content: space-between; }
+}
+
+/* ── Inventario por ciclo de vida ────────────────── */
+.inventory {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.inventory__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--lc, var(--color-text-secondary));
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-text-primary);
+
+  &--in_stock  { --lc: var(--color-primary); }
+  &--installed { --lc: var(--color-success); }
+  &--retired   { --lc: var(--color-text-secondary); }
+  &--on        { box-shadow: 0 0 0 2px var(--lc) inset; }
+}
+
+.inventory__count { font-size: 24px; font-weight: 800; }
+.inventory__label { font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .05em; }
+
+.lc-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+
+  &--in_stock  { background: rgba(26, 110, 255, 0.1); color: var(--color-primary); }
+  &--installed { background: rgba(22, 163, 74, 0.1); color: var(--color-success); }
+}
+
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  &--online  { color: var(--color-success); }
+  &--offline { color: var(--color-danger); }
+}
+
+.type-badge--fixed_sensor       { background: rgba(26, 110, 255, 0.1); color: #1a6eff; }
+.type-badge--personal_dosimeter { background: rgba(57, 213, 255, 0.12); color: #0891b2; }
+.type-badge--smart_plug         { background: rgba(22, 163, 74, 0.1); color: #16a34a; }
+
+.row-link { cursor: pointer; }
+.dropdown-item--disabled { opacity: .5; }
+
+@media (max-width: 640px) {
+  .inventory { grid-template-columns: 1fr; }
 }

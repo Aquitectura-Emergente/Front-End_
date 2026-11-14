@@ -10,9 +10,9 @@ import { switchMap } from 'rxjs';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
 import { TechWorkOrder, PatchTechWorkOrderBody } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
-import { DeviceFacade } from '../../../../contexts/iottelemetry/application/device-facade';
-import { Device } from '../../../../contexts/iottelemetry/domain/device.model';
-import { Reading } from '../../../../contexts/iottelemetry/domain/reading.model';
+import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
+import { Device } from '../../../../contexts/devicemanagement/domain/device.model';
+import { Reading } from '../../../../contexts/devicemanagement/domain/reading.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AddressLookupService } from '../../../../core/services/address-lookup.service';
 
@@ -43,7 +43,7 @@ export class TechWorkOrderDetail implements OnDestroy {
   protected saving = signal(false);
 
   readonly sensorTypes = ['Sensor', 'Gateway', 'Monitor', 'Controller', 'Plug', 'Actuator'];
-  readonly deviceStatuses = ['active', 'in-maintenance', 'requires-maintenance', 'collecting'];
+  readonly deviceStatuses = ['active', 'in-maintenance', 'requires-maintenance'];
 
   // Leaflet map (geocoded from the order location)
   private mapEl = viewChild<ElementRef<HTMLDivElement>>('woMapEl');
@@ -312,8 +312,7 @@ export class TechWorkOrderDetail implements OnDestroy {
       'active': 'Active',
       'in-maintenance': 'In Maintenance',
       'requires-maintenance': 'Requires Maintenance',
-      'collecting': 'Collecting',
-      'inactive': 'Inactive',
+      'unregistered': 'In Stock',
     };
     return map[status] ?? status;
   }

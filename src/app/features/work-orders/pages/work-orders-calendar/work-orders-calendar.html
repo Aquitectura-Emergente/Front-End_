@@ -1,0 +1,99 @@
+<section class="cal">
+  <header class="cal__header">
+    <div>
+      <h2 class="cal__title">{{ 'cal_title' | t }}</h2>
+      <p class="cal__subtitle">{{ 'cal_subtitle' | t }}</p>
+    </div>
+    <a class="btn btn--primary" routerLink="/admin/work-orders/new">
+      <i class="ph ph-plus" aria-hidden="true"></i>{{ 'cal_newOrder' | t }}
+    </a>
+  </header>
+
+  <div class="toolbar">
+    <div class="nav">
+      <button class="btn btn--ghost btn--icon" type="button" (click)="shiftWeek(-1)" aria-label="Previous week">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button class="btn btn--ghost" type="button" (click)="goToday()">{{ 'cal_today' | t }}</button>
+      <button class="btn btn--ghost btn--icon" type="button" (click)="shiftWeek(1)" aria-label="Next week">
+        <i class="ph ph-caret-right"></i>
+      </button>
+      <strong class="range">{{ rangeLabel() }}</strong>
+    </div>
+    <div class="filters">
+      <select class="select" [ngModel]="type()" (ngModelChange)="type.set($event)">
+        <option value="all">{{ 'filter_all' | t }}</option>
+        @for (t of types; track t) {
+          <option [value]="t">{{ 'cal_type_' + t | t }}</option>
+        }
+      </select>
+      <label class="check">
+        <input type="checkbox" [ngModel]="hideCancelled()" (ngModelChange)="hideCancelled.set($event)" />
+        {{ 'cal_hideCancelled' | t }}
+      </label>
+    </div>
+  </div>
+
+  @if (conflicts() > 0) {
+    <p class="warn"><i class="ph ph-warning" aria-hidden="true"></i> {{ 'cal_conflicts' | t }}: {{ conflicts() }}</p>
+  }
+
+  <div class="grid-wrap">
+    <table class="grid">
+      <thead>
+        <tr>
+          <th class="tech-col">{{ 'cal_technician' | t }}</th>
+          @for (d of days(); track key(d)) {
+            <th [class.is-today]="key(d) === today">{{ dayLabel(d) }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="8" class="muted"><i class="ph ph-circle-notch ph-spin"></i></td></tr>
+        } @else {
+          @for (r of rows(); track r.technician) {
+            <tr>
+              <td class="tech-col">
+                @if (r.technician === unassigned) {
+                  <span class="muted">{{ 'cal_unassigned' | t }}</span>
+                } @else {
+                  <span class="avatar">{{ r.initials }}</span>{{ r.technician }}
+                }
+                <small class="muted"> · {{ r.total }}</small>
+              </td>
+              @for (d of days(); track key(d)) {
+                @let cell = r.days[key(d)];
+                <td [class.is-today]="key(d) === today" [class.conflict]="conflict(cell, r.technician)">
+                  @for (o of cell ?? []; track o.id) {
+                    <button
+                      type="button"
+                      class="chip chip--{{ o.type | lowercase }} chip--{{ o.status }}"
+                      [title]="o.client + ' · ' + (o.location || o.city)"
+                      (click)="open(o)"
+                    >
+                      <span class="chip__id">{{ o.orderId }}</span>
+                      <span class="chip__client">{{ o.client }}</span>
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="muted">{{ 'cal_empty' | t }}</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend">
+    @for (t of types; track t) {
+      <span class="legend__item"><span class="swatch swatch--{{ t | lowercase }}"></span>{{ 'cal_type_' + t | t }}</span>
+    }
+  </div>
+</section>
+
+@if (selected(); as o) {
+  <app-work-order-detail-modal [order]="o" (close)="selected.set(null)" />
+}
