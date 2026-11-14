@@ -1,4 +1,7 @@
-import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LowerCasePipe } from '@angular/common';
@@ -32,6 +35,8 @@ export class Devices implements OnInit {
   private activity = inject(ActivityService);
   private lang     = inject(LanguageService);
   private router   = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private platformId = inject(PLATFORM_ID);
 
   devices       = signal<Device[]>([]);
   /** Estado de Device Management por serial. */
@@ -120,6 +125,17 @@ export class Devices implements OnInit {
     this.userFacade.all().subscribe(users => {
       this.clients.set(users.filter(u => u.role === 'Client'));
     });
+    // En vivo: al llegar lecturas (/topic/readings) refresca conectividad y última lectura sin recargar.
+    if (isPlatformBrowser(this.platformId)) {
+      this.deviceFacade.readings()
+        .pipe(debounceTime(1500), takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.refreshStatuses());
+    }
+  }
+
+  private refreshStatuses(): void {
+    const serials = this.devices().map(d => d.serialNumber);
+    if (serials.length) this.dm.statuses(serials).subscribe(m => this.dmStatus.set(m));
   }
 
   private loadDevices(): void {
