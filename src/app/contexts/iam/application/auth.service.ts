@@ -49,12 +49,13 @@ export class AuthService {
         if (!isWebRole(lr.role)) return false;
 
         const user: AuthUser = {
-          id:           lr.userId,
-          email:        lr.email,
-          name:         lr.name,
-          initials:     lr.initials,
-          role:         lr.role,
-          technicianId: lr.technicianId ?? undefined,
+          id:             lr.userId,
+          email:          lr.email,
+          name:           lr.name,
+          initials:       lr.initials,
+          role:           lr.role,
+          technicianId:   lr.technicianId ?? undefined,
+          organizationId: lr.organizationId ?? null,
         };
 
         this._user.set(user);

@@ -1,11 +1,20 @@
-/** Usuario gestionado desde el portal (admin, técnico o cliente). */
+/**
+ * Usuario gestionado desde el portal.
+ *
+ * El rol llega en formato de presentación (`Role.displayName()` del backend:
+ * «Admin», «Technician», «Client», «Worker», «SsoResponsible»), **no** como el
+ * nombre del enum. No confundirlo con el `role` de `AuthUser`, que llega en
+ * minúsculas desde `/auth/login`.
+ */
 export interface User {
   id: number;
   name: string;
   initials: string;
   joinDate: string;
-  role: 'Admin' | 'Technician' | 'Client';
+  role: 'Admin' | 'Technician' | 'Client' | 'Worker' | 'SsoResponsible';
   email: string;
+  /** Empresa a la que pertenece una cuenta industrial (Worker / SsoResponsible). */
+  organizationId?: number | null;
   status: 'active' | 'inactive' | 'pending';
   phone?: string;
   location?: string;

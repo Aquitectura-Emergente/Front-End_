@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { DateTimePipe } from '../../../../core/pipes/datetime.pipe';
 import { AlarmFacade } from '../../../../contexts/alerts/application/alarm-facade';
 import { AlarmItem } from '../../../../contexts/alerts/domain/alarm.model';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
@@ -13,7 +14,7 @@ type ClientFilter = string; // empty = all
 
 @Component({
   selector: 'app-alarms',
-  imports: [TranslatePipe, FormsModule],
+  imports: [TranslatePipe, DateTimePipe, FormsModule],
   templateUrl: './alarms.html',
   styleUrl: './alarms.scss',
 })

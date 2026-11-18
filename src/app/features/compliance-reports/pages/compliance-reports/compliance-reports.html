@@ -1,0 +1,168 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'rep_title' | t }}</h1>
+      <p class="subtitle">{{ 'rep_subtitle' | t }}</p>
+    </div>
+  </header>
+
+  <!-- ── Generar ───────────────────────────────────────────────────────── -->
+  <div class="form-card">
+    <label>
+      <span>{{ 'rep_scope' | t }}</span>
+      <select [(ngModel)]="formScope" name="formScope">
+        <option value="WORKER">{{ 'rep_scope_worker' | t }}</option>
+        <option value="PLANT_ZONE">{{ 'rep_scope_plant' | t }}</option>
+      </select>
+    </label>
+
+    @if (formScope === 'WORKER') {
+      <label>
+        <span>{{ 'rep_worker' | t }}</span>
+        <select [(ngModel)]="formWorkerId" name="formWorkerId">
+          @for (worker of workers(); track worker.id) {
+            <option [value]="worker.id">{{ worker.name }}</option>
+          }
+        </select>
+      </label>
+    }
+
+    <label>
+      <span>{{ 'rep_from' | t }}</span>
+      <input type="date" [(ngModel)]="formFrom" name="formFrom" />
+    </label>
+
+    <label>
+      <span>{{ 'rep_to' | t }}</span>
+      <input type="date" [(ngModel)]="formTo" name="formTo" />
+    </label>
+
+    <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="generate()">
+      <i class="ph ph-file-text" aria-hidden="true"></i> {{ 'rep_generate' | t }}
+    </button>
+  </div>
+
+  <!-- ── Historial del servidor ────────────────────────────────────────── -->
+  <h2 class="section-title">{{ 'rep_history' | t }}</h2>
+
+  @if (history().length > 0) {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'rep_scope' | t }}</th>
+          <th>{{ 'rep_worker' | t }}</th>
+          <th>{{ 'rep_period' | t }}</th>
+          <th class="num">{{ 'rep_version' | t }}</th>
+          <th>{{ 'rep_generatedAt' | t }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of history(); track row.id) {
+          <tr>
+            <td>{{ (row.scope === 'WORKER' ? 'rep_scope_worker' : 'rep_scope_plant') | t }}</td>
+            <td>{{ row.scope === 'WORKER' ? workerName(row.subjectWorkerId) : '—' }}</td>
+            <td>{{ row.periodFrom }} → {{ row.periodTo }}</td>
+            <td class="num">v{{ row.version }}</td>
+            <td>{{ row.generatedAt | dt }}</td>
+            <td>
+              <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="open(row.id)">
+                {{ 'rep_open' | t }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="empty">{{ 'rep_noHistory' | t }}</p>
+  }
+
+  <!-- ── Resultado ─────────────────────────────────────────────────────── -->
+  @if (busy()) {
+    <p class="empty">…</p>
+  }
+
+  @if (report(); as r) {
+    @if (warningKey(); as key) {
+      <p class="banner banner--warn" role="status">
+        <i class="ph ph-warning" aria-hidden="true"></i>
+        <span>{{ key | t }}</span>
+      </p>
+    } @else {
+      <p class="banner banner--info" role="status">
+        <i class="ph ph-seal-check" aria-hidden="true"></i>
+        <span>{{ 'rep_auditReady' | t }}</span>
+      </p>
+    }
+
+    <div class="report">
+      <header class="report__head">
+        <h2>
+          {{ (r.scope === 'WORKER' ? 'rep_scope_worker' : 'rep_scope_plant') | t }}
+          @if (r.scope === 'WORKER') { · {{ workerName(r.subjectWorkerId) }} }
+        </h2>
+        <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="download()">
+          <i class="ph ph-download-simple" aria-hidden="true"></i> {{ 'rep_download' | t }}
+        </button>
+      </header>
+
+      <dl class="facts">
+        <div>
+          <dt>{{ 'rep_period' | t }}</dt>
+          <dd>{{ r.periodFrom }} → {{ r.periodTo }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'rep_version' | t }}</dt>
+          <dd>v{{ r.version }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'rep_entries' | t }}</dt>
+          <dd>{{ r.entries?.length ?? 0 }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'rep_withoutSource' | t }}</dt>
+          <dd [class.muted--warn]="r.entriesWithoutSource > 0">{{ r.entriesWithoutSource }}</dd>
+        </div>
+        <div class="facts__wide">
+          <dt>{{ 'rep_digest' | t }}</dt>
+          <dd><code>{{ r.digestAlgorithm }} · {{ r.digestValue }}</code></dd>
+        </div>
+      </dl>
+
+      @if (r.entries && r.entries.length > 0) {
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>{{ 'rep_entryDate' | t }}</th>
+              <th>{{ 'map_session' | t }}</th>
+              <th class="num">{{ 'rep_dose' | t }}</th>
+              <th class="num">{{ 'rep_sources' | t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of r.entries; track entry.id) {
+              <tr>
+                <td>{{ entry.entryDate ?? '—' }}</td>
+                <td>{{ entry.sessionId ?? '—' }}</td>
+                <td class="num">
+                  @if (entry.finalDose) {
+                    {{ entry.finalDose.value }} {{ entry.finalDose.unit }}
+                    <span class="muted">/ {{ entry.finalDose.limit }}</span>
+                  } @else { — }
+                </td>
+                <td class="num">
+                  <span class="pill" [class.pill--danger]="(entry.sources?.length ?? 0) === 0">
+                    {{ entry.sources?.length ?? 0 }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="empty">{{ 'rep_noEntries' | t }}</p>
+      }
+    </div>
+  }
+</section>
