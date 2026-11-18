@@ -1,25 +1,33 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;700&display=swap');
 
 :root {
-  /* Palette official EMSafe */
+  /* Paleta EMSafe: marca y niveles de radiación comunes a ambos temas */
   --color-primary: #1a6eff;
   --color-primary-dark: #0d4db3;
+  --color-success: #2ea043;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+  --color-accent: #39d5ff;
+
+  /* Superficies del tema claro */
   --color-background: #f5f7fa;
   --color-surface: #ffffff;
   --color-surface-alt: #f0f2f5;
   --color-text-primary: #111827;
   --color-text-secondary: #6b7280;
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-danger: #dc2626;
-  --color-accent: #1a6eff;
+
+  /* Tipografía: Sora para títulos, Inter para texto, IBM Plex Mono para valores */
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
 
   /* Borders / shadows */
   --border-color: #e5e7eb;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
 
   /* Radii */
+  --radius-chip: 4px;
   --radius-card: 8px;
   --radius-modal: 12px;
   --radius-button: 6px;
@@ -57,7 +65,7 @@ body {
   min-height: 100%;
   background: var(--color-background);
   color: var(--color-text-primary);
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -70,7 +78,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-heading);
   font-weight: 700;
 }
 
@@ -214,12 +222,12 @@ button:active {
 ========================================= */
 
 html.theme-dark {
-  --color-background:    #0f1117;
-  --color-surface:       #1a1d27;
-  --color-surface-alt:   #232635;
-  --color-text-primary:  #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --border-color:        #2d3149;
+  --color-background:    #0d1117;
+  --color-surface:       #161b22;
+  --color-surface-alt:   #21262d;
+  --color-text-primary:  #e6edf3;
+  --color-text-secondary: #8b949e;
+  --border-color:        #21262d;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 

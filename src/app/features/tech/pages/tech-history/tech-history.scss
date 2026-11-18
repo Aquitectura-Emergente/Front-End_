@@ -36,7 +36,7 @@
   color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -99,7 +99,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-button);
     font-size: 13px;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--font-body);
     color: var(--color-text-primary);
     background: var(--color-surface);
     outline: none;
@@ -122,7 +122,7 @@
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -134,7 +134,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   background: var(--color-surface);
   outline: none;
@@ -149,7 +149,7 @@
   color: #fff;
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -196,7 +196,7 @@
 }
 
 .order-id {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: 13px;
   color: var(--color-primary);
@@ -213,7 +213,7 @@
   display: block;
   font-size: 11px;
   color: var(--color-text-secondary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   margin-top: 2px;
 }
 
@@ -340,7 +340,7 @@
   color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   display: flex;
   align-items: center;

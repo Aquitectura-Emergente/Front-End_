@@ -74,7 +74,7 @@
   color: #fff;
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -94,7 +94,7 @@
   color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -155,7 +155,7 @@
   text-align: right;
 }
 
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 // ── PENDING ───────────────────────────────────────────────────────────────────
 .pending-layout {
@@ -208,7 +208,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-button);
     font-size: 13px;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--font-body);
     color: var(--color-text-primary);
     background: var(--color-surface);
     outline: none;
@@ -332,7 +332,7 @@
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 
@@ -486,7 +486,7 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .sensor-loc {
@@ -540,7 +540,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   resize: vertical;
   outline: none;
@@ -559,7 +559,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
   background: var(--color-surface);
   outline: none;
@@ -755,7 +755,7 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
 }
 
 .d-input--req { border-color: var(--color-primary); }
@@ -813,7 +813,7 @@
   &.device-status--inactive { background: rgba(107,114,128,0.12); color: var(--color-text-secondary); }
   &.device-status--requires-maintenance { background: rgba(220,38,38,0.1); color: var(--color-danger); }
   &.device-status--in-maintenance { background: rgba(217,119,6,0.12); color: var(--color-warning); }
-  &.device-status--collecting { background: rgba(26,110,255,0.1); color: var(--color-primary); }
+  &.device-status--unregistered { background: rgba(26,110,255,0.1); color: var(--color-primary); }
 }
 
 .no-devices { font-size: 13px; color: var(--color-text-secondary); padding: 8px 0; }

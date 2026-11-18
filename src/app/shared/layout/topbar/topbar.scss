@@ -46,7 +46,7 @@
   font-size: 20px;
   font-weight: 800;
   color: var(--color-primary-dark);
-  font-family: 'Sora', sans-serif;
+  font-family: var(--font-heading);
 }
 
 .topbar__right {
@@ -66,7 +66,7 @@
   color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: 160ms ease;
 

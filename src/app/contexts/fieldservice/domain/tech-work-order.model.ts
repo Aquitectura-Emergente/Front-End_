@@ -1,11 +1,11 @@
-import { Device } from '../../iottelemetry/domain/device.model';
+import { Device } from '../../devicemanagement/domain/device.model';
 import { WorkOrderStatus } from './work-order-status';
 
 /**
  * Sensor tal y como aparece *dentro* de una orden de trabajo.
  *
  * Su vocabulario de estado ('ok' | 'maintenance') es propio de la orden y no
- * coincide con `DeviceStatus` de iottelemetry: aquí describe el resultado de la
+ * coincide con `DeviceStatus` de devicemanagement: aquí describe el resultado de la
  * revisión, no el estado del sensor en la flota.
  */
 export interface TechSensor {

@@ -47,6 +47,42 @@
       }
     </div>
 
+    @if (isCompany(c)) {
+      <!-- SSO officers -->
+      <div class="vc-card">
+        <div class="vc-section-head">
+          <h3 class="vc-section-title">{{ 'vc_ssoOfficers' | t }} ({{ ssoOfficers().length }})</h3>
+          <a class="btn btn--back" routerLink="/admin/users/new-sso-responsible" [queryParams]="{ organizationId: c.id }">
+            <i class="ph ph-plus" aria-hidden="true"></i> {{ 'vc_addSso' | t }}
+          </a>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ 'th_name' | t }}</th>
+                <th>{{ 'th_email' | t }}</th>
+                <th>{{ 'th_status' | t }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of ssoOfficers(); track o.id) {
+                <tr>
+                  <td>{{ o.name }}</td>
+                  <td>{{ o.email }}</td>
+                  <td>{{ o.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}</td>
+                  <td><a [routerLink]="['/admin/users/edit-sso-responsible', o.id]">{{ 'btn_edit' | t }}</a></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-row">{{ 'vc_noSso' | t }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
     <!-- Devices -->
     <div class="vc-card">
       <h3 class="vc-section-title">{{ 'vc_devices' | t }} ({{ devices().length }})</h3>
@@ -64,7 +100,7 @@
           <tbody>
             @for (d of devices(); track d.id) {
               <tr>
-                <td>{{ d.name }}</td>
+                <td><a [routerLink]="['/admin/devices', d.id]">{{ d.name }}</a></td>
                 <td>{{ d.type }}</td>
                 <td>{{ d.location }}</td>
                 <td class="mono">{{ d.serialNumber }}</td>

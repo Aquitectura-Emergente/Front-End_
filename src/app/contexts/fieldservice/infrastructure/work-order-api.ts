@@ -17,6 +17,14 @@ export class WorkOrderApi {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
+  /** Todas las órdenes, sin paginar (vista de calendario). */
+  list(status?: string, type?: string): Observable<WorkOrder[]> {
+    return unwrap(
+      this.http.get<ApiResponse<WorkOrder[]>>(`${this.base}/work-orders${queryString({ status, type })}`),
+      []
+    );
+  }
+
   listPaged(
     status?: string, type?: string, search?: string, page = 0, size = 10, sort?: string
   ): Observable<PageResponse<WorkOrder>> {

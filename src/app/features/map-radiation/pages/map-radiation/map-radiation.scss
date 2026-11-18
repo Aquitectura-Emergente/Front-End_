@@ -64,7 +64,7 @@
 .stat-card__value {
   font-size: 32px;
   font-weight: 800;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   color: var(--color-text-primary);
   line-height: 1;
   margin-bottom: 4px;
@@ -81,7 +81,7 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--color-text-secondary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 /* ── Map card ────────────────────────────────────── */
@@ -238,7 +238,7 @@
 
 .legend-range {
   font-size: 12px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   color: var(--color-text-secondary);
   background: var(--color-surface-alt);
   padding: 2px 7px;
@@ -375,7 +375,7 @@
 
 /* ── Utility ─────────────────────────────────────── */
 .text-sec { color: var(--color-text-secondary); font-size: 13px; }
-.mono { font-family: 'IBM Plex Mono', monospace; }
+.mono { font-family: var(--font-mono); }
 
 /* ── Empty state ─────────────────────────────────── */
 .empty-row { padding: 40px 16px !important; }

@@ -39,6 +39,8 @@
       <button class="tab" [class.tab--active]="activeTab() === 'Admin'"      type="button" role="tab" (click)="setTab('Admin')">{{ 'users_admins' | t }}</button>
       <button class="tab" [class.tab--active]="activeTab() === 'Technician'" type="button" role="tab" (click)="setTab('Technician')">{{ 'users_technicians' | t }}</button>
       <button class="tab" [class.tab--active]="activeTab() === 'Client'"     type="button" role="tab" (click)="setTab('Client')">{{ 'users_clients' | t }}</button>
+      <button class="tab" [class.tab--active]="activeTab() === 'Company'"    type="button" role="tab" (click)="setTab('Company')">{{ 'users_companies' | t }}</button>
+      <button class="tab" [class.tab--active]="activeTab() === 'SsoResponsible'" type="button" role="tab" (click)="setTab('SsoResponsible')">{{ 'users_ssoOfficers' | t }}</button>
     </div>
 
     <div class="search-wrap">
@@ -90,12 +92,15 @@
                 <div class="user-avatar user-avatar--{{ user.role.toLowerCase() }}">{{ user.initials }}</div>
                 <div>
                   <div class="user-name">{{ user.name }}</div>
-                  <div class="user-join">Joined {{ formatJoinDate(user.joinDate) }}</div>
+                  <div class="user-join">
+                    @if (user.role === 'SsoResponsible') { <i class="ph ph-buildings" aria-hidden="true"></i> {{ orgName(user) }} }
+                    @else { Joined {{ formatJoinDate(user.joinDate) }} }
+                  </div>
                 </div>
               </div>
             </td>
             <td>
-              <span class="role-badge role-badge--{{ user.role.toLowerCase() }}">{{ user.role }}</span>
+              <span class="role-badge role-badge--{{ user.role.toLowerCase() }}">{{ roleKey(user.role) | t }}</span>
             </td>
             <td class="email-cell">{{ user.email }}</td>
             <td>
@@ -223,6 +228,14 @@
           </div>
           <span class="user-type-btn__label">{{ 'users_addTechnician' | t }}</span>
           <span class="user-type-btn__desc">{{ 'users_addTechDesc' | t }}</span>
+        </button>
+
+        <button class="user-type-btn" type="button" (click)="addUser('SsoResponsible')">
+          <div class="user-type-btn__icon user-type-btn__icon--sso">
+            <i class="ph ph-buildings" aria-hidden="true"></i>
+          </div>
+          <span class="user-type-btn__label">{{ 'role_SsoResponsible' | t }}</span>
+          <span class="user-type-btn__desc">{{ 'users_addSsoDesc' | t }}</span>
         </button>
       </div>
     </div>

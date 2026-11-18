@@ -1,0 +1,61 @@
+<section class="edges">
+  <header>
+    <h2 class="edges__title">{{ 'edge_title' | t }}</h2>
+    <p class="edges__subtitle">{{ 'edge_subtitle' | t }}</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span>{{ 'edge_total' | t }}</span><strong>{{ edges().length }}</strong></div>
+    <div class="stat stat--online"><span>{{ 'dm_conn_ONLINE' | t }}</span><strong>{{ online() }}</strong></div>
+    <div class="stat stat--offline"><span>{{ 'dm_conn_OFFLINE' | t }}</span><strong>{{ offline() }}</strong></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+      <input type="text" [ngModel]="search()" (ngModelChange)="search.set($event)" [placeholder]="'edge_search' | t" />
+    </div>
+    <select class="select" [ngModel]="segment()" (ngModelChange)="segment.set($event)">
+      <option value="all">{{ 'filter_all' | t }}</option>
+      <option value="PLANT">{{ 'edge_seg_PLANT' | t }}</option>
+      <option value="HOME">{{ 'edge_seg_HOME' | t }}</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table" aria-label="Edge nodes">
+      <thead>
+        <tr>
+          <th>{{ 'edge_id' | t }}</th>
+          <th>{{ 'edge_org' | t }}</th>
+          <th>{{ 'edge_segment' | t }}</th>
+          <th>{{ 'dm_connectivity' | t }}</th>
+          <th>{{ 'dm_lastSeen' | t }}</th>
+          <th>{{ 'edge_changedAt' | t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="6" class="muted"><i class="ph ph-circle-notch ph-spin"></i></td></tr>
+        } @else {
+          @for (e of filtered(); track e.edgeNodeId) {
+            <tr>
+              <td class="mono">{{ e.edgeNodeId }}</td>
+              <td>{{ orgName(e) }}</td>
+              <td><span class="pill">{{ 'edge_seg_' + e.segment | t }}</span></td>
+              <td>
+                @if (e.connectivity; as c) {
+                  <span class="conn conn--{{ c | lowercase }}"><span class="dot"></span>{{ 'dm_conn_' + c | t }}</span>
+                } @else { <span class="muted">—</span> }
+              </td>
+              <td [title]="when(e.lastSeenAt)">{{ ago(e.lastSeenAt) }}</td>
+              <td class="muted">{{ when(e.connectivityChangedAt) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="muted">{{ 'edge_empty' | t }}</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
