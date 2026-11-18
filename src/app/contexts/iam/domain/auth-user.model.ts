@@ -16,6 +16,14 @@ export interface AuthUser {
   initials: string;
   role: 'admin' | 'technician' | 'sso_responsible';
   technicianId?: number;
+  /**
+   * Empresa del responsable de SSO. **Imprescindible**, no decorativo: los
+   * endpoints industriales la llevan en la ruta
+   * (`/personal-dosimetry/organizations/{organizationId}/limits`) y el backend
+   * comprueba que coincida con la del token. Sin ella el portal no puede
+   * construir esas URLs.
+   */
+  organizationId?: number | null;
 }
 
 /** Respuesta de `/auth/login` tal y como la envía el backend. */
@@ -27,6 +35,8 @@ export interface LoginResponse {
   role: string;
   userId: number;
   technicianId: number | null;
+  /** Null para admin y técnico; relleno para las cuentas industriales. */
+  organizationId?: number | null;
 }
 
 export type WebRole = AuthUser['role'];

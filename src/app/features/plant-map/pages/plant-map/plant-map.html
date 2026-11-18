@@ -1,0 +1,198 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'plantmap_title' | t }}</h1>
+      <p class="subtitle">{{ 'plantmap_subtitle' | t }}</p>
+    </div>
+    <div class="toolbar">
+      <button type="button" class="btn btn--ghost" (click)="reload()">
+        <i class="ph ph-arrows-clockwise" aria-hidden="true"></i>
+        {{ 'map_refresh' | t }}
+      </button>
+      <button type="button" class="btn btn--primary" (click)="openZoneForm()">
+        <i class="ph ph-plus" aria-hidden="true"></i>
+        {{ 'plant_zones_new' | t }}
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="empty">…</p>
+  } @else {
+    <p class="banner banner--info" role="status">
+      <i class="ph ph-users-three" aria-hidden="true"></i>
+      <span>{{ onShiftCount() }} / {{ totalWorkers() }} · {{ 'map_onShift' | t }}</span>
+    </p>
+
+    @if (zones().length === 0) {
+      <p class="empty">{{ 'map_noZones' | t }}</p>
+    } @else {
+      <div class="zones">
+        @for (zone of occupancy(); track zone.plantZoneId) {
+          <article class="zone" [class.zone--empty]="isEmptyZone(zone)">
+            <header class="zone__head">
+              <h2>{{ zone.zoneName }}</h2>
+              <span class="pill" [class.pill--off]="isEmptyZone(zone)">
+                {{ zone.workers.length }}
+              </span>
+            </header>
+
+            @if (isAwaitingEdge(zone.plantZoneId)) {
+              <p class="muted muted--warn">
+                <i class="ph ph-warning" aria-hidden="true"></i>
+                {{ 'plant_zones_awaitingEdge' | t }}
+              </p>
+            }
+
+            @if (zone.workers.length === 0) {
+              <p class="muted">{{ 'map_zoneEmpty' | t }}</p>
+            } @else {
+              <ul class="people">
+                @for (person of zone.workers; track person.workerId) {
+                  <li class="person">
+                    <span class="person__avatar" aria-hidden="true">{{ person.initials }}</span>
+                    <span class="person__body">
+                      <strong>{{ person.name }}</strong>
+                      @if (positionOf(person)) {
+                        <span class="muted">{{ 'map_position' | t }} {{ positionOf(person) }}</span>
+                      }
+                      @if (sessionOf(person)) {
+                        <span class="muted">{{ 'map_session' | t }} {{ sessionOf(person) }}</span>
+                      }
+                    </span>
+                    <span class="person__actions">
+                      <a class="btn btn--ghost btn--sm"
+                         [routerLink]="['/sso/exposure']"
+                         [queryParams]="{ workerId: person.workerId }"
+                         [title]="'shift_viewExposure' | t">
+                        <i class="ph ph-gauge" aria-hidden="true"></i>
+                      </a>
+                      @if (canCloseShift(person)) {
+                        <button type="button" class="btn btn--danger btn--sm"
+                                [disabled]="busy() === person.workerId"
+                                (click)="closeShift(person)">
+                          {{ 'shift_close' | t }}
+                        </button>
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </article>
+        }
+      </div>
+    }
+
+    @if (unassigned().length > 0) {
+      <article class="zone zone--off">
+        <header class="zone__head">
+          <h2>{{ 'map_offShift' | t }}</h2>
+          <span class="pill pill--off">{{ unassigned().length }}</span>
+        </header>
+        <p class="muted">{{ 'map_offShiftHint' | t }}</p>
+        <ul class="people">
+          @for (person of unassigned(); track person.workerId) {
+            <li class="person">
+              <span class="person__avatar person__avatar--off" aria-hidden="true">{{ person.initials }}</span>
+              <span class="person__body"><strong>{{ person.name }}</strong></span>
+              <span class="person__actions">
+                <a class="btn btn--ghost btn--sm"
+                   [routerLink]="['/sso/exposure']"
+                   [queryParams]="{ workerId: person.workerId }"
+                   [title]="'shift_viewExposure' | t">
+                  <i class="ph ph-gauge" aria-hidden="true"></i>
+                </a>
+                <button type="button" class="btn btn--primary btn--sm"
+                        [disabled]="busy() === person.workerId"
+                        (click)="openStart(person)">
+                  {{ 'shift_open' | t }}
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+      </article>
+    }
+  }
+
+  <!-- ── Alta de seccion de planta ─────────────────────────────────────── -->
+  @if (showZoneForm()) {
+    <div class="modal-backdrop" (click)="closeZoneForm()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'plant_zones_new' | t }}</h2>
+
+      <label>
+        <span>{{ 'plant_zones_name' | t }} <strong>*</strong></span>
+        <input type="text" [ngModel]="zoneName()" name="zoneName"
+               (ngModelChange)="zoneName.set($event)" />
+      </label>
+
+      <label>
+        <span>{{ 'plant_zones_description' | t }}</span>
+        <input type="text" [ngModel]="zoneDescription()" name="zoneDescription"
+               (ngModelChange)="zoneDescription.set($event)" />
+      </label>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeZoneForm()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary"
+                [disabled]="!canSaveZone() || savingZone()"
+                (click)="saveZone()">
+          {{ 'plant_action_save' | t }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Apertura de turno ─────────────────────────────────────────────── -->
+  @if (startFor()) {
+    <div class="modal-backdrop" (click)="closeStart()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'shift_open' | t }} · {{ startFor()!.name }}</h2>
+
+      <label>
+        <span>{{ 'plant_positions_zone' | t }} <strong>*</strong></span>
+        <select [ngModel]="startZoneId()" name="startZoneId"
+                (ngModelChange)="startZoneId.set($event); onStartZoneChange()">
+          <option value="">—</option>
+          @for (zone of zones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'plant_tab_positions' | t }} <strong>*</strong></span>
+        <select [ngModel]="startPositionId()" name="startPositionId"
+                (ngModelChange)="startPositionId.set($event)"
+                [disabled]="!startZoneId()">
+          <option value="">—</option>
+          @for (position of positionsOfStart(); track position.id) {
+            <option [value]="position.id">{{ position.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'shift_sessionId' | t }}</span>
+        <input type="text" [ngModel]="startSessionId()" name="startSessionId"
+               (ngModelChange)="startSessionId.set($event)"
+               [placeholder]="'shift_sessionIdHint' | t" />
+      </label>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeStart()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary"
+                [disabled]="!canStart() || busy() !== null"
+                (click)="submitStart()">
+          {{ 'shift_open' | t }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

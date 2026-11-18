@@ -1,0 +1,53 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'workers_title' | t }}</h1>
+      <p class="subtitle">{{ 'workers_subtitle' | t }}</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="empty">…</p>
+  } @else if (workers().length === 0) {
+    <p class="empty">{{ 'workers_empty' | t }}</p>
+  } @else {
+    <p class="banner banner--info" role="status">
+      <i class="ph ph-users-three" aria-hidden="true"></i>
+      <span>{{ onShiftCount() }} / {{ workers().length }} · {{ 'map_onShift' | t }}</span>
+    </p>
+
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'th_name' | t }}</th>
+          <th>{{ 'th_email' | t }}</th>
+          <th>{{ 'th_status' | t }}</th>
+          <th>{{ 'workers_shift' | t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (worker of workers(); track worker.id) {
+          <tr>
+            <td>
+              <strong>{{ worker.name }}</strong>
+              <span class="muted">{{ worker.initials }}</span>
+            </td>
+            <td>{{ worker.email }}</td>
+            <td>
+              <span class="pill" [class.pill--off]="worker.status !== 'active'">
+                {{ (worker.status === 'active' ? 'status_active' : 'status_inactive') | t }}
+              </span>
+            </td>
+            <td>
+              @if (isOnShift(worker.id)) {
+                <span class="pill">{{ 'map_position' | t }} {{ zoneOf(worker.id) }}</span>
+              } @else {
+                <span class="muted">{{ 'map_offShift' | t }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

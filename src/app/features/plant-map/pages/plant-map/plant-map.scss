@@ -1,0 +1,124 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+@include portal.portal-page;
+
+// El mapa es una rejilla de zonas, no un lienzo geográfico: las zonas de planta
+// no tienen coordenadas. Se adapta al número de zonas sin configurar nada.
+.zones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.zone {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  &--empty { border-style: dashed; }
+
+  &--off {
+    border-style: dashed;
+    background: transparent;
+  }
+}
+
+.zone__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--color-text-primary);
+  }
+}
+
+.people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.person {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.person__avatar {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: #fff;
+
+  &--off {
+    background: color-mix(in srgb, var(--color-text-secondary) 30%, transparent);
+    color: var(--color-text-secondary);
+  }
+}
+
+.person__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+  }
+}
+
+// Las acciones por persona van a la derecha y empujadas por `margin-left:auto`,
+// para que la ficha siga legible cuando el nombre es largo.
+.person__actions {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+// Hay un boton por operario dentro de una tarjeta estrecha: el tamaño normal
+// del portal rompe la rejilla de zonas.
+.btn--sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+// Los campos del modal de apertura de turno: el mixin estiliza el modal pero no
+// los controles de dentro, que hasta ahora solo usaba plant-config.
+.modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+
+  select,
+  input {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+}

@@ -20,6 +20,36 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }"
       >
+        <i class="ph ph-map-trifold" aria-hidden="true"></i>
+        <span>{{ 'nav_plantMap' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/mitigation" routerLinkActive="active">
+        <i class="ph ph-clipboard-text" aria-hidden="true"></i>
+        <span>{{ 'nav_mitigation' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/workers" routerLinkActive="active">
+        <i class="ph ph-users-three" aria-hidden="true"></i>
+        <span>{{ 'nav_workers' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/limits" routerLinkActive="active">
+        <i class="ph ph-gauge" aria-hidden="true"></i>
+        <span>{{ 'nav_limits' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/exposure" routerLinkActive="active">
+        <i class="ph ph-pulse" aria-hidden="true"></i>
+        <span>{{ 'nav_exposure' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/reports" routerLinkActive="active">
+        <i class="ph ph-file-text" aria-hidden="true"></i>
+        <span>{{ 'nav_reports' | t }}</span>
+      </a>
+
+      <a routerLink="/sso/plant-config" routerLinkActive="active">
         <i class="ph ph-factory" aria-hidden="true"></i>
         <span>{{ 'nav_plantConfig' | t }}</span>
       </a>
