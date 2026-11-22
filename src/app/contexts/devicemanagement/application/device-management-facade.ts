@@ -14,7 +14,8 @@ const STATUS_CONCURRENCY = 6;
 
 /**
  * Estado, configuración, ciclo de vida, auditoría y telemetría de cada
- * dispositivo, más los nodos Edge. Lo usa solo el admin.
+ * dispositivo, más los nodos Edge. Lo usa el admin; el SSO solo lee la
+ * configuración y cambia el umbral de alerta (`changeAlertThreshold`).
  */
 @Injectable({ providedIn: 'root' })
 export class DeviceManagementFacade {
@@ -46,6 +47,10 @@ export class DeviceManagementFacade {
     payload: OperationalConfigPayload
   ): Observable<MutationResult<DeviceConfigView>> {
     return this.api.changeOperationalConfig(deviceId, payload);
+  }
+
+  changeAlertThreshold(deviceId: string, alertThresholdUT: number): Observable<MutationResult<DeviceConfigView>> {
+    return this.api.changeAlertThreshold(deviceId, { alertThresholdUT });
   }
 
   changeLifecycle(deviceId: string, status: LifecycleStatus): Observable<MutationResult<DeviceStatusView>> {

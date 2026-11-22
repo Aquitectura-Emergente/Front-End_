@@ -13,7 +13,7 @@ import {
   unwrapOrNull,
 } from '../../../core/http/api-response';
 import { DeviceStatusView, LifecycleStatus } from '../domain/device-status.model';
-import { DeviceConfigView, OperationalConfigPayload } from '../domain/device-config.model';
+import { AlertThresholdPayload, DeviceConfigView, OperationalConfigPayload } from '../domain/device-config.model';
 import { AuditEntryView } from '../domain/device-audit.model';
 import { ReadingRouting, TelemetryReadingView } from '../domain/telemetry-reading.model';
 import { EdgeNodeView } from '../domain/edge-node.model';
@@ -45,6 +45,13 @@ export class DeviceManagementApi {
   ): Observable<MutationResult<DeviceConfigView>> {
     return toResult(
       this.http.put<ApiResponse<DeviceConfigView>>(`${this.device(deviceId)}/config/operational`, payload)
+    );
+  }
+
+  /** El umbral de alerta del dosímetro lo fija el responsable de SSO de su organización. */
+  changeAlertThreshold(deviceId: string, payload: AlertThresholdPayload): Observable<MutationResult<DeviceConfigView>> {
+    return toResult(
+      this.http.put<ApiResponse<DeviceConfigView>>(`${this.device(deviceId)}/config/alert-threshold`, payload)
     );
   }
 

@@ -17,6 +17,21 @@ export interface OperationalConfigPayload {
   inactivityTimeoutS?: number;
 }
 
+/** Cuerpo de `PUT /devices/{deviceId}/config/alert-threshold` (solo el SSO). */
+export interface AlertThresholdPayload {
+  alertThresholdUT: number;
+}
+
+/**
+ * Devuelve la clave del error del umbral, o null si es válido. El backend
+ * exige un número positivo; aquí solo se evita mandar algo que va a fallar.
+ */
+export function validateAlertThreshold(value: number | null | undefined): string | null {
+  if (value == null || Number.isNaN(value)) return 'dm_thr_required';
+  if (value <= 0) return 'dm_thr_positive';
+  return null;
+}
+
 /** Límites que valida el backend. */
 export const SAMPLING_MS = { min: 100, max: 3_600_000 } as const;
 export const INACTIVITY_S = { min: 10, max: 86_400 } as const;
