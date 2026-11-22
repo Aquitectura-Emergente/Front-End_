@@ -16,6 +16,7 @@ import { User } from '../../../../contexts/iam/domain/user.model';
 import { AddressLookupService, AddressSuggestion } from '../../../../core/services/address-lookup.service';
 import { ActivityService } from '../../../../core/services/activity.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { loadLeaflet } from '../../../../core/maps/leaflet';
 
 @Component({
   selector: 'app-new-work-order',
@@ -207,9 +208,7 @@ export class NewWorkOrder implements OnInit, OnDestroy {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private initPickerMap(): void {
     if (!this.mapPickerEl?.nativeElement) return;
-    import('leaflet').then(mod => {
-      // Prod bundle exposes leaflet as { default: L }; dev as the namespace.
-      const L = (mod as unknown as { default?: typeof mod }).default ?? mod;
+    loadLeaflet().then(L => {
       this.pickerL = L;
 
       // Center on Lima, or on current location value if it has coords

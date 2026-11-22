@@ -1,0 +1,154 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'limits_title' | t }}</h1>
+      <p class="subtitle">{{ 'limits_subtitle' | t }}</p>
+    </div>
+    <button type="button" class="btn btn--primary"
+            [disabled]="positions().length === 0" (click)="openForm()">
+      <i class="ph ph-plus" aria-hidden="true"></i> {{ 'limits_new' | t }}
+    </button>
+  </header>
+
+  @if (unavailable()) {
+    <p class="banner banner--warn" role="status">
+      <i class="ph ph-warning" aria-hidden="true"></i>
+      <span>{{ 'limits_noOrganization' | t }}</span>
+    </p>
+  } @else if (loading()) {
+    <p class="empty">…</p>
+  } @else {
+
+    @if (positions().length === 0) {
+      <p class="banner banner--warn" role="status">
+        <i class="ph ph-warning" aria-hidden="true"></i>
+        <span>{{ 'limits_needsPositions' | t }}</span>
+      </p>
+    }
+
+    @if (withoutLimit().length > 0) {
+      <p class="banner banner--warn" role="status">
+        <i class="ph ph-warning" aria-hidden="true"></i>
+        <span>{{ withoutLimit().length }} · {{ 'limits_missing' | t }}</span>
+      </p>
+    }
+
+    @if (current().length === 0) {
+      <p class="empty">{{ 'limits_empty' | t }}</p>
+      @if (positions().length > 0) {
+        <p class="muted">{{ 'limits_membershipHint' | t }}</p>
+      }
+    } @else {
+      <table class="grid">
+        <thead>
+          <tr>
+            <th>{{ 'plant_tab_positions' | t }}</th>
+            <th>{{ 'plant_positions_zone' | t }}</th>
+            <th class="num">{{ 'limits_limit' | t }}</th>
+            <th class="num">{{ 'limits_warning' | t }}</th>
+            <th>{{ 'limits_effectiveFrom' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (limit of current(); track limit.id) {
+            <tr>
+              <td>
+                <strong>{{ positionName(limit.jobPositionId) }}</strong>
+                <span class="muted">v{{ limit.version }} · {{ limit.methodId }}</span>
+              </td>
+              <td>{{ zoneOf(limit.jobPositionId) }}</td>
+              <td class="num">{{ limit.limitIndex }} {{ limit.unit }}</td>
+              <td class="num">
+                {{ warningThreshold(limit) }} {{ limit.unit }}
+                <span class="muted">{{ limit.warningRatio * 100 }}%</span>
+              </td>
+              <td>
+                {{ limit.effectiveFrom }}
+                @if (historyCount(limit.jobPositionId) > 0) {
+                  <span class="muted">
+                    {{ historyCount(limit.jobPositionId) }} · {{ 'limits_previousVersions' | t }}
+                  </span>
+                }
+              </td>
+              <td class="actions">
+                <button type="button" class="btn btn--ghost" (click)="openForm(limit.jobPositionId)">
+                  {{ 'limits_newVersion' | t }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    @if (withoutLimit().length > 0) {
+      <h2 class="section-title">{{ 'limits_withoutLimit' | t }}</h2>
+      <table class="grid">
+        <tbody>
+          @for (position of withoutLimit(); track position.id) {
+            <tr>
+              <td>
+                <strong>{{ position.name }}</strong>
+                <span class="muted">{{ position.plantZoneName }}</span>
+              </td>
+              <td class="actions">
+                <button type="button" class="btn btn--primary" (click)="openForm(position.id)">
+                  {{ 'limits_configure' | t }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+
+  <!-- ── Formulario ────────────────────────────────────────────────────── -->
+  @if (showForm()) {
+    <div class="modal-backdrop" (click)="closeForm()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'limits_new' | t }}</h2>
+
+      <p class="banner banner--info">
+        <i class="ph ph-info" aria-hidden="true"></i>
+        <span>{{ 'limits_versionHint' | t }}</span>
+      </p>
+
+      <label>
+        <span>{{ 'plant_tab_positions' | t }}</span>
+        <select [(ngModel)]="formPositionId" name="formPositionId">
+          @for (position of positions(); track position.id) {
+            <option [value]="position.id">{{ position.name }} · {{ position.plantZoneName }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'limits_limit' | t }} (uT*s)</span>
+        <input type="number" min="0" step="any" [(ngModel)]="formLimitIndex"
+               name="formLimitIndex" placeholder="12000" />
+      </label>
+
+      <label>
+        <span>{{ 'limits_warningRatio' | t }}</span>
+        <input type="number" min="0" max="1" step="0.01" [(ngModel)]="formWarningRatio"
+               name="formWarningRatio" />
+      </label>
+
+      <label>
+        <span>{{ 'limits_effectiveFrom' | t }}</span>
+        <input type="datetime-local" [(ngModel)]="formEffectiveFrom" name="formEffectiveFrom" />
+      </label>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeForm()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="save()">
+          {{ 'plant_action_save' | t }}
+        </button>
+      </div>
+    </div>
+  }
+</section>
