@@ -1,4 +1,4 @@
-import { validateOperationalConfig } from './device-config.model';
+import { validateAlertThreshold, validateOperationalConfig } from './device-config.model';
 
 describe('validateOperationalConfig', () => {
   it('acepta valores dentro de los límites del backend', () => {
@@ -19,5 +19,18 @@ describe('validateOperationalConfig', () => {
   it('rechaza una inactividad fuera de 10 s – 24 h', () => {
     expect(validateOperationalConfig({ inactivityTimeoutS: 9 })).toBe('dm_cfg_inactivityRange');
     expect(validateOperationalConfig({ inactivityTimeoutS: 1.5 })).toBe('dm_cfg_inactivityRange');
+  });
+});
+
+describe('validateAlertThreshold', () => {
+  it('acepta un umbral positivo', () => {
+    expect(validateAlertThreshold(100)).toBeNull();
+  });
+
+  it('rechaza vacío, cero y negativos', () => {
+    expect(validateAlertThreshold(null)).toBe('dm_thr_required');
+    expect(validateAlertThreshold(Number.NaN)).toBe('dm_thr_required');
+    expect(validateAlertThreshold(0)).toBe('dm_thr_positive');
+    expect(validateAlertThreshold(-5)).toBe('dm_thr_positive');
   });
 });

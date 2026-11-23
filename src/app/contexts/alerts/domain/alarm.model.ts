@@ -16,6 +16,52 @@ export interface AlarmItem {
   recipientType?: string;
   clientName?: string;
   sensor?: string;
+
+  // ── Alerta de operario (backend V23; creación automática desde el 2026-11-22) ──
+  // Ausentes en una alarma de cliente: el backend omite los nulos.
+  organizationId?: number | null;
+  workerId?: number | null;
+  sessionId?: string | null;
+  acknowledgedAt?: string | null;
+  escalatedAt?: string | null;
+  ssoResponsibleId?: number | null;
+  escalationReason?: string | null;
+}
+
+/** Cuerpo de `POST /api/alarms/{id}/escalate`. */
+export interface EscalateAlarmPayload {
+  ssoResponsibleId: number;
+  reason?: string;
+}
+
+/**
+ * En qué punto está una alerta de operario, de la más avanzada a la menos:
+ * resuelta, escalada al SSO, acusada por el operario o pendiente de acuse.
+ */
+export type WorkerAlertStatus = 'resolved' | 'escalated' | 'acknowledged' | 'pending';
+
+export function workerAlertStatus(alarm: AlarmItem): WorkerAlertStatus {
+  if (alarm.resolved) return 'resolved';
+  if (alarm.escalatedAt) return 'escalated';
+  if (alarm.acknowledgedAt) return 'acknowledged';
+  return 'pending';
+}
+
+/**
+ * El SSO puede escalar una alerta de operario que siga abierta y sin escalar.
+ * No exige acuse previo: escalar sin acuse es justo el caso de la regla 10.
+ */
+export function canEscalate(alarm: AlarmItem): boolean {
+  return !!alarm.workerId && !alarm.resolved && !alarm.escalatedAt;
+}
+
+/**
+ * Inserta o reemplaza una alerta que llegó en vivo, manteniendo el orden de la
+ * más reciente a la más antigua (el mismo del backend).
+ */
+export function upsertAlarm(list: AlarmItem[], incoming: AlarmItem): AlarmItem[] {
+  const rest = list.filter(a => a.id !== incoming.id);
+  return [incoming, ...rest].sort((a, b) => b.id - a.id);
 }
 
 export interface CreateAlarmPayload {

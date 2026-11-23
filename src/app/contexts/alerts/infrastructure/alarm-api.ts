@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse, unwrap, unwrapOrNull } from '../../../core/http/api-response';
-import { AlarmItem, CreateAlarmPayload } from '../domain/alarm.model';
+import { ApiResponse, MutationResult, toResult, unwrap, unwrapOrNull } from '../../../core/http/api-response';
+import { AlarmItem, CreateAlarmPayload, EscalateAlarmPayload } from '../domain/alarm.model';
 
 /** Acceso HTTP a los endpoints de alarmas. */
 @Injectable({ providedIn: 'root' })
@@ -14,6 +14,15 @@ export class AlarmApi {
 
   list(): Observable<AlarmItem[]> {
     return unwrap(this.http.get<ApiResponse<AlarmItem[]>>(`${this.base}/alarms`), []);
+  }
+
+  /** Alertas de operario de la organización del SSO autenticado. */
+  organization(): Observable<AlarmItem[]> {
+    return unwrap(this.http.get<ApiResponse<AlarmItem[]>>(`${this.base}/alarms/organization`), []);
+  }
+
+  escalate(id: number, payload: EscalateAlarmPayload): Observable<MutationResult<AlarmItem>> {
+    return toResult(this.http.post<ApiResponse<AlarmItem>>(`${this.base}/alarms/${id}/escalate`, payload));
   }
 
   create(payload: CreateAlarmPayload): Observable<AlarmItem | null> {

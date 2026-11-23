@@ -33,6 +33,7 @@ import { MapRadiation }  from './features/map-radiation/pages/map-radiation/map-
 import { PlantConfig }   from './features/plant-config/pages/plant-config/plant-config';
 import { PlantMap }      from './features/plant-map/pages/plant-map/plant-map';
 import { SsoWorkers }    from './features/sso-workers/pages/sso-workers/sso-workers';
+import { SsoAlerts }     from './features/sso-alerts/pages/sso-alerts/sso-alerts';
 import { Mitigation }    from './features/mitigation/pages/mitigation/mitigation';
 import { ExposureLimits } from './features/exposure-limits/pages/exposure-limits/exposure-limits';
 import { ExposureSessions } from './features/exposure-sessions/pages/exposure-sessions/exposure-sessions';
@@ -96,6 +97,7 @@ export const routes: Routes = [
       { path: '',              component: PlantMap },
       { path: 'plant-config',  component: PlantConfig },
       { path: 'workers',       component: SsoWorkers },
+      { path: 'alerts',        component: SsoAlerts },
       { path: 'mitigation',    component: Mitigation },
       { path: 'exposure',      component: ExposureSessions },
       { path: 'limits',        component: ExposureLimits },
