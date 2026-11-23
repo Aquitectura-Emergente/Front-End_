@@ -1,0 +1,7 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+@include portal.portal-page;
+
+// Los operarios y los avisos se apilan dentro de la celda.
+.grid td .pill { margin-right: 0.3rem; }
+.grid td .muted { display: block; margin-top: 0.2rem; }

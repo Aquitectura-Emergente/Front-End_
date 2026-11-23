@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { DateTimePipe } from '../../../../core/pipes/datetime.pipe';
 import { TechWorkOrderFacade } from '../../../../contexts/fieldservice/application/tech-work-order-facade';
 import { TechWorkOrder, PatchTechWorkOrderBody } from '../../../../contexts/fieldservice/domain/tech-work-order.model';
 import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
@@ -15,6 +16,7 @@ import { Device } from '../../../../contexts/devicemanagement/domain/device.mode
 import { Reading } from '../../../../contexts/devicemanagement/domain/reading.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AddressLookupService } from '../../../../core/services/address-lookup.service';
+import { loadLeaflet } from '../../../../core/maps/leaflet';
 
 // A discovered sensor (unregistered, reporting live) the technician can claim.
 interface DiscoverRow {
@@ -27,7 +29,7 @@ interface RemovalRow { deviceId: number; name: string; type: string; removed: bo
 
 @Component({
   selector: 'app-tech-work-order-detail',
-  imports: [RouterLink, FormsModule, TranslatePipe, NgTemplateOutlet],
+  imports: [RouterLink, FormsModule, TranslatePipe, DateTimePipe, NgTemplateOutlet],
   templateUrl: './tech-work-order-detail.html',
   styleUrl: './tech-work-order-detail.scss',
 })
@@ -334,9 +336,7 @@ export class TechWorkOrderDetail implements OnDestroy {
   }
 
   private buildMap(el: HTMLDivElement, location: string): void {
-    import('leaflet').then(mod => {
-      // Prod bundle exposes leaflet as { default: L }; dev as the namespace.
-      const L = (mod as unknown as { default?: typeof mod }).default ?? mod;
+    loadLeaflet().then(L => {
       this.destroyMap();
       const limaCenter: [number, number] = [-12.0464, -77.0428];
       this.map = L.map(el, { center: limaCenter, zoom: 12, scrollWheelZoom: false });

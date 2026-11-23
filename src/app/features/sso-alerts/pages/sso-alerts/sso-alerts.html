@@ -1,0 +1,107 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'al_title' | t }}</h1>
+      <p class="subtitle">{{ 'al_subtitle' | t }}</p>
+    </div>
+    <div class="header-actions">
+      <span [class]="live() ? 'pill' : 'pill pill--off'">
+        <i class="ph ph-broadcast" aria-hidden="true"></i>
+        {{ (live() ? 'al_live' : 'al_waiting') | t }}
+      </span>
+      <button type="button" class="btn btn--ghost" (click)="load()">
+        <i class="ph ph-arrows-clockwise" aria-hidden="true"></i> {{ 'al_refresh' | t }}
+      </button>
+    </div>
+  </header>
+
+  <div class="summary">
+    <strong>{{ pendingCount() }}</strong> {{ 'al_pendingCount' | t }}
+    <label class="toggle">
+      <input type="checkbox" [checked]="onlyOpen()" (change)="onlyOpen.set(!onlyOpen())" />
+      {{ 'al_onlyOpen' | t }}
+    </label>
+  </div>
+
+  <!-- ── Alertas de operario ─────────────────────────────────────────────── -->
+  @if (visible().length > 0) {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'al_worker' | t }}</th>
+          <th>{{ 'al_alert' | t }}</th>
+          <th>{{ 'al_createdAt' | t }}</th>
+          <th>{{ 'al_status' | t }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (alarm of visible(); track alarm.id) {
+          <tr>
+            <td><strong>{{ workerName(alarm.workerId) }}</strong></td>
+            <td>
+              <div class="alert-title">
+                <i [class]="'ph ' + (alarm.icon || 'ph-warning')"
+                   [class.is-danger]="alarm.type === 'danger'"
+                   [class.is-warning]="alarm.type === 'warning'" aria-hidden="true"></i>
+                {{ alarm.title }}
+              </div>
+              <span class="muted">{{ alarm.description }}</span>
+            </td>
+            <td>{{ alarm.time }}</td>
+            <td>
+              <span [class]="pillClass(alarm)">{{ 'al_status_' + status(alarm) | t }}</span>
+              @if (alarm.acknowledgedAt) {
+                <div class="muted">{{ 'al_ackAt' | t }} {{ alarm.acknowledgedAt | dt }}</div>
+              }
+              @if (alarm.escalatedAt) {
+                <div class="muted">{{ 'al_escAt' | t }} {{ alarm.escalatedAt | dt }}</div>
+                @if (alarm.escalationReason) {
+                  <div class="muted">{{ alarm.escalationReason }}</div>
+                }
+              }
+            </td>
+            <td>
+              @if (canEscalate(alarm)) {
+                <button type="button" class="btn btn--danger" [disabled]="busy()" (click)="escalate(alarm)">
+                  <i class="ph ph-arrow-fat-up" aria-hidden="true"></i> {{ 'al_escalate' | t }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="empty">{{ 'al_empty' | t }}</p>
+  }
+
+  <!-- ── Umbral de alerta del dosímetro ──────────────────────────────────── -->
+  <h2 class="section-title">{{ 'dm_thr_title' | t }}</h2>
+  <p class="muted">{{ 'dm_thr_hint' | t }}</p>
+
+  <div class="form-card">
+    <label>
+      <span>{{ 'dm_thr_serial' | t }}</span>
+      <input type="text" [(ngModel)]="serial" name="serial" placeholder="EMSafe-DOS-01" />
+    </label>
+    <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="loadConfig()">
+      <i class="ph ph-magnifying-glass" aria-hidden="true"></i> {{ 'dm_thr_load' | t }}
+    </button>
+
+    @if (config(); as c) {
+      <label>
+        <span>{{ 'dm_thr_value' | t }}</span>
+        <input type="number" min="0" step="1" [(ngModel)]="thresholdUT" name="thresholdUT" />
+      </label>
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="saveThreshold()">
+        <i class="ph ph-floppy-disk" aria-hidden="true"></i> {{ 'dm_thr_save' | t }}
+      </button>
+      <span class="muted">
+        {{ 'dm_thr_current' | t }} {{ c.alertThresholdUT }} µT ·
+        {{ (c.definedBy === 'SSO_RESPONSIBLE' ? 'dm_thr_bySso' : 'dm_thr_byDefault') | t }} ·
+        v{{ c.configVersion }}
+      </span>
+    }
+  </div>
+</section>

@@ -1,0 +1,82 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+@include portal.portal-page;
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+
+  strong {
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+  }
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+
+  .is-danger { color: var(--color-danger); }
+  .is-warning { color: var(--color-warning); }
+}
+
+.section-title {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+// Mismo formulario en línea que el de reportes de cumplimiento.
+.form-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 9rem;
+
+    span {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  input {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 0.9rem;
+  }
+}

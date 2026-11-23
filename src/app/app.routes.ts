@@ -31,6 +31,13 @@ import { EdgeNodes }     from './features/edge-nodes/pages/edge-nodes/edge-nodes
 import { Alarms }        from './features/alarms/pages/alarms/alarms';
 import { MapRadiation }  from './features/map-radiation/pages/map-radiation/map-radiation';
 import { PlantConfig }   from './features/plant-config/pages/plant-config/plant-config';
+import { PlantMap }      from './features/plant-map/pages/plant-map/plant-map';
+import { SsoWorkers }    from './features/sso-workers/pages/sso-workers/sso-workers';
+import { SsoAlerts }     from './features/sso-alerts/pages/sso-alerts/sso-alerts';
+import { Mitigation }    from './features/mitigation/pages/mitigation/mitigation';
+import { ExposureLimits } from './features/exposure-limits/pages/exposure-limits/exposure-limits';
+import { ExposureSessions } from './features/exposure-sessions/pages/exposure-sessions/exposure-sessions';
+import { ComplianceReports } from './features/compliance-reports/pages/compliance-reports/compliance-reports';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -87,8 +94,15 @@ export const routes: Routes = [
     component: SsoLayout,
     canActivate: [ssoGuard],
     children: [
-      { path: '',        component: PlantConfig },
-      { path: 'profile', component: Profile },
+      { path: '',              component: PlantMap },
+      { path: 'plant-config',  component: PlantConfig },
+      { path: 'workers',       component: SsoWorkers },
+      { path: 'alerts',        component: SsoAlerts },
+      { path: 'mitigation',    component: Mitigation },
+      { path: 'exposure',      component: ExposureSessions },
+      { path: 'limits',        component: ExposureLimits },
+      { path: 'reports',       component: ComplianceReports },
+      { path: 'profile',       component: Profile },
     ],
   },
 

@@ -1,0 +1,226 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'mit_title' | t }}</h1>
+      <p class="subtitle">{{ 'mit_subtitle' | t }}</p>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="openRelocation()">
+      <i class="ph ph-arrows-left-right" aria-hidden="true"></i>
+      <span>{{ 'reloc_new' | t }}</span>
+    </button>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Mitigation sections">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'pending'"
+            [class.active]="tab() === 'pending'" (click)="setTab('pending')">
+      {{ 'mit_tab_pending' | t }}
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'all'"
+            [class.active]="tab() === 'all'" (click)="setTab('all')">
+      {{ 'mit_tab_all' | t }}
+    </button>
+  </nav>
+
+  @if (loading()) {
+    <p class="empty">…</p>
+  } @else if (actions().length === 0) {
+    <p class="empty">
+      {{ (tab() === 'pending' ? 'mit_emptyPending' : 'mit_emptyAll') | t }}
+    </p>
+  } @else {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'mit_th_type' | t }}</th>
+          <th>{{ 'mit_th_origin' | t }}</th>
+          <th>{{ 'mit_th_workers' | t }}</th>
+          <th>{{ 'th_status' | t }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (action of actions(); track action.id) {
+          <tr>
+            <td>
+              <strong>{{ action.type }}</strong>
+              @if (action.justification) {
+                <span class="muted">{{ action.justification }}</span>
+              }
+            </td>
+            <td>
+              {{ action.origin }}
+              @if (action.priority === 'HIGH') {
+                <span class="pill pill--warn">{{ 'mit_highPriority' | t }}</span>
+              }
+            </td>
+            <td>
+              @for (id of workerIds(action); track id) {
+                <span class="pill pill--off">#{{ id }}</span>
+              }
+              @if (needsTarget(action)) {
+                <span class="muted muted--warn">{{ 'mit_needsTarget' | t }}</span>
+              }
+            </td>
+            <td>
+              <span class="pill"
+                    [class.pill--off]="!isPending(action)"
+                    [class.pill--warn]="isPending(action)">
+                {{ stateLabelKey(action) | t }}
+              </span>
+            </td>
+            <td class="actions">
+              @if (isPending(action)) {
+                <button type="button" class="btn btn--success" (click)="openDecision(action, 'approve')">
+                  {{ 'mit_approve' | t }}
+                </button>
+                <button type="button" class="btn btn--danger" (click)="openDecision(action, 'reject')">
+                  {{ 'mit_reject' | t }}
+                </button>
+              } @else {
+                <span class="muted">{{ 'mit_alreadyDecided' | t }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <!-- ── Decisión ──────────────────────────────────────────────────────── -->
+  @if (showDecision()) {
+    <div class="modal-backdrop" (click)="closeDecision()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>
+        {{ (decisionMode() === 'approve' ? 'mit_approve' : 'mit_reject') | t }}
+        · #{{ decisionAction()?.id }}
+      </h2>
+
+      @if (decisionMode() === 'approve' && needsTarget(decisionAction()!)) {
+        <p class="banner banner--warn">
+          <i class="ph ph-warning" aria-hidden="true"></i>
+          <span>{{ 'mit_targetRequired' | t }}</span>
+        </p>
+
+        <label>
+          <span>{{ 'plant_positions_zone' | t }}</span>
+          <select [ngModel]="targetZoneId()" name="targetZoneId"
+                  (ngModelChange)="targetZoneId.set($event); onTargetZoneChange()">
+            <option value="">—</option>
+            @for (zone of zones(); track zone.id) {
+              <option [value]="zone.id">{{ zone.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>{{ 'plant_tab_positions' | t }}</span>
+          <select [ngModel]="targetPositionId()" name="targetPositionId"
+                  (ngModelChange)="targetPositionId.set($event)"
+                  [disabled]="!targetZoneId()">
+            <option value="">—</option>
+            @for (position of positionsOfTarget(); track position.id) {
+              <option [value]="position.id">{{ position.name }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      <label>
+        <span>
+          {{ 'mit_reason' | t }}
+          @if (decisionMode() === 'reject') { <strong>*</strong> }
+        </span>
+        <textarea [ngModel]="decisionReason()" name="decisionReason"
+                  (ngModelChange)="decisionReason.set($event)"
+                  [placeholder]="(decisionMode() === 'reject' ? 'mit_reasonRequired' : 'mit_reasonOptional') | t">
+        </textarea>
+      </label>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeDecision()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button"
+                class="btn"
+                [class.btn--success]="decisionMode() === 'approve'"
+                [class.btn--danger]="decisionMode() === 'reject'"
+                [disabled]="!canSubmit()"
+                (click)="submitDecision()">
+          {{ (decisionMode() === 'approve' ? 'mit_approve' : 'mit_reject') | t }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Reubicación por decisión propia del SSO ───────────────────────── -->
+  @if (showRelocation()) {
+    <div class="modal-backdrop" (click)="closeRelocation()"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>{{ 'reloc_new' | t }}</h2>
+
+      <p class="banner">
+        <i class="ph ph-info" aria-hidden="true"></i>
+        <span>{{ 'reloc_hint' | t }}</span>
+      </p>
+
+      <label>
+        <span>{{ 'reloc_worker' | t }} <strong>*</strong></span>
+        <select [ngModel]="relocWorkerId()" name="relocWorkerId"
+                (ngModelChange)="relocWorkerId.set($event)">
+          <option value="">—</option>
+          @for (worker of workers(); track worker.id) {
+            <option [value]="worker.id">{{ worker.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'plant_positions_zone' | t }} <strong>*</strong></span>
+        <select [ngModel]="relocZoneId()" name="relocZoneId"
+                (ngModelChange)="relocZoneId.set($event); onRelocZoneChange()">
+          <option value="">—</option>
+          @for (zone of zones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'plant_tab_positions' | t }} <strong>*</strong></span>
+        <select [ngModel]="relocPositionId()" name="relocPositionId"
+                (ngModelChange)="relocPositionId.set($event)"
+                [disabled]="!relocZoneId()">
+          <option value="">—</option>
+          @for (position of positionsOfReloc(); track position.id) {
+            <option [value]="position.id">{{ position.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'reloc_justification' | t }}</span>
+        <textarea [ngModel]="relocJustification()" name="relocJustification"
+                  (ngModelChange)="relocJustification.set($event)"
+                  [placeholder]="'reloc_justificationHint' | t"></textarea>
+      </label>
+
+      @if (relocError()) {
+        <p class="banner banner--warn">
+          <i class="ph ph-warning" aria-hidden="true"></i>
+          <span>{{ relocError()! | t }}</span>
+        </p>
+      }
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeRelocation()">
+          {{ 'plant_action_cancel' | t }}
+        </button>
+        <button type="button" class="btn btn--primary"
+                [disabled]="!!relocError() || submitting()"
+                (click)="submitRelocation()">
+          {{ 'reloc_apply' | t }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

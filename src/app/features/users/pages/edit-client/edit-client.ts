@@ -11,6 +11,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AddressLookupService, AddressSuggestion } from '../../../../core/services/address-lookup.service';
+import { loadLeaflet } from '../../../../core/maps/leaflet';
 
 type ClientType = 'company' | 'individual';
 
@@ -205,9 +206,7 @@ export class EditClient implements OnInit, OnDestroy {
 
   private initPickerMap(): void {
     if (!this.mapPickerEl?.nativeElement) return;
-    import('leaflet').then(mod => {
-      // Prod bundle exposes leaflet as { default: L }; dev as the namespace.
-      const L = (mod as unknown as { default?: typeof mod }).default ?? mod;
+    loadLeaflet().then(L => {
       this.pickerMap = L.map(this.mapPickerEl!.nativeElement, {
         center: [-12.0464, -77.0428],
         zoom: 13,

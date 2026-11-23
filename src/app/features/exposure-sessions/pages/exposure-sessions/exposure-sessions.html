@@ -1,0 +1,151 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'exp_title' | t }}</h1>
+      <p class="subtitle">{{ 'exp_subtitle' | t }}</p>
+    </div>
+  </header>
+
+  <label class="picker">
+    <span>{{ 'exp_worker' | t }}</span>
+    <select [ngModel]="workerId()" name="workerId"
+            (ngModelChange)="workerId.set($event); onWorkerChange()">
+      <option value="">—</option>
+      @for (worker of workers(); track worker.id) {
+        <option [value]="worker.id">{{ worker.name }}</option>
+      }
+    </select>
+  </label>
+
+  @if (!workerId()) {
+    <p class="empty">{{ 'exp_pickWorker' | t }}</p>
+  } @else if (loading()) {
+    <p class="empty">…</p>
+  } @else if (ordered().length === 0) {
+    <p class="empty">{{ 'exp_empty' | t }}</p>
+    <p class="muted">{{ 'exp_emptyHint' | t }}</p>
+  } @else {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'exp_th_started' | t }}</th>
+          <th>{{ 'th_status' | t }}</th>
+          <th>{{ 'exp_th_index' | t }}</th>
+          <th>{{ 'exp_th_coverage' | t }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (session of ordered(); track session.id) {
+          <tr [class.row--active]="isSelected(session)">
+            <td>
+              <strong>{{ session.startedAt | dt }}</strong>
+              @if (session.endedAt) {
+                <span class="muted">→ {{ session.endedAt | dt }}</span>
+              }
+            </td>
+            <td>
+              <span class="pill" [class.pill--off]="session.state === 'CLOSED'">
+                {{ stateLabelKey(session) | t }}
+              </span>
+              @if (isProvisional(session)) {
+                <span class="muted muted--warn">{{ 'exp_provisional' | t }}</span>
+              }
+            </td>
+            <td>
+              <!-- La unidad se rotula tal como llega: es un indice operacional
+                   en uT*s, no una dosis certificada. No se convierte. -->
+              <strong>{{ session.accumulatedIndex }} {{ session.unit }}</strong>
+              <span class="muted">
+                {{ session.percentage }}% · {{ 'exp_of' | t }} {{ session.limitIndex }}
+              </span>
+              <span class="pill"
+                    [class.pill--danger]="severityOf(session) === 'exceeded'"
+                    [class.pill--warn]="severityOf(session) === 'warning'"
+                    [class.pill--off]="severityOf(session) === 'normal'">
+                {{ severityLabelKey(session) | t }}
+              </span>
+            </td>
+            <td>
+              {{ session.coveragePercentage }}%
+              @if (hasGaps(session)) {
+                <span class="muted muted--warn">
+                  <i class="ph ph-warning" aria-hidden="true"></i>
+                  {{ 'exp_gaps' | t }}
+                </span>
+              }
+              @if (session.outOfRangeReadings > 0) {
+                <span class="muted">
+                  {{ session.outOfRangeReadings }} {{ 'exp_outOfRange' | t }}
+                </span>
+              }
+            </td>
+            <td class="actions">
+              <button type="button" class="btn btn--ghost" (click)="select(session)">
+                {{ (isSelected(session) ? 'exp_hideReadings' : 'exp_showReadings') | t }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- ── Lecturas de la sesión elegida ──────────────────────────────── -->
+    @if (selected()) {
+      <article class="panel">
+        <header class="panel__head">
+          <h2>{{ 'exp_readings' | t }}</h2>
+          <span class="muted">{{ selected()!.id }}</span>
+        </header>
+
+        @if (hasGaps(selected()!)) {
+          <p class="banner banner--warn">
+            <i class="ph ph-warning" aria-hidden="true"></i>
+            <span>{{ 'exp_gapsHint' | t }}</span>
+          </p>
+        }
+
+        @if (loadingReadings()) {
+          <p class="empty">…</p>
+        } @else if (readings().length === 0) {
+          <p class="empty">{{ 'exp_noReadings' | t }}</p>
+        } @else {
+          @if (lateCount() > 0) {
+            <p class="banner">
+              <i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>
+              <span>{{ lateCount() }} {{ 'exp_lateCount' | t }}</span>
+            </p>
+          }
+
+          <table class="grid grid--dense">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ 'exp_th_from' | t }}</th>
+                <th>{{ 'exp_th_to' | t }}</th>
+                <th>{{ 'exp_th_field' | t }}</th>
+                <th>{{ 'th_status' | t }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (reading of readings(); track reading.id) {
+                <tr>
+                  <td class="muted">{{ reading.sequence }}</td>
+                  <td>{{ reading.capturedFrom }}</td>
+                  <td>{{ reading.capturedTo }}</td>
+                  <td><strong>{{ reading.fieldMicrotesla }} {{ reading.unit }}</strong></td>
+                  <td>
+                    <span class="pill" [class.pill--warn]="reading.status === 'LATE'"
+                          [class.pill--off]="reading.status === 'ACCEPTED'">
+                      {{ reading.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </article>
+    }
+  }
+</section>
