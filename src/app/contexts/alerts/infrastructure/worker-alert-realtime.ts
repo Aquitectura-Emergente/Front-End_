@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable } from 'rxjs';
 import { Client } from '@stomp/stompjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../iam/application/auth.service';
 import { AlarmItem } from '../domain/alarm.model';
 
 /**
@@ -21,6 +22,7 @@ import { AlarmItem } from '../domain/alarm.model';
 @Injectable({ providedIn: 'root' })
 export class WorkerAlertRealtime {
   private platformId = inject(PLATFORM_ID);
+  private auth = inject(AuthService);
 
   forOrganization(organizationId: number): Observable<AlarmItem> {
     return new Observable<AlarmItem>(subscriber => {
@@ -28,6 +30,13 @@ export class WorkerAlertRealtime {
       const client = new Client({
         brokerURL: environment.wsUrl,
         reconnectDelay: 4000,
+        // Desde el backend 23673ce, `/ws` rechaza el CONNECT sin JWT
+        // ("Missing bearer token"). Se lee en cada intento para que una
+        // reconexión use el token vigente, como en `RealtimeService`.
+        beforeConnect: () => {
+          const token = this.auth.getToken();
+          client.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+        },
         onConnect: () => {
           client.subscribe(`/topic/organizations/${organizationId}/alerts`, message => {
             try {
