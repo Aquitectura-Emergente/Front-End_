@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, Subject } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../iam/application/auth.service';
 import { Reading } from '../domain/reading.model';
 
 /**
@@ -14,10 +15,14 @@ import { Reading } from '../domain/reading.model';
  *
  * SSR-safe: the connection is opened lazily and only in the browser
  * (`isPlatformBrowser`), like Leaflet/localStorage elsewhere in the app.
+ *
+ * El backend exige el JWT en el CONNECT; se lee antes de cada (re)conexión
+ * para usar siempre el token vigente.
  */
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private platformId = inject(PLATFORM_ID);
+  private auth = inject(AuthService);
   private client: Client | null = null;
   private connected = false;
 
@@ -42,6 +47,10 @@ export class RealtimeService {
     this.client = new Client({
       brokerURL: environment.wsUrl,
       reconnectDelay: 4000,
+      beforeConnect: () => {
+        const token = this.auth.getToken();
+        this.client!.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+      },
       onConnect: () => {
         this.client!.subscribe('/topic/readings',  m => this.emit(this.readingsSubject, m));
         this.client!.subscribe('/topic/discovery', m => this.emit(this.discoverySubject, m));
