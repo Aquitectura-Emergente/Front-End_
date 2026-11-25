@@ -22,8 +22,15 @@
       <button type="button" class="btn btn--ghost btn--refresh" [disabled]="loading()" (click)="load()">
         <i class="ph ph-arrows-clockwise" aria-hidden="true"></i> {{ 'af_refresh' | t }}
       </button>
+      <button type="button" class="btn btn--primary btn--start" (click)="openStart()">
+        <i class="ph ph-play" aria-hidden="true"></i> {{ 'sc_start_title' | t }}
+      </button>
     </div>
   </header>
+
+  @if (startOpen()) {
+    <app-start-session-dialog (started)="onStarted()" (cancelled)="startOpen.set(false)" />
+  }
 
   <p class="muted">{{ 'af_autoRefresh' | t }}</p>
 
@@ -189,6 +196,81 @@
           <p class="muted">{{ 'af_noRedaction' | t }}</p>
         }
       }
+
+      <!-- ── Jornada de dosimetría: cerrar y finalizar ─────────────────────── -->
+      <section class="session-control">
+        <h3>{{ 'sc_section' | t }}</h3>
+
+        @if (sessionLoading()) {
+          <p class="muted">{{ 'af_loading' | t }}</p>
+        } @else if (session(); as s) {
+          @switch (sessionPhase()) {
+            @case ('open') {
+              <p class="session-state">
+                <span class="pill">{{ 'exp_state_open' | t }}</span>
+                <span class="muted">{{ 'sc_openHint' | t }}</span>
+              </p>
+              <button type="button" class="btn btn--danger btn--close-session"
+                      [disabled]="sessionBusy()" (click)="closeSession()">
+                <i class="ph ph-stop-circle" aria-hidden="true"></i> {{ 'sc_close' | t }}
+              </button>
+            }
+            @case ('processing') {
+              <p class="session-state">
+                <span class="pill pill--warn processing">
+                  <i class="ph ph-hourglass-medium" aria-hidden="true"></i> {{ 'sc_processing' | t }}
+                </span>
+              </p>
+              <p class="banner banner--warn provisional" role="status">
+                <i class="ph ph-warning" aria-hidden="true"></i>
+                {{ 'sc_provisional' | t }} {{ forecasting.limaDateTime(s.reconciliationDeadline) }} (Lima).
+              </p>
+              <div class="finalize">
+                <button type="button" class="btn btn--primary btn--finalize"
+                        [disabled]="!finalizable() || sessionBusy()" (click)="finalizeSession()">
+                  <i class="ph ph-seal-check" aria-hidden="true"></i> {{ 'sc_finalize' | t }}
+                </button>
+                @if (!finalizable()) {
+                  <span class="muted finalize-from">
+                    {{ 'sc_finalizeFrom' | t }} {{ forecasting.limaDateTime(s.reconciliationDeadline) }} (Lima)
+                  </span>
+                }
+              </div>
+            }
+            @case ('closed') {
+              <p class="session-state">
+                <span class="pill pill--off closed">
+                  <i class="ph ph-check-circle" aria-hidden="true"></i> {{ 'sc_closedState' | t }}
+                </span>
+              </p>
+              <dl class="facts">
+                <div><dt>{{ 'sc_finalIndex' | t }}</dt>
+                  <dd class="final-index">{{ s.accumulatedIndex | number: '1.0-2' }} {{ s.unit }}
+                    <span class="muted">({{ s.percentage }}%)</span></dd></div>
+                <div><dt>{{ 'sc_coverage' | t }}</dt>
+                  <dd class="coverage" [class.is-warn]="!s.coverageComplete">{{ s.coveragePercentage }}%</dd></div>
+              </dl>
+              @if (!s.coverageComplete) {
+                <p class="banner banner--warn incomplete" role="status">
+                  <i class="ph ph-warning" aria-hidden="true"></i> {{ 'sc_incompleteCoverage' | t }}
+                </p>
+              }
+            }
+          }
+
+          @if (sessionError(); as e) {
+            <div class="command-error" role="alert">
+              <strong>{{ control.errorTitleKey(e.status) | t }}</strong>
+              @if (e.message) { <span class="command-error__message">{{ e.message }}</span> }
+            </div>
+          }
+          @if (sessionChanged()) {
+            <p class="muted list-delay">{{ 'sc_listDelay' | t }}</p>
+          }
+        } @else {
+          <p class="muted session-missing">{{ 'sc_sessionUnavailable' | t }}</p>
+        }
+      </section>
     </aside>
   }
 </section>

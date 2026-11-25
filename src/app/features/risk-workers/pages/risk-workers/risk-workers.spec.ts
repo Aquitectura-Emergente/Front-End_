@@ -3,13 +3,38 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
+import { By } from '@angular/platform-browser';
+
 import { RISK_REFRESH_MS, RiskWorkers } from './risk-workers';
+import { StartSessionDialog } from '../../components/start-session-dialog/start-session-dialog';
 import { Assessment } from '../../../../contexts/aiforecasting/domain/assessment.model';
+import { ExposureSession } from '../../../../contexts/personaldosimetry/domain/exposure-session.model';
+import { ConfirmService } from '../../../../core/services/confirm.service';
 import { environment } from '../../../../../environments/environment';
 
 const API = `${environment.apiUrl}/v1/ai-forecasting`;
 const LIST = `${API}/projections/critical-workers`;
 const WORKERS = `${environment.apiUrl}/sso/workers`;
+const PD_SESSIONS = `${environment.apiUrl}/v1/personal-dosimetry/sessions`;
+
+/** Confirmación controlable: los specs de este repo no abren `window.confirm`. */
+class ConfirmStub {
+  answer = true;
+  asked: string[] = [];
+  confirm(message: string): boolean {
+    this.asked.push(message);
+    return this.answer;
+  }
+}
+
+function pdSession(o: Partial<ExposureSession> = {}): ExposureSession {
+  return {
+    id: 'S-300', organizationId: 8, workerId: 300, deviceId: 30, jobPositionId: 31, state: 'OPEN',
+    methodId: 'MAGNETIC_TIME_INDEX_V1', unit: 'uT*s', accumulatedIndex: 11500, limitIndex: 12000,
+    percentage: 95.83, warningRaised: true, limitExceeded: false, coveragePercentage: 100,
+    coverageComplete: false, startedAt: '2026-11-10T08:00:00Z', outOfRangeReadings: 0, ...o,
+  };
+}
 
 // Los dos avisos de la guía de Swagger del backend: 300 CRITICAL y 101 HIGH.
 const CRITICAL = {
@@ -51,6 +76,7 @@ describe('RiskWorkers', () => {
   let fixture: ComponentFixture<RiskWorkers>;
   let component: RiskWorkers;
   let http: HttpTestingController;
+  let confirm: ConfirmStub;
 
   function el(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
@@ -77,12 +103,29 @@ describe('RiskWorkers', () => {
   }
 
   beforeEach(async () => {
+    confirm = new ConfirmStub();
     await TestBed.configureTestingModule({
       imports: [RiskWorkers],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ConfirmService, useValue: confirm },
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
+
+  /** Abre el detalle de una fila y responde a la evaluación activa y a su jornada. */
+  function openDetail(row: number, assessment: Assessment, session: ExposureSession | 'skip' = pdSession()): void {
+    rows()[row].click();
+    render();
+    http.expectOne(`${API}/projections/workers/${assessment.workerId}`).flush({ data: assessment });
+    if (session !== 'skip') {
+      http.expectOne(`${PD_SESSIONS}/${assessment.sessionId}`).flush({ data: session });
+    }
+    render();
+  }
 
   afterEach(() => {
     vi.useRealTimers();
@@ -173,16 +216,9 @@ describe('RiskWorkers', () => {
   });
 
   describe('detalle', () => {
-    function open(row: number): void {
-      rows()[row].click();
-      render();
-    }
-
     it('al hacer clic pide la evaluacion activa y muestra la proyeccion completa', () => {
       start();
-      open(1);
-      http.expectOne(`${API}/projections/workers/101`).flush({ data: HIGH });
-      render();
+      openDetail(1, HIGH, pdSession({ id: 'S-101', workerId: 101 }));
 
       const panel = el().querySelector('.detail')!;
       expect(panel.textContent).toContain('Carlos Rojas');
@@ -199,34 +235,161 @@ describe('RiskWorkers', () => {
 
     it('etiqueta la explicacion como IA o Plantilla segun generatedBy', () => {
       start();
-      open(1);
-      http.expectOne(`${API}/projections/workers/101`).flush({ data: HIGH });
-      render();
+      openDetail(1, HIGH, pdSession({ id: 'S-101', workerId: 101 }));
       expect(el().querySelector('.redaction-tag')!.textContent!.trim()).toBe('AI');
 
       component.closeDetail();
       render();
-      open(0);
-      http.expectOne(`${API}/projections/workers/300`).flush({ data: CRITICAL });
-      render();
+      openDetail(0, CRITICAL);
       expect(el().querySelector('.redaction-tag')!.textContent!.trim()).toBe('Template');
     });
 
     it('si el operario ya no tiene evaluacion activa (404) lo dice', () => {
       start();
-      open(0);
+      rows()[0].click();
+      render();
       http.expectOne(`${API}/projections/workers/300`)
         .flush({ success: false, message: 'Not found' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${PD_SESSIONS}/S-300`).flush({ data: pdSession() });
       render();
       expect(el().querySelector('.no-active')!.textContent!.trim()).toBe('This worker has no active assessment.');
     });
 
     it('un segundo clic en la misma fila cierra el detalle', () => {
       start();
-      open(0);
-      http.expectOne(`${API}/projections/workers/300`).flush({ data: CRITICAL });
-      open(0);
+      openDetail(0, CRITICAL);
+      rows()[0].click();
+      render();
       expect(el().querySelector('.detail')).toBeNull();
+    });
+  });
+
+  // ── F4: jornada de dosimetría ──────────────────────────────────────────────
+
+  describe('cerrar jornada', () => {
+    const inFuture = () => new Date(Date.now() + 30 * 60_000).toISOString();
+
+    it('pide confirmacion y, si se cancela, no llama al backend', () => {
+      start();
+      openDetail(0, CRITICAL);
+      confirm.answer = false;
+      el().querySelector<HTMLButtonElement>('.btn--close-session')!.click();
+      expect(confirm.asked[0]).toContain('Lucía Mendoza');
+      http.expectNone(`${PD_SESSIONS}/S-300/close`);
+    });
+
+    it('cierra sin endedAt y muestra «Procesando lecturas» con el plazo en hora de Lima', () => {
+      start();
+      openDetail(0, CRITICAL);
+      el().querySelector<HTMLButtonElement>('.btn--close-session')!.click();
+
+      const req = http.expectOne(`${PD_SESSIONS}/S-300/close`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      expect('endedAt' in req.request.body).toBe(false);
+      req.flush({ data: pdSession({
+        state: 'CLOSING', endedAt: '2026-11-25T19:00:00Z', reconciliationDeadline: '2026-11-25T19:30:00Z',
+      }) });
+      // Refresca la lista al cerrar.
+      http.expectOne(`${LIST}?page=0&size=50`).flush(page([HIGH, CRITICAL]));
+      render();
+
+      expect(el().querySelector('.processing')!.textContent).toContain('Processing readings');
+      // 19:30 UTC = 14:30 en Lima.
+      expect(el().querySelector('.provisional')!.textContent).toContain('provisional');
+      expect(el().querySelector('.provisional')!.textContent).toContain('Nov 25, 02:30 PM (Lima)');
+      expect(el().querySelector('.list-delay')!.textContent).toContain('up to 1 minute');
+    });
+
+    it('un error del backend se muestra con titulo y mensaje', () => {
+      start();
+      openDetail(0, CRITICAL);
+      el().querySelector<HTMLButtonElement>('.btn--close-session')!.click();
+      http.expectOne(`${PD_SESSIONS}/S-300/close`).flush(
+        { success: false, message: 'Session end time is immutable' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      render();
+      expect(el().querySelector('.command-error strong')!.textContent!.trim()).toBe('Conflict with the current state');
+      expect(el().querySelector('.command-error__message')!.textContent!.trim()).toBe('Session end time is immutable');
+    });
+
+    it('antes del plazo «Finalizar» esta deshabilitado y dice desde cuando se podra', () => {
+      start();
+      const deadline = inFuture();
+      openDetail(0, CRITICAL, pdSession({ state: 'CLOSING', reconciliationDeadline: deadline }));
+
+      const button = el().querySelector<HTMLButtonElement>('.btn--finalize')!;
+      expect(button.disabled).toBe(true);
+      expect(el().querySelector('.finalize-from')!.textContent).toContain('Can be finalized from');
+      // Ni forzándolo desde código se envía antes de tiempo.
+      component.finalizeSession();
+      http.expectNone(`${PD_SESSIONS}/S-300/finalize`);
+    });
+  });
+
+  describe('finalizar jornada', () => {
+    const past = '2026-11-25T14:30:00Z';
+
+    it('pasado el plazo finaliza con deliveryConfirmed: false y muestra «Jornada cerrada»', () => {
+      start();
+      openDetail(0, CRITICAL, pdSession({ state: 'CLOSING', reconciliationDeadline: past }));
+
+      const button = el().querySelector<HTMLButtonElement>('.btn--finalize')!;
+      expect(button.disabled).toBe(false);
+      expect(el().querySelector('.finalize-from')).toBeNull();
+      button.click();
+
+      const req = http.expectOne(`${PD_SESSIONS}/S-300/finalize`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ deliveryConfirmed: false });
+      req.flush({ data: pdSession({
+        state: 'CLOSED', reconciliationDeadline: past, finalizedAt: '2026-11-25T15:00:00Z',
+        accumulatedIndex: 11800, percentage: 98.33, coveragePercentage: 97.5, coverageComplete: false,
+      }) });
+      http.expectOne(`${LIST}?page=0&size=50`).flush(page([HIGH]));
+      render();
+
+      expect(el().querySelector('.closed')!.textContent).toContain('Shift closed');
+      expect(el().querySelector('.final-index')!.textContent).toContain('11,800 uT*s');
+      expect(el().querySelector('.coverage')!.textContent!.trim()).toBe('97.5%');
+      expect(el().querySelector('.incomplete')!.textContent).toContain('Incomplete coverage');
+    });
+
+    it('con cobertura completa no avisa', () => {
+      start();
+      openDetail(0, CRITICAL, pdSession({ state: 'CLOSED', coveragePercentage: 100, coverageComplete: true }));
+      expect(el().querySelector('.closed')).not.toBeNull();
+      expect(el().querySelector('.incomplete')).toBeNull();
+      expect(el().querySelector('.btn--finalize')).toBeNull();
+    });
+  });
+
+  describe('iniciar jornada', () => {
+    it('el boton de la cabecera abre el modal y, al iniciar, se cierra y refresca la lista', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--start')!.click();
+      render();
+      const dialog = fixture.debugElement.query(By.directive(StartSessionDialog));
+      expect(dialog).not.toBeNull();
+      // El modal pide sus opciones; sin organización en la sesión de prueba solo pide operarios.
+      http.expectOne(WORKERS).flush({ data: [] });
+
+      (dialog.componentInstance as StartSessionDialog).started.emit(pdSession({ id: 'S-new' }));
+      http.expectOne(`${LIST}?page=0&size=50`).flush(page([HIGH, CRITICAL]));
+      render();
+      expect(fixture.debugElement.query(By.directive(StartSessionDialog))).toBeNull();
+    });
+
+    it('cancelar cierra el modal sin refrescar', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--start')!.click();
+      render();
+      http.expectOne(WORKERS).flush({ data: [] });
+      el().querySelector<HTMLButtonElement>('.btn--cancel')!.click();
+      render();
+      expect(fixture.debugElement.query(By.directive(StartSessionDialog))).toBeNull();
+      http.expectNone(`${LIST}?page=0&size=50`);
     });
   });
 

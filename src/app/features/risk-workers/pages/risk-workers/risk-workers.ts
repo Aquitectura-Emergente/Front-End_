@@ -3,10 +3,16 @@ import { DecimalPipe } from '@angular/common';
 import { Subscription, interval } from 'rxjs';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { LanguageService } from '../../../../core/services/language.service';
+import { ConfirmService } from '../../../../core/services/confirm.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { timeAgo } from '../../../../core/utils/time';
 import { ForecastingFacade } from '../../../../contexts/aiforecasting/application/forecasting-facade';
 import { Assessment, Criticality } from '../../../../contexts/aiforecasting/domain/assessment.model';
 import { WorkerNames } from '../../../../contexts/aiforecasting/domain/worker-name';
+import { SessionControlFacade } from '../../../../contexts/personaldosimetry/application/session-control-facade';
+import { ExposureSession } from '../../../../contexts/personaldosimetry/domain/exposure-session.model';
+import { CommandError, SessionPhase } from '../../../../contexts/personaldosimetry/domain/session-control.model';
+import { StartSessionDialog } from '../../components/start-session-dialog/start-session-dialog';
 
 /** Cada cuánto se vuelve a pedir la lista mientras la página está abierta. */
 export const RISK_REFRESH_MS = 60_000;
@@ -31,16 +37,24 @@ type CriticalityFilter = Criticality | '';
  * Se refresca sola cada 60 s mientras está abierta. Un refresco que falla
  * **no borra la lista**: se conserva la última y se avisa de que puede estar
  * desactualizada, porque vaciarla haría creer que ya no hay nadie en riesgo.
+ *
+ * Desde aquí el SSO también controla la jornada de dosimetría (F4): la inicia
+ * desde la cabecera y la cierra y finaliza desde el detalle. Cerrar deja la
+ * jornada en `CLOSING` («procesando lecturas»); finalizar solo se habilita
+ * pasado `reconciliationDeadline` y siempre con `deliveryConfirmed: false`.
  */
 @Component({
   selector: 'app-risk-workers',
-  imports: [TranslatePipe, DecimalPipe],
+  imports: [TranslatePipe, DecimalPipe, StartSessionDialog],
   templateUrl: './risk-workers.html',
   styleUrl: './risk-workers.scss',
 })
 export class RiskWorkers implements OnInit, OnDestroy {
   protected forecasting = inject(ForecastingFacade);
+  protected control = inject(SessionControlFacade);
   protected lang = inject(LanguageService);
+  private confirm = inject(ConfirmService);
+  private toast = inject(ToastService);
 
   readonly filters: { value: CriticalityFilter; labelKey: string }[] = [
     { value: '', labelKey: 'af_filter_all' },
@@ -64,13 +78,36 @@ export class RiskWorkers implements OnInit, OnDestroy {
   detailLoading = signal(false);
   noActive = signal(false);
 
+  /** Jornada de dosimetría de la evaluación abierta en el detalle. */
+  session = signal<ExposureSession | null>(null);
+  sessionLoading = signal(false);
+  sessionBusy = signal(false);
+  sessionError = signal<CommandError | null>(null);
+  /** Tras cerrar o finalizar: el operario tarda hasta 1 min en salir de la lista. */
+  sessionChanged = signal(false);
+
+  startOpen = signal(false);
+
   ordered = computed(() => this.forecasting.byUrgency(this.assessments()));
   truncated = computed(() => this.total() > this.assessments().length);
+
+  sessionPhase = computed<SessionPhase | null>(() => {
+    const s = this.session();
+    return s ? this.control.phase(s) : null;
+  });
+
+  /** Se reevalúa con el reloj de la página, que avanza en cada refresco (≤ 60 s). */
+  finalizable = computed(() => {
+    const s = this.session();
+    return !!s && this.control.canFinalize(s, this.now());
+  });
 
   private refreshSub?: Subscription;
   private loadSub?: Subscription;
   private detailSub?: Subscription;
   private namesSub?: Subscription;
+  private sessionSub?: Subscription;
+  private commandSub?: Subscription;
 
   ngOnInit(): void {
     this.namesSub = this.forecasting.workerNames().subscribe(names => this.names.set(names));
@@ -83,6 +120,8 @@ export class RiskWorkers implements OnInit, OnDestroy {
     this.loadSub?.unsubscribe();
     this.detailSub?.unsubscribe();
     this.namesSub?.unsubscribe();
+    this.sessionSub?.unsubscribe();
+    this.commandSub?.unsubscribe();
   }
 
   /**
@@ -133,14 +172,85 @@ export class RiskWorkers implements OnInit, OnDestroy {
       if (active) this.detail.set(active);
       else this.noActive.set(true);
     });
+    this.loadSession(assessment.sessionId);
   }
 
   closeDetail(): void {
     this.detailSub?.unsubscribe();
+    this.sessionSub?.unsubscribe();
+    this.commandSub?.unsubscribe();
     this.selected.set(null);
     this.detail.set(null);
     this.noActive.set(false);
     this.detailLoading.set(false);
+    this.resetSession();
+  }
+
+  // ── Jornada de dosimetría ────────────────────────────────────────────────
+
+  /**
+   * Cierra la jornada de la evaluación (`POST /close` sin `endedAt`). Pide
+   * confirmación: no se deshace, y el operario deja de medir en ese instante.
+   */
+  closeSession(): void {
+    const session = this.session();
+    const row = this.selected();
+    if (!session || !row || this.sessionBusy()) return;
+    const message = `${this.lang.t('sc_closeConfirm')} ${this.workerName(row.workerId)}`;
+    if (!this.confirm.confirm(message)) return;
+    this.runCommand(this.control.close(session.id), 'sc_closed');
+  }
+
+  /** Finaliza con `deliveryConfirmed: false`; solo pasado el plazo de reconciliación. */
+  finalizeSession(): void {
+    const session = this.session();
+    if (!session || this.sessionBusy() || !this.control.canFinalize(session, Date.now())) return;
+    this.runCommand(this.control.finalize(session.id), 'sc_finalized');
+  }
+
+  openStart(): void {
+    this.startOpen.set(true);
+  }
+
+  /** Jornada iniciada desde el modal: se cierra y se refresca la lista. */
+  onStarted(): void {
+    this.startOpen.set(false);
+    this.load(true);
+  }
+
+  private runCommand(command: ReturnType<SessionControlFacade['close']>, successKey: string): void {
+    this.sessionBusy.set(true);
+    this.sessionError.set(null);
+    this.commandSub?.unsubscribe();
+    this.commandSub = command.subscribe(result => {
+      this.sessionBusy.set(false);
+      if (!result.ok) {
+        this.sessionError.set(result.error);
+        return;
+      }
+      this.session.set(result.data);
+      this.sessionChanged.set(true);
+      this.toast.success(this.lang.t(successKey));
+      this.load(true);
+    });
+  }
+
+  private loadSession(sessionId: string): void {
+    this.resetSession();
+    this.sessionLoading.set(true);
+    this.sessionSub?.unsubscribe();
+    this.sessionSub = this.control.session(sessionId).subscribe(session => {
+      this.sessionLoading.set(false);
+      this.session.set(session);
+    });
+  }
+
+  private resetSession(): void {
+    this.session.set(null);
+    this.sessionLoading.set(false);
+    this.sessionBusy.set(false);
+    this.sessionError.set(null);
+    this.sessionChanged.set(false);
   }
 
   isSelected(assessment: Assessment): boolean {
@@ -184,6 +294,10 @@ export class RiskWorkers implements OnInit, OnDestroy {
       this.selected.set(fresh);
       this.detail.set(fresh);
       this.noActive.set(false);
+      // Otra jornada del mismo operario (se cerró y abrió otra): su estado es otro.
+      if (fresh.sessionId !== this.session()?.id && !this.sessionLoading() && !this.sessionBusy()) {
+        this.loadSession(fresh.sessionId);
+      }
     }
   }
 }

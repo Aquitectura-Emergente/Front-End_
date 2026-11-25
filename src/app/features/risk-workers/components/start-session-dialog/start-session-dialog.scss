@@ -1,0 +1,64 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+// Trae .modal, .modal-backdrop, .btn y .muted del portal industrial.
+@include portal.portal-page;
+
+:host {
+  display: contents;
+}
+
+.device {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &__label {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+  }
+
+  &__chosen {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+  }
+
+  &__search {
+    display: flex;
+    gap: 0.5rem;
+
+    input {
+      flex: 1;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--color-background);
+      color: var(--color-text-primary);
+      font: inherit;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.command-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  color: var(--color-danger);
+  font-size: 0.88rem;
+
+  &__message {
+    color: var(--color-text-primary);
+    word-break: break-word;
+  }
+}
