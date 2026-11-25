@@ -1,0 +1,279 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>{{ 'ea_title' | t }}</h1>
+      <p class="subtitle">{{ 'ea_subtitle' | t }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn--ghost btn--export"
+              [disabled]="!summary() || empty()" (click)="exportCsv()">
+        <i class="ph ph-file-csv" aria-hidden="true"></i> {{ 'ea_exportCsv' | t }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Periodo ─────────────────────────────────────────────────────────── -->
+  <form class="form-card period" (submit)="$event.preventDefault(); load()">
+    <label>
+      <span>{{ 'ea_from' | t }}</span>
+      <input type="date" name="from" class="period__from" [value]="from()"
+             (change)="setFrom($any($event.target).value)" />
+    </label>
+    <label>
+      <span>{{ 'ea_to' | t }}</span>
+      <input type="date" name="to" class="period__to" [value]="to()"
+             (change)="setTo($any($event.target).value)" />
+    </label>
+    <button type="submit" class="btn btn--primary btn--apply" [disabled]="loading()">
+      <i class="ph ph-funnel" aria-hidden="true"></i> {{ 'ea_apply' | t }}
+    </button>
+
+    <div class="quick" role="group" [attr.aria-label]="'ea_quick' | t">
+      @for (days of quickPeriods; track days) {
+        <button type="button" class="btn btn--ghost btn--quick" [class.is-active]="quick() === days"
+                [attr.aria-pressed]="quick() === days" [disabled]="loading()" (click)="useLastDays(days)">
+          {{ days }} {{ 'ea_days' | t }}
+        </button>
+      }
+    </div>
+
+    <span class="muted zone">{{ 'ea_zone' | t }} {{ zone }}</span>
+  </form>
+
+  @if (periodError(); as invalid) {
+    <p class="banner banner--warn period-error" role="alert">
+      <i class="ph ph-calendar-x" aria-hidden="true"></i> {{ 'ea_period_' + invalid | t }}
+    </p>
+  } @else if (loading()) {
+    <div class="loading-state">
+      <i class="ph ph-spinner" aria-hidden="true"></i> {{ 'ea_loading' | t }}
+    </div>
+  } @else if (error()) {
+    <div class="state state--error" role="alert">
+      <p class="banner banner--warn">
+        <i class="ph ph-warning" aria-hidden="true"></i> {{ 'ea_error' | t }}
+      </p>
+      <button type="button" class="btn btn--ghost btn--retry" (click)="load()">{{ 'af_retry' | t }}</button>
+    </div>
+  } @else if (summary(); as s) {
+
+    @if (empty()) {
+      <p class="empty">{{ 'ea_empty' | t }}</p>
+    } @else {
+      <!-- ── Indicadores ─────────────────────────────────────────────────── -->
+      <div class="kpis">
+        <div class="kpi kpi--sessions">
+          <span class="kpi__label">{{ 'ea_kpi_closedSessions' | t }}</span>
+          <strong class="kpi__value">{{ s.totals.closedSessions }}</strong>
+        </div>
+        <div class="kpi kpi--workers">
+          <span class="kpi__label">{{ 'ea_kpi_workers' | t }}</span>
+          <strong class="kpi__value">{{ s.totals.workers }}</strong>
+        </div>
+        <div class="kpi kpi--near">
+          <span class="kpi__label">{{ 'ea_kpi_nearLimit' | t }}</span>
+          <strong class="kpi__value">{{ pct(s.totals.sessionsNearLimitPct) }}</strong>
+          <span class="muted">{{ s.totals.sessionsNearLimit }} {{ 'ea_sessions' | t }} ·
+            ≥ {{ s.totals.nearLimitRatio * 100 | number: '1.0-0' }}% {{ 'ea_ofLimit' | t }}</span>
+        </div>
+        <div class="kpi kpi--exceeded" [class.kpi--danger]="s.totals.sessionsExceeded > 0">
+          <span class="kpi__label">{{ 'ea_kpi_exceeded' | t }}</span>
+          <strong class="kpi__value">{{ pct(s.totals.sessionsExceededPct) }}</strong>
+          <span class="muted">{{ s.totals.sessionsExceeded }} {{ 'ea_sessions' | t }}</span>
+        </div>
+        <div class="kpi kpi--coverage" [class.kpi--warn]="s.totals.incompleteCoverageSessions > 0">
+          <span class="kpi__label">{{ 'ea_kpi_incompleteCoverage' | t }}</span>
+          <strong class="kpi__value">{{ s.totals.incompleteCoverageSessions }}</strong>
+        </div>
+      </div>
+
+      @if (s.totals.incompleteCoverageSessions > 0) {
+        <p class="banner banner--warn coverage-warning" role="status">
+          <i class="ph ph-warning" aria-hidden="true"></i>
+          {{ s.totals.incompleteCoverageSessions }} {{ 'ea_coverageWarning' | t }}
+        </p>
+      }
+
+      <!-- ── Tendencia semanal ───────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="panel__head">
+          <h2>{{ 'ea_trend_title' | t }}</h2>
+          <span class="muted">{{ 'ea_trend_hint' | t }}</span>
+        </div>
+        <apx-chart
+          class="chart chart--trend"
+          [series]="trendSeries()"
+          [chart]="trendChart"
+          [xaxis]="trendXAxis()"
+          [yaxis]="trendYAxis()"
+          [stroke]="trendStroke"
+          [markers]="trendMarkers"
+          [colors]="trendColors"
+          [plotOptions]="trendPlotOptions"
+          [grid]="grid"
+          [dataLabels]="dataLabels"
+          [tooltip]="trendTooltip()"
+          [legend]="legend"
+        ></apx-chart>
+      </div>
+
+      <!-- ── Puestos ─────────────────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="panel__head">
+          <h2>{{ 'ea_positions_title' | t }}</h2>
+          <span class="muted">{{ s.unit }}</span>
+        </div>
+        @if (s.topPositions.length > 0) {
+          <apx-chart
+            class="chart chart--positions"
+            [series]="positionSeries()"
+            [chart]="positionChart()"
+            [xaxis]="positionXAxis()"
+            [yaxis]="positionYAxis"
+            [plotOptions]="positionPlotOptions"
+            [colors]="positionColors"
+            [grid]="grid"
+            [dataLabels]="dataLabels"
+            [tooltip]="positionTooltip"
+            [legend]="legend"
+          ></apx-chart>
+        } @else {
+          <p class="muted">{{ 'ea_positions_empty' | t }}</p>
+        }
+      </div>
+
+      <!-- ── Por operario ────────────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="panel__head">
+          <h2>{{ 'ea_workers_title' | t }}</h2>
+          <span class="muted">{{ s.unit }}</span>
+        </div>
+        <table class="grid workers">
+          <thead>
+            <tr>
+              <th>{{ 'af_th_worker' | t }}</th>
+              <th class="num">{{ 'ea_th_sessions' | t }}</th>
+              <th class="num" [attr.aria-sort]="ariaSort('avgFinalIndex')">
+                <button type="button" class="sort sort--avg" (click)="sortBy('avgFinalIndex')">
+                  {{ 'ea_th_avg' | t }} <i [class]="sortIcon('avgFinalIndex')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th class="num" [attr.aria-sort]="ariaSort('maxFinalIndex')">
+                <button type="button" class="sort sort--max" (click)="sortBy('maxFinalIndex')">
+                  {{ 'ea_th_max' | t }} <i [class]="sortIcon('maxFinalIndex')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th class="num">{{ 'ea_th_maxRatio' | t }}</th>
+              <th class="num" [attr.aria-sort]="ariaSort('sessionsAboveWarning')">
+                <button type="button" class="sort sort--warning" (click)="sortBy('sessionsAboveWarning')">
+                  {{ 'ea_th_aboveWarning' | t }} <i [class]="sortIcon('sessionsAboveWarning')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th class="num">{{ 'ea_th_exceeded' | t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of workers(); track w.workerId) {
+              <tr class="worker-row">
+                <td><strong class="worker">{{ workerName(w.workerId) }}</strong></td>
+                <td class="num">{{ w.sessions }}</td>
+                <td class="num avg">{{ w.avgFinalIndex | number: '1.0-0' }}</td>
+                <td class="num max">{{ w.maxFinalIndex | number: '1.0-0' }}</td>
+                <td class="num" [class.is-danger]="w.maxRatio > 1">
+                  {{ pct(forecasting.ratioToPercent(w.maxRatio)) }}
+                </td>
+                <td class="num above">{{ w.sessionsAboveWarning }}</td>
+                <td class="num" [class.is-danger]="w.sessionsExceeded > 0">{{ w.sessionsExceeded }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="columns">
+        <!-- ── Sobre la advertencia ──────────────────────────────────────── -->
+        <div class="panel">
+          <div class="panel__head">
+            <h2>{{ 'ea_aboveWarning_title' | t }}</h2>
+          </div>
+          @if (s.workersAboveWarning.length > 0) {
+            <ul class="list above-warning">
+              @for (w of s.workersAboveWarning; track w.workerId) {
+                <li>
+                  <strong>{{ workerName(w.workerId) }}</strong>
+                  <span class="pill pill--warn">{{ w.sessionsAboveWarning }} {{ 'ea_sessions' | t }}</span>
+                  <span class="muted">{{ 'ea_lastAt' | t }} {{ forecasting.limaDateTime(w.lastAt) }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="muted">{{ 'ea_aboveWarning_empty' | t }}</p>
+          }
+        </div>
+
+        <!-- ── Recomendaciones ───────────────────────────────────────────── -->
+        <div class="panel">
+          <div class="panel__head">
+            <h2>{{ 'ea_recommendations_title' | t }}</h2>
+          </div>
+          <dl class="facts recommendations">
+            <div><dt>{{ 'ea_rec_rotation' | t }}</dt><dd class="rec-rotation">{{ s.recommendations.rotation }}</dd></div>
+            <div><dt>{{ 'ea_rec_reschedule' | t }}</dt><dd class="rec-reschedule">{{ s.recommendations.rescheduleTask }}</dd></div>
+            <div><dt>{{ 'ea_rec_benefit' | t }}</dt>
+              <dd class="rec-benefit">{{ s.recommendations.estimatedBenefitIndex | number: '1.0-0' }} {{ s.unit }}</dd></div>
+          </dl>
+        </div>
+      </div>
+    }
+
+    <!-- ── Críticos proyectados: foto de ahora, no depende del periodo ─────── -->
+    <div class="panel projected">
+      <div class="panel__head">
+        <h2>
+          {{ 'ea_projected_title' | t }}
+          <span class="pill pill--accent projection-tag">{{ 'af_projection' | t }}</span>
+        </h2>
+        <a routerLink="/sso/risk-workers" class="btn btn--ghost risk-link">
+          {{ 'ea_projected_link' | t }} <i class="ph ph-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      <p class="muted">{{ 'ea_projected_hint' | t }}</p>
+      @if (s.projectedCriticalWorkers.length > 0) {
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>{{ 'af_th_worker' | t }}</th>
+              <th>{{ 'af_th_criticality' | t }}</th>
+              <th class="num">{{ 'ea_th_projected' | t }}</th>
+              <th>{{ 'af_th_exceedance' | t }}</th>
+              <th>{{ 'af_th_recommendation' | t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of s.projectedCriticalWorkers; track c.assessmentId) {
+              <tr class="projected-row">
+                <td><strong>{{ workerName(c.workerId) }}</strong></td>
+                <td><span [class]="forecasting.criticalityPillClass(c.criticality)">
+                  {{ forecasting.criticalityLabelKey(c.criticality) | t }}</span></td>
+                <td class="num">{{ pct(forecasting.ratioToPercent(c.projectedRatio)) }}</td>
+                <td>{{ forecasting.limaTime(c.estimatedExceedanceAt) }}</td>
+                <td>
+                  @if (c.recommendationType) {
+                    {{ forecasting.recommendationLabelKey(c.recommendationType) | t }}
+                    @if (c.targetWorkerId) {
+                      <span class="muted">→ {{ workerName(c.targetWorkerId) }}</span>
+                    }
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="muted projected-empty">{{ 'ea_projected_empty' | t }}</p>
+      }
+    </div>
+  }
+</section>

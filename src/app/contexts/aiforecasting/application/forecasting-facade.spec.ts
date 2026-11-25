@@ -131,6 +131,65 @@ describe('ForecastingFacade', () => {
     });
   });
 
+  describe('summaryResult', () => {
+    // A diferencia de summary(), un fallo no se confunde con «sin datos».
+    it('un error llega como ok: false', () => {
+      let ok: boolean | undefined;
+      facade.summaryResult({ from: '2026-11-04', to: '2026-11-25' }).subscribe(r => (ok = r.ok));
+      http.expectOne(`${API}/analytics/organizations/8/summary?from=2026-11-04&to=2026-11-25`)
+        .flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+      expect(ok).toBe(false);
+    });
+
+    it('sin organizacion no llama al backend', () => {
+      auth.organizationId = null;
+      let ok: boolean | undefined;
+      facade.summaryResult().subscribe(r => (ok = r.ok));
+      http.expectNone(() => true);
+      expect(ok).toBe(false);
+    });
+  });
+
+  describe('downloadCsv', () => {
+    // jsdom no implementa createObjectURL: se sustituye para capturar el Blob.
+    const original = { create: URL.createObjectURL, revoke: URL.revokeObjectURL };
+    afterEach(() => {
+      URL.createObjectURL = original.create;
+      URL.revokeObjectURL = original.revoke;
+      vi.restoreAllMocks();
+    });
+
+    it('descarga un CSV con BOM y nombre por organizacion y periodo', async () => {
+      let blob: Blob | undefined;
+      URL.createObjectURL = ((b: Blob) => { blob = b; return 'blob:csv'; }) as typeof URL.createObjectURL;
+      URL.revokeObjectURL = () => {};
+      let filename = '';
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+        filename = this.download;
+      });
+
+      const summary = {
+        organizationId: 8, from: '2026-11-04', to: '2026-11-25', zone: 'America/Lima', unit: 'uT*s',
+        methodId: 'MAGNETIC_TIME_INDEX_V1', isProjection: false, generatedAt: '2026-11-25T15:00:00Z',
+        totals: { closedSessions: 1, workers: 1, sessionsAboveWarning: 0, sessionsNearLimit: 0, sessionsExceeded: 0,
+          incompleteCoverageSessions: 0, nearLimitRatio: 0.9 },
+        perWorker: [{ workerId: 14, sessions: 1, avgFinalIndex: 100, maxFinalIndex: 100, maxRatio: 0.5,
+          sessionsAboveWarning: 0, sessionsNearLimit: 0, sessionsExceeded: 0 }],
+        weeklyTrend: [], topPositions: [], workersAboveWarning: [], projectedCriticalWorkers: [],
+        recommendations: { rotation: 0, rescheduleTask: 0, estimatedBenefitIndex: 0 },
+      } as AnalyticsSummary;
+
+      facade.downloadCsv(summary, new Map([[14, 'Lucía Mendoza']]));
+
+      expect(filename).toBe('emsafe-exposure-analytics-8-2026-11-04_2026-11-25.csv');
+      expect(blob!.type).toBe('text/csv;charset=utf-8');
+      const bytes = new Uint8Array(await blob!.arrayBuffer());
+      expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]); // BOM UTF-8
+      const content = new TextDecoder().decode(bytes.slice(3));
+      expect(content).toContain('14,Lucía Mendoza,1,100,100,0.5,0,0,0');
+    });
+  });
+
   describe('workerNames', () => {
     it('cruza los operarios del SSO con su id', () => {
       let names: WorkerNames = new Map();

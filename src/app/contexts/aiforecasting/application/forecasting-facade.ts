@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { MutationResult, PageResponse } from '../../../core/http/api-response';
@@ -33,6 +34,7 @@ import {
 } from '../domain/analytics-summary.model';
 import { WorkerNames, workerName, workerNameMap } from '../domain/worker-name';
 import { limaDateTime, limaTime } from '../domain/lima-time';
+import { analyticsCsv, analyticsCsvFileName } from '../domain/analytics-view';
 
 /** Punto de entrada del contexto aiforecasting para la presentación. */
 @Injectable({ providedIn: 'root' })
@@ -40,6 +42,7 @@ export class ForecastingFacade {
   private forecasting = inject(ForecastingApi);
   private analytics = inject(AnalyticsApi);
   private sso = inject(SsoFacade);
+  private platformId = inject(PLATFORM_ID);
 
   // ── Proyecciones ─────────────────────────────────────────────────────────
 
@@ -75,6 +78,27 @@ export class ForecastingFacade {
     const organizationId = this.sso.organizationId();
     if (!organizationId) return of(null);
     return this.analytics.summary(organizationId, period);
+  }
+
+  /**
+   * Como `summary`, pero con `ok: false` si la llamada falla. Sin organización
+   * no se llama al backend: la URL no se puede construir.
+   */
+  summaryResult(period: AnalyticsPeriod = {}): Observable<MutationResult<AnalyticsSummary>> {
+    const organizationId = this.sso.organizationId();
+    if (!organizationId) return of({ ok: false as const, error: 'no-organization' });
+    return this.analytics.summaryResult(organizationId, period);
+  }
+
+  /**
+   * Descarga el resumen como CSV, para la plantilla del reporte de cumplimiento.
+   *
+   * Con BOM UTF-8: sin él, Excel abre el archivo como ANSI y rompe las tildes de
+   * los nombres («Lucía» → «LucÃ­a»).
+   */
+  downloadCsv(summary: AnalyticsSummary, names: WorkerNames): void {
+    const blob = new Blob(['﻿', analyticsCsv(summary, names)], { type: 'text/csv;charset=utf-8' });
+    this.saveAs(blob, analyticsCsvFileName(summary));
   }
 
   // ── Nombres de operarios ─────────────────────────────────────────────────
@@ -154,5 +178,19 @@ export class ForecastingFacade {
 
   positionLabel(position: PositionStats): string {
     return positionLabel(position);
+  }
+
+  /**
+   * Guarda el blob como archivo. Tras `isPlatformBrowser` porque toca
+   * `document` y `URL`, igual que `ComplianceReportFacade.saveAs`.
+   */
+  private saveAs(blob: Blob, filename: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 }

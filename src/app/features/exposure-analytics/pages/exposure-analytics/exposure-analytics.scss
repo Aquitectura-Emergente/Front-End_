@@ -1,0 +1,224 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+@include portal.portal-page;
+
+// Igual que en risk-workers: tono de información para «Proyección».
+.pill--accent {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+
+.projection-tag {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Mismo formulario en línea que el de sso-alerts y compliance-reports.
+.form-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 9rem;
+
+    span {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  input {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 0.9rem;
+  }
+}
+
+.quick {
+  display: flex;
+  gap: 0.35rem;
+
+  .is-active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+}
+
+.zone {
+  margin-left: auto;
+  align-self: center;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+// ── Indicadores ──────────────────────────────────────────────────────────
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  &__label {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__value {
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--color-text-primary);
+  }
+
+  &--warn {
+    border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+
+    .kpi__value { color: var(--color-warning); }
+  }
+
+  &--danger {
+    border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+
+    .kpi__value { color: var(--color-danger); }
+  }
+}
+
+// ── Paneles ──────────────────────────────────────────────────────────────
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--color-surface);
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.chart {
+  display: block;
+  min-height: 12rem;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.25rem;
+}
+
+.grid {
+  .is-danger { color: var(--color-danger); font-weight: 600; }
+
+  th[aria-sort] { padding: 0; }
+}
+
+.sort {
+  appearance: none;
+  background: none;
+  border: none;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+
+  &:hover { color: var(--color-text-primary); }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child { border-bottom: none; }
+  }
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+
+  dt {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
+  dd {
+    margin: 0.15rem 0 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+.risk-link {
+  text-decoration: none;
+}
