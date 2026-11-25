@@ -1,0 +1,194 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>
+        {{ 'af_title' | t }}
+        <span class="pill pill--accent projection-tag">
+          <i class="ph ph-trend-up" aria-hidden="true"></i> {{ 'af_projection' | t }}
+        </span>
+      </h1>
+      <p class="subtitle">{{ 'af_subtitle' | t }}</p>
+    </div>
+    <div class="header-actions">
+      <label class="filter">
+        <span>{{ 'af_minCriticality' | t }}</span>
+        <select class="filter__select" [value]="minCriticality()"
+                (change)="setMinCriticality($any($event.target).value)">
+          @for (f of filters; track f.value) {
+            <option [value]="f.value">{{ f.labelKey | t }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="btn btn--ghost btn--refresh" [disabled]="loading()" (click)="load()">
+        <i class="ph ph-arrows-clockwise" aria-hidden="true"></i> {{ 'af_refresh' | t }}
+      </button>
+    </div>
+  </header>
+
+  <p class="muted">{{ 'af_autoRefresh' | t }}</p>
+
+  @if (loading() && ordered().length === 0) {
+    <div class="loading-state">
+      <i class="ph ph-spinner" aria-hidden="true"></i> {{ 'af_loading' | t }}
+    </div>
+  } @else if (error() && ordered().length === 0) {
+    <div class="state state--error" role="alert">
+      <p class="banner banner--warn">
+        <i class="ph ph-warning" aria-hidden="true"></i> {{ 'af_error' | t }}
+      </p>
+      <button type="button" class="btn btn--ghost" (click)="load()">{{ 'af_retry' | t }}</button>
+    </div>
+  } @else if (ordered().length === 0) {
+    <p class="empty">{{ 'af_empty' | t }}</p>
+    <p class="muted empty-hint">{{ 'af_emptyHint' | t }}</p>
+  } @else {
+    @if (error()) {
+      <p class="banner banner--warn" role="status">
+        <i class="ph ph-warning" aria-hidden="true"></i> {{ 'af_staleWarning' | t }}
+      </p>
+    }
+
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'af_th_worker' | t }}</th>
+          <th>{{ 'af_th_criticality' | t }}</th>
+          <th>{{ 'af_th_exposure' | t }}</th>
+          <th>{{ 'af_th_exceedance' | t }}</th>
+          <th>{{ 'af_th_recommendation' | t }}</th>
+          <th>{{ 'af_th_assessed' | t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of ordered(); track a.id) {
+          <tr class="row" tabindex="0" [class.row--active]="isSelected(a)"
+              [attr.aria-selected]="isSelected(a)"
+              (click)="select(a)" (keydown.enter)="select(a)">
+            <td><strong class="worker">{{ workerName(a.workerId) }}</strong></td>
+            <td>
+              <span class="criticality" [class]="'criticality ' + forecasting.criticalityPillClass(a.criticality)">
+                {{ forecasting.criticalityLabelKey(a.criticality) | t }}
+              </span>
+            </td>
+            <td class="exposure">
+              <!-- Riel de 100 %: la barra sólida es lo consumido y la tenue, lo
+                   proyectado al fin del turno. Sobre el límite se pinta en rojo. -->
+              <div class="bar" role="img"
+                   [attr.aria-label]="percentLabel(forecasting.consumedPercent(a)) + ' → ' + percentLabel(forecasting.projectedPercent(a))">
+                <span class="bar__projected"
+                      [class.bar__projected--over]="(forecasting.projectedPercent(a) ?? 0) > 100"
+                      [style.width.%]="barWidth(forecasting.projectedPercent(a))"></span>
+                <span class="bar__consumed"
+                      [style.width.%]="barWidth(forecasting.consumedPercent(a))"></span>
+              </div>
+              <span class="muted percent">
+                {{ percentLabel(forecasting.consumedPercent(a)) }} →
+                <strong class="inline">{{ percentLabel(forecasting.projectedPercent(a)) }}</strong>
+              </span>
+            </td>
+            <td class="exceedance">{{ forecasting.limaTime(a.projection.estimatedExceedanceAt) }}</td>
+            <td class="recommendation">
+              @if (a.recommendation; as r) {
+                {{ forecasting.recommendationLabelKey(r.type) | t }}
+                @if (r.targetWorkerId) {
+                  <span class="muted">→ {{ workerName(r.targetWorkerId) }}</span>
+                }
+              } @else {
+                —
+              }
+            </td>
+            <td class="muted ago">{{ ago(a.assessedAt) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (truncated()) {
+      <p class="muted">{{ 'af_showing' | t }} {{ ordered().length }} {{ 'af_of' | t }} {{ total() }}</p>
+    }
+  }
+
+  <!-- ── Detalle de la proyección ─────────────────────────────────────────── -->
+  @if (selected(); as row) {
+    <aside class="panel detail" aria-live="polite">
+      <div class="panel__head">
+        <h2>{{ 'af_detail_title' | t }} · {{ workerName(row.workerId) }}</h2>
+        <button type="button" class="btn btn--ghost btn--close" (click)="closeDetail()">
+          <i class="ph ph-x" aria-hidden="true"></i> {{ 'af_close' | t }}
+        </button>
+      </div>
+
+      @if (detailLoading()) {
+        <p class="muted">{{ 'af_loading' | t }}</p>
+      } @else if (noActive()) {
+        <p class="empty no-active">{{ 'af_noActive' | t }}</p>
+      } @else if (detail(); as d) {
+        <div class="detail__tags">
+          <span [class]="forecasting.criticalityPillClass(d.criticality)">
+            {{ forecasting.criticalityLabelKey(d.criticality) | t }}
+          </span>
+          @if (d.isProjection) {
+            <span class="pill pill--accent projection-tag">{{ 'af_projection' | t }}</span>
+          }
+          <span class="muted">{{ 'af_model' | t }} {{ d.modelVersion.code }}</span>
+        </div>
+
+        <dl class="facts">
+          <div><dt>{{ 'af_current' | t }}</dt>
+            <dd>{{ d.projection.currentIndex | number: '1.0-2' }} {{ d.projection.unit }}
+              <span class="muted">({{ percentLabel(forecasting.consumedPercent(d)) }})</span></dd></div>
+          <div><dt>{{ 'af_limit' | t }}</dt>
+            <dd>{{ d.projection.limitIndex | number: '1.0-2' }} {{ d.projection.unit }}</dd></div>
+          <div><dt>{{ 'af_rate' | t }}</dt>
+            <dd class="rate">{{ d.projection.accumulationRate | number: '1.0-4' }} {{ d.projection.unit }}/s</dd></div>
+          <div><dt>{{ 'af_projected' | t }}</dt>
+            <dd>{{ d.projection.projectedIndexAtShiftEnd | number: '1.0-2' }} {{ d.projection.unit }}
+              <span class="muted">({{ percentLabel(forecasting.projectedPercent(d)) }})</span></dd></div>
+          <div><dt>{{ 'af_margin' | t }}</dt>
+            <dd [class.is-danger]="d.projection.remainingMargin < 0">
+              {{ d.projection.remainingMargin | number: '1.0-2' }} {{ d.projection.unit }}</dd></div>
+          <div><dt>{{ 'af_shiftEnd' | t }}</dt>
+            <dd>{{ forecasting.limaDateTime(d.projection.shiftEnd) }}</dd></div>
+          <div><dt>{{ 'af_th_exceedance' | t }}</dt>
+            <dd>
+              @if (d.projection.estimatedExceedanceAt) {
+                {{ forecasting.limaDateTime(d.projection.estimatedExceedanceAt) }}
+              } @else {
+                {{ 'af_noExceedance' | t }}
+              }
+            </dd></div>
+        </dl>
+
+        <h3>{{ 'af_th_recommendation' | t }}</h3>
+        @if (d.recommendation; as r) {
+          <p class="detail__recommendation">
+            <strong class="inline">{{ forecasting.recommendationLabelKey(r.type) | t }}</strong>
+            @if (r.targetWorkerId) {
+              · {{ 'af_target' | t }} {{ workerName(r.targetWorkerId) }}
+            }
+            @if (r.estimatedBenefitIndex != null) {
+              · {{ 'af_benefit' | t }} {{ r.estimatedBenefitIndex | number: '1.0-2' }} {{ d.projection.unit }}
+            }
+          </p>
+        } @else {
+          <p class="muted">{{ 'af_noRecommendation' | t }}</p>
+        }
+
+        <h3>
+          {{ 'af_explanation' | t }}
+          @if (d.redaction; as red) {
+            <span class="redaction-tag"
+                  [class]="'redaction-tag ' + (red.generatedBy === 'LLM' ? 'pill pill--accent' : 'pill pill--off')">
+              {{ (red.generatedBy === 'LLM' ? 'af_redaction_llm' : 'af_redaction_fallback') | t }}
+            </span>
+          }
+        </h3>
+        @if (d.redaction; as red) {
+          <p class="redaction">{{ red.text }}</p>
+        } @else {
+          <p class="muted">{{ 'af_noRedaction' | t }}</p>
+        }
+      }
+    </aside>
+  }
+</section>

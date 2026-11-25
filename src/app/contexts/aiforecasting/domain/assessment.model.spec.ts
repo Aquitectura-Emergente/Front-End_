@@ -5,6 +5,7 @@ import {
   consumedPercent,
   criticalityChipClass,
   criticalityLabelKey,
+  criticalityPillClass,
   criticalityRank,
   criticalityTone,
   projectedPercent,
@@ -65,6 +66,14 @@ describe('criticidad', () => {
     expect(criticalityTone('HIGH')).toBe('warning');
     expect(criticalityTone('CRITICAL')).toBe('danger');
     expect(criticalityChipClass('CRITICAL')).toBe('chip chip--danger');
+  });
+
+  it('la clase pill del portal SSO sigue el mismo tono', () => {
+    expect(criticalityPillClass('LOW')).toBe('pill');
+    expect(criticalityPillClass('MODERATE')).toBe('pill pill--accent');
+    expect(criticalityPillClass('HIGH')).toBe('pill pill--warn');
+    expect(criticalityPillClass('CRITICAL')).toBe('pill pill--danger');
+    expect(criticalityPillClass(undefined)).toBe('pill pill--off');
   });
 
   it('el rango ordena los niveles y sin nivel queda por debajo de LOW', () => {

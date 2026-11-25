@@ -38,6 +38,7 @@ import { Mitigation }    from './features/mitigation/pages/mitigation/mitigation
 import { ExposureLimits } from './features/exposure-limits/pages/exposure-limits/exposure-limits';
 import { ExposureSessions } from './features/exposure-sessions/pages/exposure-sessions/exposure-sessions';
 import { ComplianceReports } from './features/compliance-reports/pages/compliance-reports/compliance-reports';
+import { RiskWorkers }   from './features/risk-workers/pages/risk-workers/risk-workers';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -98,6 +99,7 @@ export const routes: Routes = [
       { path: 'plant-config',  component: PlantConfig },
       { path: 'workers',       component: SsoWorkers },
       { path: 'alerts',        component: SsoAlerts },
+      { path: 'risk-workers',  component: RiskWorkers },
       { path: 'mitigation',    component: Mitigation },
       { path: 'exposure',      component: ExposureSessions },
       { path: 'limits',        component: ExposureLimits },

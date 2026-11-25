@@ -1,0 +1,188 @@
+@use '../../../../shared/styles/portal-tables' as portal;
+
+@include portal.portal-page;
+
+// MODERATE y la etiqueta «Proyección»/«IA»: el mixin no trae un tono neutro de
+// información, y usar success o warn haría pasar una proyección por un estado.
+.pill--accent {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+
+.projection-tag {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  span {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
+  select {
+    padding: 0.42rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+  }
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.empty-hint {
+  margin-top: -1rem;
+  text-align: center;
+}
+
+.row {
+  cursor: pointer;
+
+  &:hover > td { background: color-mix(in srgb, var(--color-primary) 4%, transparent); }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.row--active > td {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.grid td strong.inline,
+strong.inline {
+  display: inline;
+}
+
+// Barra de exposición: riel = límite (100 %).
+.exposure {
+  min-width: 10rem;
+}
+
+.bar {
+  position: relative;
+  height: 0.5rem;
+  margin: 0.2rem 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-secondary) 15%, transparent);
+  overflow: hidden;
+
+  span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+  }
+
+  &__projected {
+    background: color-mix(in srgb, var(--color-warning) 40%, transparent);
+
+    &--over { background: color-mix(in srgb, var(--color-danger) 40%, transparent); }
+  }
+
+  &__consumed {
+    background: var(--color-primary);
+  }
+}
+
+.percent {
+  white-space: nowrap;
+}
+
+.ago,
+.exceedance {
+  white-space: nowrap;
+}
+
+// Detalle: mismo panel que el de sesiones de exposición.
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--color-surface);
+
+  h3 {
+    margin: 1rem 0 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.detail__tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  .projection-tag { margin-left: 0; }
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0.9rem 0 0;
+
+  dt {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
+  dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    color: var(--color-text-primary);
+
+    &.is-danger { color: var(--color-danger); }
+  }
+}
+
+.detail__recommendation {
+  margin: 0;
+}
+
+.redaction {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--color-background);
+  white-space: pre-line;
+  line-height: 1.45;
+}

@@ -118,6 +118,22 @@ export function criticalityChipClass(criticality: Criticality | undefined): stri
   return tone === 'neutral' ? 'chip' : `chip chip--${tone}`;
 }
 
+const PILLS: Record<Criticality, string> = {
+  LOW: 'pill',
+  MODERATE: 'pill pill--accent',
+  HIGH: 'pill pill--warn',
+  CRITICAL: 'pill pill--danger',
+};
+
+/**
+ * Clase `pill` del portal industrial (`shared/styles/portal-tables`), que es la
+ * que usan las páginas SSO. `pill--accent` no existe en el mixin: la define la
+ * página que la usa.
+ */
+export function criticalityPillClass(criticality: Criticality | undefined): string {
+  return criticality ? PILLS[criticality] : 'pill pill--off';
+}
+
 /** Orden numérico de la criticidad; sin nivel cuenta como la más baja. */
 export function criticalityRank(criticality: Criticality | undefined): number {
   return criticality ? RANK[criticality] : -1;

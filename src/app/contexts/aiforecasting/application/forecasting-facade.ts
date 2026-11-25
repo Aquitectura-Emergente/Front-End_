@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { PageResponse } from '../../../core/http/api-response';
+import { MutationResult, PageResponse } from '../../../core/http/api-response';
 import { SsoFacade } from '../../iam/application/sso-facade';
 import { ForecastingApi } from '../infrastructure/forecasting-api';
 import { AnalyticsApi } from '../infrastructure/analytics-api';
@@ -14,6 +14,7 @@ import {
   consumedPercent,
   criticalityChipClass,
   criticalityLabelKey,
+  criticalityPillClass,
   criticalityTone,
   projectedPercent,
   projectsExceedance,
@@ -31,6 +32,7 @@ import {
   weekHasData,
 } from '../domain/analytics-summary.model';
 import { WorkerNames, workerName, workerNameMap } from '../domain/worker-name';
+import { limaDateTime, limaTime } from '../domain/lima-time';
 
 /** Punto de entrada del contexto aiforecasting para la presentación. */
 @Injectable({ providedIn: 'root' })
@@ -47,6 +49,15 @@ export class ForecastingFacade {
     size = 20,
   ): Observable<PageResponse<Assessment>> {
     return this.forecasting.criticalWorkers(minCriticality, page, size);
+  }
+
+  /** Como `criticalWorkers`, pero con `ok: false` si la llamada falla. */
+  criticalWorkersResult(
+    minCriticality?: Criticality,
+    page = 0,
+    size = 20,
+  ): Observable<MutationResult<PageResponse<Assessment>>> {
+    return this.forecasting.criticalWorkersResult(minCriticality, page, size);
   }
 
   /** `null` si el operario no tiene evaluación activa (404 del backend). */
@@ -95,6 +106,18 @@ export class ForecastingFacade {
 
   criticalityChipClass(criticality: Criticality | undefined): string {
     return criticalityChipClass(criticality);
+  }
+
+  criticalityPillClass(criticality: Criticality | undefined): string {
+    return criticalityPillClass(criticality);
+  }
+
+  limaTime(iso: string | null | undefined): string {
+    return limaTime(iso);
+  }
+
+  limaDateTime(iso: string | null | undefined): string {
+    return limaDateTime(iso);
   }
 
   consumedPercent(assessment: Assessment): number | null {
