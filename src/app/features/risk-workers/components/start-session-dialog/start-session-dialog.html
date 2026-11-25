@@ -1,0 +1,66 @@
+<div class="modal-backdrop" (click)="cancelled.emit()"></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="start-session-title">
+  <h2 id="start-session-title">{{ 'sc_start_title' | t }}</h2>
+  <p class="muted">{{ 'sc_start_hint' | t }}</p>
+
+  <label>
+    <span>{{ 'af_th_worker' | t }}</span>
+    <select class="field-worker" [value]="workerId() ?? ''" (change)="selectWorker($any($event.target).value)">
+      <option value="">—</option>
+      @for (w of workers(); track w.id) {
+        <option [value]="w.id">{{ w.name }}</option>
+      }
+    </select>
+    @if (validation() === 'worker') { <small class="field-error">{{ 'sc_required_worker' | t }}</small> }
+  </label>
+
+  <label>
+    <span>{{ 'sc_position' | t }}</span>
+    <select class="field-position" [value]="jobPositionId() ?? ''" [disabled]="optionsLoading()"
+            (change)="selectPosition($any($event.target).value)">
+      <option value="">—</option>
+      @for (p of positions(); track p.id) {
+        <option [value]="p.id">{{ p.name }} · {{ p.plantZoneName }}</option>
+      }
+    </select>
+    @if (!optionsLoading() && positions().length === 0) {
+      <small class="muted no-positions">{{ 'sc_noPositions' | t }}</small>
+    }
+    @if (validation() === 'position') { <small class="field-error">{{ 'sc_required_position' | t }}</small> }
+  </label>
+
+  <div class="device">
+    <span class="device__label">{{ 'sc_device' | t }}</span>
+    @if (deviceId()) {
+      <p class="device__chosen">
+        <i class="ph ph-identification-badge" aria-hidden="true"></i>
+        <strong>{{ deviceLabel() }}</strong>
+        <span class="muted">· {{ (deviceSource() === 'lastSession' ? 'sc_device_fromLast' : 'sc_device_fromSerial') | t }}</span>
+      </p>
+    }
+    <div class="device__search">
+      <input type="text" class="field-serial" [placeholder]="'sc_serialPlaceholder' | t"
+             [value]="serial()" (input)="serial.set($any($event.target).value)"
+             (keydown.enter)="$event.preventDefault(); lookupSerial()" />
+      <button type="button" class="btn btn--ghost btn--lookup" [disabled]="serialBusy()" (click)="lookupSerial()">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i> {{ 'sc_lookup' | t }}
+      </button>
+    </div>
+    @if (serialError(); as e) { <small class="field-error serial-error">{{ e }}</small> }
+    @if (validation() === 'device') { <small class="field-error">{{ 'sc_required_device' | t }}</small> }
+  </div>
+
+  @if (error(); as e) {
+    <div class="command-error" role="alert">
+      <strong>{{ errorTitleKey(e.status) | t }}</strong>
+      @if (e.message) { <span class="command-error__message">{{ e.message }}</span> }
+    </div>
+  }
+
+  <div class="modal__actions">
+    <button type="button" class="btn btn--ghost btn--cancel" (click)="cancelled.emit()">{{ 'af_close' | t }}</button>
+    <button type="button" class="btn btn--primary btn--submit" [disabled]="busy()" (click)="submit()">
+      <i class="ph ph-play" aria-hidden="true"></i> {{ 'sc_start' | t }}
+    </button>
+  </div>
+</div>
