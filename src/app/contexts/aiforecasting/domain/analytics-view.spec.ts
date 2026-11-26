@@ -12,6 +12,7 @@ import {
   weeklySeries,
 } from './analytics-view';
 import { workerNameMap } from './worker-name';
+import { PeriodInsights } from './period-insights.model';
 
 // 2026-11-26 02:00 UTC = 2026-11-25 21:00 en Lima.
 const LATE_EVENING_LIMA = new Date('2026-11-26T02:00:00Z');
@@ -176,6 +177,41 @@ describe('analyticsCsv', () => {
   it('usa CRLF y termina en salto de linea', () => {
     expect(csv.endsWith('\r\n')).toBe(true);
     expect(csv.replace(/\r\n/g, '')).not.toContain('\n');
+  });
+
+  it('sin analisis con IA no agrega esa seccion', () => {
+    expect(lines).not.toContain('aiInsights');
+  });
+
+  it('con analisis con IA agrega resumen, hallazgos y recomendaciones aparte', () => {
+    const insights: PeriodInsights = {
+      organizationId: 8, generatedBy: 'FALLBACK', generatedAt: '2026-11-25T23:46:49Z',
+      period: { from: '2026-10-29', to: '2026-11-25', zone: 'America/Lima' }, isAdvisory: true,
+      disclaimer: 'Análisis generado con reglas automáticas (IA no disponible).',
+      resumen: 'Se cerraron 60 jornadas, 1 superó el límite.',
+      hallazgos: [{ texto: '1 jornada superó el límite: Carlos Rojas.', nivel: 'CRITICO' }],
+      recomendaciones: [
+        { accion: 'Capacitar', motivo: 'Cobertura incompleta', prioridad: 'BAJA', operariosAfectados: [],
+          puestosAfectados: [] },
+        { accion: 'Reprogramar tareas', motivo: 'Proyección CRITICAL', prioridad: 'ALTA', operariosAfectados: [14, 99],
+          puestosAfectados: [{ positionId: 1, positionName: 'Prensa hidráulica' }, { positionId: 7 }] },
+      ],
+      calidadDatos: '1 de 60 jornadas tiene cobertura incompleta.',
+    };
+    const withAi = analyticsCsv(summary(), names, insights).split('\r\n');
+    const start = withAi.indexOf('aiInsights');
+    // Va después de las tablas medidas, no mezclado con ellas.
+    expect(start).toBeGreaterThan(withAi.indexOf('topPositions'));
+    expect(withAi).toContain('FALLBACK,,2026-11-25T23:46:49Z,2026-10-29,2026-11-25,America/Lima,true');
+    // El resumen lleva una coma: va entre comillas.
+    expect(withAi).toContain('"Se cerraron 60 jornadas, 1 superó el límite."');
+    expect(withAi).toContain('CRITICO,1 jornada superó el límite: Carlos Rojas.');
+    // Ordenadas por prioridad, con operarios por nombre (o #id) y puestos por nombre (o #id).
+    const recs = withAi.slice(withAi.indexOf('recomendaciones') + 2, withAi.indexOf('calidadDatos'));
+    expect(recs[0]).toBe('ALTA,Reprogramar tareas,Proyección CRITICAL,"Rojas, Carlos; #99",Prensa hidráulica; #7');
+    expect(recs[1]).toBe('BAJA,Capacitar,Cobertura incompleta,,');
+    expect(withAi).toContain('1 de 60 jornadas tiene cobertura incompleta.');
+    expect(withAi).toContain('Análisis generado con reglas automáticas (IA no disponible).');
   });
 
   it('el nombre del archivo identifica organizacion y periodo', () => {

@@ -11,6 +11,7 @@ import { AuthService } from '../../../../contexts/iam/application/auth.service';
 import { ForecastingFacade } from '../../../../contexts/aiforecasting/application/forecasting-facade';
 import { AnalyticsSummary } from '../../../../contexts/aiforecasting/domain/analytics-summary.model';
 import { lastDaysPeriod } from '../../../../contexts/aiforecasting/domain/analytics-view';
+import { PeriodInsights } from '../../../../contexts/aiforecasting/domain/period-insights.model';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -309,6 +310,194 @@ describe('ExposureAnalytics', () => {
       const s = summary();
       start({ data: { ...s, totals: { ...s.totals, closedSessions: 0 } } });
       expect(el().querySelector<HTMLButtonElement>('.btn--export')!.disabled).toBe(true);
+    });
+  });
+
+  describe('analisis con IA', () => {
+    const INSIGHTS_URL = `${environment.apiUrl}/v1/ai-forecasting/analytics/organizations/8/insights`;
+    const insightsUrl = (from: string, to: string, refresh = false) =>
+      `${INSIGHTS_URL}?from=${from}&to=${to}&zone=America%2FLima${refresh ? '&refresh=true' : ''}`;
+
+    function insights(o: Partial<PeriodInsights> = {}): PeriodInsights {
+      return {
+        organizationId: 8, generatedBy: 'LLM', model: 'gemini-2.5-flash', generatedAt: '2026-11-25T23:46:49Z',
+        period: { from: period28.from, to: period28.to, zone: 'America/Lima' }, isAdvisory: true,
+        disclaimer: 'Análisis generado por IA (Gemini). Las cifras deben ser validadas por el SSO.',
+        resumen: 'Se cerraron 60 jornadas de 4 operarios; 1 superó el límite.',
+        hallazgos: [
+          { texto: 'Puesto con mayor índice: Prensa hidráulica.', nivel: 'INFO' },
+          { texto: '1 jornada superó el límite: Carlos Rojas.', nivel: 'CRITICO' },
+          { texto: 'Proyección HIGH de Lucía Mendoza.', nivel: 'ATENCION' },
+        ],
+        recomendaciones: [
+          { accion: 'Reforzar la capacitación.', motivo: 'Cobertura incompleta.', prioridad: 'BAJA',
+            operariosAfectados: [], puestosAfectados: [] },
+          { accion: 'Revisar el blindaje del puesto.', motivo: 'Mayor índice promedio.', prioridad: 'MEDIA',
+            operariosAfectados: [], puestosAfectados: [{ positionId: 31, positionName: 'Prensa hidráulica' }, { positionId: 7 }] },
+          { accion: 'Reprogramar las tareas restantes.', motivo: 'Proyección CRITICAL.', prioridad: 'ALTA',
+            operariosAfectados: [15, 999], puestosAfectados: [] },
+        ],
+        calidadDatos: '1 de 60 jornadas tiene cobertura incompleta.',
+        ...o,
+      };
+    }
+
+    function generate(response: object = { data: insights() }): void {
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to)).flush(response);
+      render();
+    }
+
+    // Cada llamada puede gastar cuota de Gemini.
+    it('no se genera al entrar en la pagina', () => {
+      start();
+      http.expectNone(req => req.url.startsWith(INSIGHTS_URL));
+      expect(el().querySelector('.insights__body')).toBeNull();
+      expect(el().querySelector('.btn--generate')).not.toBeNull();
+    });
+
+    it('el boton pide por POST el mismo periodo del filtro y sin refresh', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      const req = http.expectOne(insightsUrl(period28.from, period28.to));
+      expect(req.request.method).toBe('POST');
+      expect(req.request.urlWithParams).not.toContain('refresh');
+      req.flush({ data: insights() });
+    });
+
+    it('Regenerar envia refresh=true', () => {
+      start();
+      generate();
+      el().querySelector<HTMLButtonElement>('.btn--regenerate')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to, true)).flush({ data: insights() });
+    });
+
+    it('mientras carga avisa y deshabilita el boton', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      render();
+      expect(el().querySelector('.insights__loading')!.textContent).toContain('The AI is analysing the period');
+      expect(el().querySelector<HTMLButtonElement>('.btn--generate')!.disabled).toBe(true);
+      http.expectOne(insightsUrl(period28.from, period28.to)).flush({ data: insights() });
+    });
+
+    it('con Gemini: etiqueta IA (Gemini), modelo, hora de Lima, resumen y disclaimer', () => {
+      start();
+      generate();
+      expect(el().querySelector('.source')!.textContent!.trim()).toBe('AI (Gemini)');
+      expect(el().querySelector('.model')!.textContent!.trim()).toBe('gemini-2.5-flash');
+      // 23:46 UTC = 18:46 en Lima.
+      expect(el().querySelector('.generated-at')!.textContent).toContain('Nov 25, 06:46 PM (Lima)');
+      expect(el().querySelector('.insights__summary')!.textContent!.trim())
+        .toBe('Se cerraron 60 jornadas de 4 operarios; 1 superó el límite.');
+      expect(el().querySelector('.disclaimer')!.textContent).toContain('validadas por el SSO');
+    });
+
+    it('con reglas: etiqueta Reglas automaticas y sin modelo', () => {
+      start();
+      const fallback = insights({ generatedBy: 'FALLBACK' });
+      delete fallback.model;
+      generate({ data: fallback });
+      expect(el().querySelector('.source')!.textContent!.trim()).toBe('Automatic rules');
+      expect(el().querySelector('.model')).toBeNull();
+    });
+
+    it('colorea los hallazgos por nivel', () => {
+      start();
+      generate();
+      const tones = Array.from(el().querySelectorAll('.finding')).map(f =>
+        ['finding--danger', 'finding--warn', 'finding--neutral'].find(c => f.classList.contains(c)));
+      expect(tones).toEqual(['finding--neutral', 'finding--danger', 'finding--warn']);
+    });
+
+    it('ordena las recomendaciones por prioridad y nombra operarios y puestos', () => {
+      start();
+      generate();
+      const recs = Array.from(el().querySelectorAll('.ai-rec'));
+      expect(recs.map(r => r.querySelector('.priority')!.textContent!.trim())).toEqual(['High', 'Medium', 'Low']);
+      expect(recs[0].querySelector('.workers-affected')!.textContent).toContain('Lucía Mendoza, #999');
+      expect(recs[1].querySelector('.positions-affected')!.textContent!.replace(/\s+/g, ' '))
+        .toContain('Prensa hidráulica, #7');
+      expect(recs[0].querySelector('.priority')!.classList).toContain('pill--danger');
+    });
+
+    it('muestra la calidad de datos como aviso solo si viene', () => {
+      start();
+      generate();
+      expect(el().querySelector('.data-quality')!.textContent).toContain('1 de 60 jornadas');
+
+      const clean = insights();
+      delete clean.calidadDatos;
+      el().querySelector<HTMLButtonElement>('.btn--regenerate')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to, true)).flush({ data: clean });
+      render();
+      expect(el().querySelector('.data-quality')).toBeNull();
+    });
+
+    it('un error muestra el mensaje y Reintentar repite la peticion', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to)).flush(null, { status: 500, statusText: 'Server Error' });
+      render();
+      expect(el().querySelector('.insights__error')!.textContent).toContain('Could not generate the analysis.');
+
+      el().querySelector<HTMLButtonElement>('.btn--insights-retry')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to)).flush({ data: insights() });
+      render();
+      expect(el().querySelector('.insights__error')).toBeNull();
+      expect(el().querySelector('.insights__summary')).not.toBeNull();
+    });
+
+    it('un 403 dice «sin permiso» y no ofrece Reintentar', () => {
+      start();
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      http.expectOne(insightsUrl(period28.from, period28.to))
+        .flush({ success: false, message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+      render();
+      expect(el().querySelector('.insights__error')!.textContent).toContain('No permission');
+      expect(el().querySelector('.btn--insights-retry')).toBeNull();
+    });
+
+    it('si cambia el periodo despues de generar, lo marca como de otro periodo', () => {
+      start();
+      generate();
+      expect(el().querySelector('.insights__stale')).toBeNull();
+
+      el().querySelectorAll<HTMLButtonElement>('.btn--quick')[0].click(); // 7 días
+      const p7 = lastDaysPeriod(7);
+      http.expectOne(url(p7.from, p7.to)).flush({ data: summary({ from: p7.from, to: p7.to }) });
+      render();
+
+      expect(el().querySelector('.insights__stale')!.textContent).toContain('another period');
+      expect(el().querySelector('.insights__stale')!.textContent).toContain(`${period28.from} → ${period28.to}`);
+      // Se ofrece generar el del periodo nuevo, no regenerar el viejo.
+      expect(el().querySelector('.btn--regenerate')).toBeNull();
+      el().querySelector<HTMLButtonElement>('.btn--generate')!.click();
+      http.expectOne(insightsUrl(p7.from, p7.to)).flush({
+        data: insights({ period: { from: p7.from, to: p7.to, zone: 'America/Lima' } }),
+      });
+      render();
+      expect(el().querySelector('.insights__stale')).toBeNull();
+    });
+
+    it('el CSV incluye el analisis solo si es del periodo actual', () => {
+      start();
+      const facade = TestBed.inject(ForecastingFacade);
+      const download = vi.spyOn(facade, 'downloadCsv').mockImplementation(() => {});
+
+      el().querySelector<HTMLButtonElement>('.btn--export')!.click();
+      expect(download.mock.calls[0][2]).toBeNull();
+
+      generate();
+      el().querySelector<HTMLButtonElement>('.btn--export')!.click();
+      expect(download.mock.calls[1][2]!.resumen).toContain('60 jornadas');
+
+      el().querySelectorAll<HTMLButtonElement>('.btn--quick')[0].click();
+      const p7 = lastDaysPeriod(7);
+      http.expectOne(url(p7.from, p7.to)).flush({ data: summary({ from: p7.from, to: p7.to }) });
+      render();
+      el().querySelector<HTMLButtonElement>('.btn--export')!.click();
+      expect(download.mock.calls[2][2]).toBeNull();
     });
   });
 

@@ -150,6 +150,26 @@ describe('ForecastingFacade', () => {
     });
   });
 
+  describe('insightsResult', () => {
+    it('sin organizacion no llama al backend (ni gasta cuota)', () => {
+      auth.organizationId = null;
+      let ok: boolean | undefined;
+      facade.insightsResult({ from: '2026-11-04', to: '2026-11-25' }).subscribe(r => (ok = r.ok));
+      http.expectNone(() => true);
+      expect(ok).toBe(false);
+    });
+
+    it('conserva el estado HTTP del error', () => {
+      let status: number | undefined;
+      facade.insightsResult({ from: '2026-11-04', to: '2026-11-25' }).subscribe(r => {
+        if (!r.ok) status = r.status;
+      });
+      http.expectOne(`${API}/analytics/organizations/8/insights?from=2026-11-04&to=2026-11-25`)
+        .flush({ message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+      expect(status).toBe(403);
+    });
+  });
+
   describe('downloadCsv', () => {
     // jsdom no implementa createObjectURL: se sustituye para capturar el Blob.
     const original = { create: URL.createObjectURL, revoke: URL.revokeObjectURL };

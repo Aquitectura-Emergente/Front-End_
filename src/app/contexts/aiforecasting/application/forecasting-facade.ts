@@ -35,6 +35,7 @@ import {
 import { WorkerNames, workerName, workerNameMap } from '../domain/worker-name';
 import { limaDateTime, limaTime } from '../domain/lima-time';
 import { analyticsCsv, analyticsCsvFileName } from '../domain/analytics-view';
+import { InsightsResult, PeriodInsights } from '../domain/period-insights.model';
 
 /** Punto de entrada del contexto aiforecasting para la presentación. */
 @Injectable({ providedIn: 'root' })
@@ -91,13 +92,24 @@ export class ForecastingFacade {
   }
 
   /**
+   * Análisis con IA del periodo de la organización del SSO. Cada llamada puede
+   * gastar cuota de Gemini, así que la pantalla solo la hace cuando el SSO lo
+   * pide; `refresh` fuerza uno nuevo saltándose la caché del backend.
+   */
+  insightsResult(period: AnalyticsPeriod = {}, refresh = false): Observable<InsightsResult> {
+    const organizationId = this.sso.organizationId();
+    if (!organizationId) return of({ ok: false as const, status: 0, message: 'no-organization' });
+    return this.analytics.insightsResult(organizationId, period, refresh);
+  }
+
+  /**
    * Descarga el resumen como CSV, para la plantilla del reporte de cumplimiento.
    *
    * Con BOM UTF-8: sin él, Excel abre el archivo como ANSI y rompe las tildes de
    * los nombres («Lucía» → «LucÃ­a»).
    */
-  downloadCsv(summary: AnalyticsSummary, names: WorkerNames): void {
-    const blob = new Blob(['﻿', analyticsCsv(summary, names)], { type: 'text/csv;charset=utf-8' });
+  downloadCsv(summary: AnalyticsSummary, names: WorkerNames, insights?: PeriodInsights | null): void {
+    const blob = new Blob(['﻿', analyticsCsv(summary, names, insights)], { type: 'text/csv;charset=utf-8' });
     this.saveAs(blob, analyticsCsvFileName(summary));
   }
 
