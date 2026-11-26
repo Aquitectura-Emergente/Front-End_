@@ -9,6 +9,7 @@ import {
 } from './analytics-summary.model';
 import { PLANT_TIME_ZONE } from './lima-time';
 import { WorkerNames, workerName } from './worker-name';
+import { PeriodInsights, affectedPositionLabel, byPriority } from './period-insights.model';
 
 /**
  * Reglas puras de la pantalla de analítica: el periodo por días de la planta,
@@ -151,7 +152,7 @@ function row(cells: Cell[]): string {
  * inglés y sin traducir, para que la plantilla no dependa del idioma de la
  * interfaz. Índices en `unit` (uT*s), sin convertir.
  */
-export function analyticsCsv(summary: AnalyticsSummary, names: WorkerNames): string {
+export function analyticsCsv(summary: AnalyticsSummary, names: WorkerNames, insights?: PeriodInsights | null): string {
   const t = summary.totals;
   const lines: string[] = [
     row(['EMSafe exposure analytics']),
@@ -186,9 +187,41 @@ export function analyticsCsv(summary: AnalyticsSummary, names: WorkerNames): str
     row(['positionId', 'positionName', 'sessions', 'avgFinalIndex', 'maxFinalIndex']),
     ...summary.topPositions.map(p => row([p.positionId, p.positionName, p.sessions, p.avgFinalIndex,
       p.maxFinalIndex])),
+    ...(insights ? insightsCsvLines(insights, names) : []),
   ];
   // CRLF: el fin de línea que espera Excel y el que pide RFC 4180.
   return lines.join('\r\n') + '\r\n';
+}
+
+/**
+ * Sección aparte con el análisis con IA, solo si ya se generó **para este
+ * periodo**. Va al final y con su propio origen y aviso: es consultivo, no
+ * forma parte del dato medido de las tablas anteriores.
+ */
+function insightsCsvLines(insights: PeriodInsights, names: WorkerNames): string[] {
+  return [
+    '',
+    row(['aiInsights']),
+    row(['generatedBy', 'model', 'generatedAt', 'from', 'to', 'zone', 'isAdvisory']),
+    row([insights.generatedBy, insights.model, insights.generatedAt, insights.period.from, insights.period.to,
+      insights.period.zone, insights.isAdvisory]),
+    row(['resumen']),
+    row([insights.resumen]),
+    row(['hallazgos']),
+    row(['nivel', 'texto']),
+    ...insights.hallazgos.map(h => row([h.nivel, h.texto])),
+    row(['recomendaciones']),
+    row(['prioridad', 'accion', 'motivo', 'operariosAfectados', 'puestosAfectados']),
+    ...byPriority(insights.recomendaciones).map(r => row([
+      r.prioridad, r.accion, r.motivo,
+      r.operariosAfectados.map(id => workerName(id, names)).join('; '),
+      r.puestosAfectados.map(affectedPositionLabel).join('; '),
+    ])),
+    row(['calidadDatos']),
+    row([insights.calidadDatos]),
+    row(['disclaimer']),
+    row([insights.disclaimer]),
+  ];
 }
 
 export function analyticsCsvFileName(summary: AnalyticsSummary): string {

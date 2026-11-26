@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
@@ -10,6 +11,7 @@ import {
   unwrapOrNull,
 } from '../../../core/http/api-response';
 import { AnalyticsPeriod, AnalyticsSummary } from '../domain/analytics-summary.model';
+import { InsightsResult, PeriodInsights } from '../domain/period-insights.model';
 
 /**
  * Acceso HTTP a la analítica de exposición.
@@ -33,6 +35,41 @@ export class AnalyticsApi {
         `${this.base}/v1/ai-forecasting/analytics/organizations/${organizationId}/summary${qs}`
       )
     );
+  }
+
+  /**
+   * Análisis con IA del periodo. Es `POST` porque puede llamar a Gemini (coste),
+   * aunque no crea nada. El backend lo cachea 10 min por periodo; `refresh`
+   * solo se envía al regenerar, para no gastar cuota sin que el SSO lo pida.
+   *
+   * Devuelve el estado HTTP además del mensaje: un 403 se muestra distinto.
+   */
+  insightsResult(
+    organizationId: number,
+    period: AnalyticsPeriod = {},
+    refresh = false,
+  ): Observable<InsightsResult> {
+    const qs = queryString({
+      from: period.from,
+      to: period.to,
+      zone: period.zone,
+      refresh: refresh ? 'true' : undefined,
+    });
+    return this.http
+      .post<ApiResponse<PeriodInsights>>(
+        `${this.base}/v1/ai-forecasting/analytics/organizations/${organizationId}/insights${qs}`,
+        null
+      )
+      .pipe(
+        map(r => ({ ok: true as const, data: r.data })),
+        catchError((err: HttpErrorResponse) =>
+          of({
+            ok: false as const,
+            status: err?.status ?? 0,
+            message: (err?.error as { message?: string } | null)?.message || err?.message || '',
+          })
+        ),
+      );
   }
 
   /**

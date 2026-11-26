@@ -36,6 +36,20 @@ import {
   weeklySeries,
 } from '../../../../contexts/aiforecasting/domain/analytics-view';
 import { PLANT_TIME_ZONE } from '../../../../contexts/aiforecasting/domain/lima-time';
+import {
+  HallazgoNivel,
+  PeriodInsights,
+  Prioridad,
+  PuestoAfectado,
+  affectedPositionLabel,
+  byPriority,
+  findingLabelKey,
+  findingTone,
+  insightsMatchPeriod,
+  insightsSourceKey,
+  priorityLabelKey,
+  priorityPillClass,
+} from '../../../../contexts/aiforecasting/domain/period-insights.model';
 import { WorkerNames } from '../../../../contexts/aiforecasting/domain/worker-name';
 
 // Mismos tonos que --color-primary, --color-danger y --color-warning de
@@ -85,6 +99,24 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
 
   sortKey = signal<WorkerSortKey>('avgFinalIndex');
   sortDir = signal<SortDirection>('desc');
+
+  /** Periodo del resumen que se está viendo (el último que se pidió válido). */
+  appliedPeriod = signal<{ from?: string; to?: string; zone: string } | null>(null);
+
+  // ── Análisis con IA: solo a pedido, nunca al entrar (gasta cuota de Gemini) ─
+  insights = signal<PeriodInsights | null>(null);
+  insightsLoading = signal(false);
+  insightsError = signal<{ status: number; message: string } | null>(null);
+  /** Última petición, para que Reintentar repita lo mismo (con o sin refresh). */
+  private lastInsightsRefresh = false;
+
+  /** El análisis es de otro periodo: se cambió el filtro después de generarlo. */
+  insightsStale = computed(() => {
+    const i = this.insights();
+    return !!i && !insightsMatchPeriod(i, this.appliedPeriod());
+  });
+
+  recommendations = computed(() => byPriority(this.insights()?.recomendaciones ?? []));
 
   empty = computed(() => {
     const s = this.summary();
@@ -198,6 +230,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
 
   private loadSub?: Subscription;
   private namesSub?: Subscription;
+  private insightsSub?: Subscription;
 
   ngOnInit(): void {
     const period = lastDaysPeriod(DEFAULT_PERIOD_DAYS);
@@ -210,6 +243,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.loadSub?.unsubscribe();
     this.namesSub?.unsubscribe();
+    this.insightsSub?.unsubscribe();
   }
 
   // ── Periodo ──────────────────────────────────────────────────────────────
@@ -247,8 +281,10 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
       this.summary.set(null);
       this.error.set(false);
       this.loading.set(false);
+      this.appliedPeriod.set(null);
       return;
     }
+    this.appliedPeriod.set(period);
     this.loading.set(true);
     this.error.set(false);
     this.summary.set(null);
@@ -294,8 +330,67 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
     return value == null ? '—' : `${value}%`;
   }
 
+  /** El análisis solo entra en el CSV si es del mismo periodo que las tablas. */
   exportCsv(): void {
     const s = this.summary();
-    if (s) this.forecasting.downloadCsv(s, this.names());
+    if (!s) return;
+    const insights = this.insightsStale() ? null : this.insights();
+    this.forecasting.downloadCsv(s, this.names(), insights);
+  }
+
+  // ── Análisis con IA ──────────────────────────────────────────────────────
+
+  /**
+   * Pide el análisis del **mismo periodo** que muestra el resumen. `refresh`
+   * solo con «Regenerar»: sin él, el backend responde desde su caché (10 min)
+   * y no gasta otra llamada a Gemini.
+   */
+  generateInsights(refresh = false): void {
+    const period = this.appliedPeriod();
+    if (!period || this.insightsLoading()) return;
+    this.lastInsightsRefresh = refresh;
+    this.insightsLoading.set(true);
+    this.insightsError.set(null);
+    this.insightsSub?.unsubscribe();
+    this.insightsSub = this.forecasting.insightsResult(period, refresh).subscribe(result => {
+      this.insightsLoading.set(false);
+      if (!result.ok) {
+        this.insightsError.set({ status: result.status, message: result.message });
+        return;
+      }
+      this.insights.set(result.data);
+    });
+  }
+
+  retryInsights(): void {
+    this.generateInsights(this.lastInsightsRefresh);
+  }
+
+  sourceKey(insights: PeriodInsights): string {
+    return insightsSourceKey(insights.generatedBy);
+  }
+
+  findingTone(level: HallazgoNivel): string {
+    return findingTone(level);
+  }
+
+  findingLabelKey(level: HallazgoNivel): string {
+    return findingLabelKey(level);
+  }
+
+  priorityPillClass(priority: Prioridad): string {
+    return priorityPillClass(priority);
+  }
+
+  priorityLabelKey(priority: Prioridad): string {
+    return priorityLabelKey(priority);
+  }
+
+  positionLabel(position: PuestoAfectado): string {
+    return affectedPositionLabel(position);
+  }
+
+  workerList(ids: readonly number[]): string {
+    return ids.map(id => this.workerName(id)).join(', ');
   }
 }
