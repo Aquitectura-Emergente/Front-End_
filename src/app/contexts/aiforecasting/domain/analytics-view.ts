@@ -61,9 +61,107 @@ export function isEmptyHistory(summary: AnalyticsSummary): boolean {
 
 // ── Gráficos ───────────────────────────────────────────────────────────────
 
+export type ChartLocale = 'en' | 'es';
+
+const MONTHS: Record<ChartLocale, readonly string[]> = {
+  es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+
+/** Raya de rango (en dash), sin espacios: «16–22 nov». */
+const DASH = '–';
+
+interface Day { y: number; m: number; d: number; }
+
+function toDay(iso: string): Day {
+  const [y, m, d] = iso.split('-').map(Number);
+  return { y, m: m - 1, d };
+}
+
+/**
+ * Tramo **real** de una semana dentro del periodo pedido.
+ *
+ * `weekStart` (lunes) y `from`/`to` ya son días de calendario en America/Lima:
+ * el backend los calcula en `zone`. Por eso se opera con fechas `yyyy-MM-dd` y
+ * no con instantes: no hay conversión de zona que pueda correr un día.
+ *
+ * Si el periodo empieza un jueves, la primera semana es «jueves–domingo»:
+ * mostrar el lunes haría creer que esa semana tiene datos de días no pedidos.
+ */
+export function weekSpan(
+  weekStart: string,
+  period?: { from?: string; to?: string } | null,
+): { start: string; end: string; partial: boolean } {
+  const weekEnd = addDays(weekStart, 6);
+  const start = period?.from && period.from > weekStart ? period.from : weekStart;
+  const end = period?.to && period.to < weekEnd ? period.to : weekEnd;
+  return { start, end, partial: start !== weekStart || end !== weekEnd };
+}
+
+/**
+ * Rango corto para el eje X, sin año.
+ * ES «16–22 nov» / «30 nov–6 dic»; EN «Nov 16–22» / «Nov 30–Dec 6».
+ */
+export function shortRangeLabel(start: string, end: string, locale: ChartLocale): string {
+  const a = toDay(start);
+  const b = toDay(end);
+  const months = MONTHS[locale];
+  const sameMonth = a.m === b.m && a.y === b.y;
+  if (locale === 'es') {
+    if (start === end) return `${a.d} ${months[a.m]}`;
+    return sameMonth ? `${a.d}${DASH}${b.d} ${months[a.m]}` : `${a.d} ${months[a.m]}${DASH}${b.d} ${months[b.m]}`;
+  }
+  if (start === end) return `${months[a.m]} ${a.d}`;
+  return sameMonth ? `${months[a.m]} ${a.d}${DASH}${b.d}` : `${months[a.m]} ${a.d}${DASH}${months[b.m]} ${b.d}`;
+}
+
+/**
+ * Rango completo con año para el tooltip.
+ * ES «16–22 nov 2026» / «29 dic 2025–4 ene 2026»; EN «Nov 16–22, 2026» /
+ * «Dec 29, 2025–Jan 4, 2026».
+ */
+export function fullRangeLabel(start: string, end: string, locale: ChartLocale): string {
+  const a = toDay(start);
+  const b = toDay(end);
+  const months = MONTHS[locale];
+  if (a.y !== b.y) {
+    return locale === 'es'
+      ? `${a.d} ${months[a.m]} ${a.y}${DASH}${b.d} ${months[b.m]} ${b.y}`
+      : `${months[a.m]} ${a.d}, ${a.y}${DASH}${months[b.m]} ${b.d}, ${b.y}`;
+  }
+  return locale === 'es'
+    ? `${shortRangeLabel(start, end, locale)} ${a.y}`
+    : `${shortRangeLabel(start, end, locale)}, ${a.y}`;
+}
+
+/** Número de la semana ISO a partir de `2026-W47` → 47. */
+export function isoWeekNumber(isoWeek: string): number | null {
+  const match = /W(\d{1,2})$/.exec(isoWeek);
+  return match ? Number(match[1]) : null;
+}
+
+/** Palabras traducidas del tooltip; las da la vista con `LanguageService`. */
+export interface WeekWords {
+  /** «semana» / «week». */
+  week: string;
+  /** «semana parcial» / «partial week». */
+  partial: string;
+}
+
+export interface WeeklySeriesOptions {
+  /** Periodo resuelto del resumen, para recortar las semanas parciales. */
+  period?: { from?: string; to?: string } | null;
+  locale?: ChartLocale;
+  words?: WeekWords;
+}
+
 export interface WeeklySeries {
-  /** `W47`; la semana completa va en `weekStarts` para el tooltip. */
+  /** Etiqueta del eje X: el tramo real, p. ej. «16–22 nov». */
   categories: string[];
+  /** Tooltip: «16–22 nov 2026 (semana 47)», o «(semana 47, semana parcial)». */
+  tooltips: string[];
+  /** La semana solo está cubierta en parte por el periodo. */
+  partial: boolean[];
   weekStarts: string[];
   /**
    * `null` en las semanas sin jornadas: ApexCharts deja un **hueco** en la
@@ -75,14 +173,45 @@ export interface WeeklySeries {
   nearLimit: number[];
 }
 
-export function weeklySeries(weeks: readonly WeekStats[]): WeeklySeries {
+const DEFAULT_WORDS: Record<ChartLocale, WeekWords> = {
+  es: { week: 'semana', partial: 'semana parcial' },
+  en: { week: 'week', partial: 'partial week' },
+};
+
+export function weeklySeries(weeks: readonly WeekStats[], options: WeeklySeriesOptions = {}): WeeklySeries {
+  const locale = options.locale ?? 'es';
+  const words = options.words ?? DEFAULT_WORDS[locale];
+  const spans = weeks.map(w => weekSpan(w.weekStart, options.period));
   return {
-    categories: weeks.map(w => w.isoWeek.split('-')[1] ?? w.isoWeek),
+    categories: spans.map(s => shortRangeLabel(s.start, s.end, locale)),
+    tooltips: weeks.map((w, i) => {
+      const s = spans[i];
+      const n = isoWeekNumber(w.isoWeek);
+      const details = [n != null ? `${words.week} ${n}` : w.isoWeek, ...(s.partial ? [words.partial] : [])];
+      return `${fullRangeLabel(s.start, s.end, locale)} (${details.join(', ')})`;
+    }),
+    partial: spans.map(s => s.partial),
     weekStarts: weeks.map(w => w.weekStart),
     avg: weeks.map(w => (weekHasData(w) ? w.avgFinalIndex! : null)),
     max: weeks.map(w => (weekHasData(w) && w.maxFinalIndex != null ? w.maxFinalIndex : null)),
     nearLimit: weeks.map(w => w.sessionsNearLimit),
   };
+}
+
+/**
+ * Eje de conteos (jornadas cerca del límite): enteros, desde 0 y con aire
+ * arriba, para que una sola jornada no llene el gráfico.
+ *
+ * El máximo es el conteo más alto + 1, y como mínimo 5. Hasta 10 hay una marca
+ * por unidad; por encima se redondea a un múltiplo de 5 con 5 marcas, para que
+ * cada paso siga siendo entero (ApexCharts reparte `max` en `tickAmount` partes).
+ */
+export function countAxis(counts: readonly number[]): { min: 0; max: number; tickAmount: number } {
+  const highest = counts.reduce((m, c) => (Number.isFinite(c) && c > m ? c : m), 0);
+  const top = Math.max(5, Math.ceil(highest) + 1);
+  if (top <= 10) return { min: 0, max: top, tickAmount: top };
+  const step = Math.ceil(top / 5);
+  return { min: 0, max: step * 5, tickAmount: 5 };
 }
 
 export interface PositionBars {

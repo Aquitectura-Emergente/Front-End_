@@ -1007,6 +1007,9 @@ export const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     ai_affectedWorkers: 'Workers:',
     ai_affectedPositions: 'Positions:',
     ai_dataQuality: 'Data quality:',
+    // ── Exposure analytics: weekly trend labels ─────────────
+    ea_week: 'week',
+    ea_partialWeek: 'partial week',
   },
 
   es: {
@@ -2013,6 +2016,9 @@ export const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     ai_affectedWorkers: 'Operarios:',
     ai_affectedPositions: 'Puestos:',
     ai_dataQuality: 'Calidad de datos:',
+    // ── Analítica de exposición: etiquetas de la tendencia semanal ──
+    ea_week: 'semana',
+    ea_partialWeek: 'semana parcial',
   },
 };
 

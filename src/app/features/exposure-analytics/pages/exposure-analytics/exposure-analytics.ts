@@ -7,6 +7,7 @@ import type {
   ApexAxisChartSeries,
   ApexChart,
   ApexDataLabels,
+  ApexFill,
   ApexGrid,
   ApexLegend,
   ApexMarkers,
@@ -28,6 +29,7 @@ import {
   QUICK_PERIODS,
   SortDirection,
   WorkerSortKey,
+  countAxis,
   isEmptyHistory,
   lastDaysPeriod,
   matchingQuickPeriod,
@@ -130,7 +132,19 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
 
   // ── Tendencia semanal: líneas de promedio y máximo + barras de «cerca» ─────
 
-  private weekly = computed(() => weeklySeries(this.summary()?.weeklyTrend ?? []));
+  /**
+   * Etiquetas por rango de fechas en el idioma de la interfaz, recortadas al
+   * periodo del resumen (semanas parciales). Depende de `lang()`, así que al
+   * cambiar de idioma el eje se vuelve a rotular.
+   */
+  private weekly = computed(() => {
+    const s = this.summary();
+    return weeklySeries(s?.weeklyTrend ?? [], {
+      period: s ? { from: s.from, to: s.to } : null,
+      locale: this.lang.lang(),
+      words: { week: this.lang.t('ea_week'), partial: this.lang.t('ea_partialWeek') },
+    });
+  });
 
   trendSeries = computed<ApexAxisChartSeries>(() => {
     const w = this.weekly();
@@ -156,10 +170,11 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
       // El máximo comparte el eje del promedio: misma unidad y misma escala.
       { seriesName: avg, show: false, labels: { formatter: integer } },
       {
+        // Conteos: enteros desde 0 y con aire arriba (máx. = mayor + 1, mínimo
+        // 5), para que una sola jornada no llene el alto del gráfico.
         seriesName: this.lang.t('ea_trend_nearLimit'),
         opposite: true,
-        min: 0,
-        forceNiceScale: true,
+        ...countAxis(this.weekly().nearLimit),
         decimalsInFloat: 0,
         title: { text: this.lang.t('ea_trend_sessions') },
         labels: { ...AXIS_LABELS, formatter: integer },
@@ -171,11 +186,9 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
     theme: 'light',
     shared: true,
     intersect: false,
-    x: { formatter: (_v: number, opts?: { dataPointIndex: number }) => {
-      const i = opts?.dataPointIndex ?? 0;
-      const w = this.weekly();
-      return `${w.categories[i] ?? ''} · ${w.weekStarts[i] ?? ''}`;
-    } },
+    // «16–22 nov 2026 (semana 47)», o «(semana 47, semana parcial)».
+    x: { formatter: (_v: number, opts?: { dataPointIndex: number }) =>
+      this.weekly().tooltips[opts?.dataPointIndex ?? 0] ?? '' },
     y: { formatter: (v: number) => integer(v) },
   }));
 
@@ -192,7 +205,10 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
   readonly trendStroke: ApexStroke = { width: [2, 2, 0], curve: 'straight', dashArray: [0, 5, 0] };
   readonly trendMarkers: ApexMarkers = { size: [4, 3, 0] };
   readonly trendColors = [PRIMARY, DANGER, WARNING];
-  readonly trendPlotOptions: ApexPlotOptions = { bar: { columnWidth: '35%', borderRadius: 3 } };
+  // Barras angostas y semitransparentes: son un conteo de apoyo y no deben
+  // tapar las líneas de índice, que son el dato principal.
+  readonly trendPlotOptions: ApexPlotOptions = { bar: { columnWidth: '18%', borderRadius: 2 } };
+  readonly trendFill: ApexFill = { type: 'solid', opacity: [1, 1, 0.35] };
 
   // ── Puestos: barras horizontales ───────────────────────────────────────────
 
