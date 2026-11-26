@@ -9,6 +9,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { ExposureAnalytics } from './exposure-analytics';
 import { AuthService } from '../../../../contexts/iam/application/auth.service';
 import { ForecastingFacade } from '../../../../contexts/aiforecasting/application/forecasting-facade';
+import { LanguageService } from '../../../../core/services/language.service';
 import { AnalyticsSummary } from '../../../../contexts/aiforecasting/domain/analytics-summary.model';
 import { lastDaysPeriod } from '../../../../contexts/aiforecasting/domain/analytics-view';
 import { PeriodInsights } from '../../../../contexts/aiforecasting/domain/period-insights.model';
@@ -26,6 +27,7 @@ class ApxChartStub {
   xaxis = input<unknown>();
   yaxis = input<unknown>();
   stroke = input<unknown>();
+  fill = input<unknown>();
   markers = input<unknown>();
   colors = input<unknown>();
   plotOptions = input<unknown>();
@@ -236,7 +238,52 @@ describe('ExposureAnalytics', () => {
       expect(series[0].data).toEqual([7000, null, 6600]);   // promedio
       expect(series[1].data).toEqual([12360, null, 10560]); // máximo
       expect(series[2].data).toEqual([1, 0, 1]);            // cerca del límite
-      expect((trend.xaxis() as { categories: string[] }).categories).toEqual(['W45', 'W46', 'W47']);
+      expect((trend.xaxis() as { categories: string[] }).categories).toEqual(['Nov 2–8', 'Nov 9–15', 'Nov 16–22']);
+    });
+
+    it('en espanol rotula el eje con el rango en castellano', () => {
+      TestBed.inject(LanguageService).toggle(); // en → es
+      start();
+      const [trend] = charts();
+      expect((trend.xaxis() as { categories: string[] }).categories).toEqual(['2–8 nov', '9–15 nov', '16–22 nov']);
+      const series = trend.series() as { name: string; data: (number | null)[] }[];
+      expect(series.map(s => s.name)).toEqual(['Índice final promedio', 'Índice final máximo', 'Jornadas cerca del límite']);
+      // El hueco de la semana vacía no depende del idioma.
+      expect(series[0].data).toEqual([7000, null, 6600]);
+    });
+
+    it('el tooltip muestra el rango con año y la semana ISO', () => {
+      start();
+      const [trend] = charts();
+      const x = (trend.tooltip() as { x: { formatter: (v: number, o: { dataPointIndex: number }) => string } }).x;
+      expect(x.formatter(0, { dataPointIndex: 2 })).toBe('Nov 16–22, 2026 (week 47)');
+    });
+
+    it('recorta y marca como parcial la semana que el periodo cubre en parte', () => {
+      start({ data: summary({ from: '2026-11-05', to: '2026-11-19' }) });
+      const [trend] = charts();
+      // W45 (2–8) empieza el 5; W47 (16–22) termina el 19.
+      expect((trend.xaxis() as { categories: string[] }).categories).toEqual(['Nov 5–8', 'Nov 9–15', 'Nov 16–19']);
+      const x = (trend.tooltip() as { x: { formatter: (v: number, o: { dataPointIndex: number }) => string } }).x;
+      expect(x.formatter(0, { dataPointIndex: 0 })).toBe('Nov 5–8, 2026 (week 45, partial week)');
+      expect(x.formatter(0, { dataPointIndex: 1 })).toBe('Nov 9–15, 2026 (week 46)');
+    });
+
+    it('el eje de jornadas usa enteros desde 0 y no deja que 1 jornada llene el grafico', () => {
+      start();
+      const [trend] = charts();
+      const counts = (trend.yaxis() as { min?: number; max?: number; tickAmount?: number; opposite?: boolean }[])[2];
+      expect(counts.opposite).toBe(true);
+      expect(counts.min).toBe(0);
+      expect(counts.max).toBe(5);       // el conteo más alto es 1: máx(5, 1 + 1)
+      expect(counts.tickAmount).toBe(5); // una marca por unidad: 0, 1, 2, 3, 4, 5
+    });
+
+    it('las barras son angostas y semitransparentes para no tapar las lineas', () => {
+      start();
+      const [trend] = charts();
+      expect((trend.fill() as { opacity: number[] }).opacity).toEqual([1, 1, 0.35]);
+      expect((trend.plotOptions() as { bar: { columnWidth: string } }).bar.columnWidth).toBe('18%');
     });
 
     it('los puestos se pintan como barras horizontales con su nombre o su id', () => {

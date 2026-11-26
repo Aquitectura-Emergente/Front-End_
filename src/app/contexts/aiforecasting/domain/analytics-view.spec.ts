@@ -2,8 +2,13 @@ import { AnalyticsSummary, WeekStats, WorkerStats } from './analytics-summary.mo
 import {
   analyticsCsv,
   analyticsCsvFileName,
+  countAxis,
   csvCell,
+  fullRangeLabel,
   isEmptyHistory,
+  isoWeekNumber,
+  shortRangeLabel,
+  weekSpan,
   lastDaysPeriod,
   matchingQuickPeriod,
   plantToday,
@@ -76,10 +81,77 @@ describe('isEmptyHistory', () => {
   });
 });
 
+describe('rangos de semana', () => {
+  it('una semana completa va de lunes a domingo', () => {
+    expect(weekSpan('2026-11-16', { from: '2026-10-29', to: '2026-11-25' }))
+      .toEqual({ start: '2026-11-16', end: '2026-11-22', partial: false });
+  });
+
+  // El periodo empieza un jueves y termina un miércoles: las dos puntas se recortan.
+  it('recorta al tramo real las semanas que el periodo cubre en parte', () => {
+    const period = { from: '2026-11-19', to: '2026-11-25' };
+    expect(weekSpan('2026-11-16', period)).toEqual({ start: '2026-11-19', end: '2026-11-22', partial: true });
+    expect(weekSpan('2026-11-23', period)).toEqual({ start: '2026-11-23', end: '2026-11-25', partial: true });
+  });
+
+  it('sin periodo no recorta', () => {
+    expect(weekSpan('2026-11-16').partial).toBe(false);
+  });
+
+  it('etiqueta corta en ES y EN, sin año', () => {
+    expect(shortRangeLabel('2026-11-16', '2026-11-22', 'es')).toBe('16–22 nov');
+    expect(shortRangeLabel('2026-11-16', '2026-11-22', 'en')).toBe('Nov 16–22');
+  });
+
+  it('una semana que cruza de mes nombra los dos meses', () => {
+    expect(shortRangeLabel('2026-11-30', '2026-12-06', 'es')).toBe('30 nov–6 dic');
+    expect(shortRangeLabel('2026-11-30', '2026-12-06', 'en')).toBe('Nov 30–Dec 6');
+  });
+
+  it('un tramo de un solo dia no repite la fecha', () => {
+    expect(shortRangeLabel('2026-11-25', '2026-11-25', 'es')).toBe('25 nov');
+    expect(shortRangeLabel('2026-11-25', '2026-11-25', 'en')).toBe('Nov 25');
+  });
+
+  it('la etiqueta completa lleva el año, y los dos si la semana cruza de año', () => {
+    expect(fullRangeLabel('2026-11-16', '2026-11-22', 'es')).toBe('16–22 nov 2026');
+    expect(fullRangeLabel('2026-11-16', '2026-11-22', 'en')).toBe('Nov 16–22, 2026');
+    expect(fullRangeLabel('2025-12-29', '2026-01-04', 'es')).toBe('29 dic 2025–4 ene 2026');
+    expect(fullRangeLabel('2025-12-29', '2026-01-04', 'en')).toBe('Dec 29, 2025–Jan 4, 2026');
+  });
+
+  it('lee el numero de la semana ISO', () => {
+    expect(isoWeekNumber('2026-W47')).toBe(47);
+    expect(isoWeekNumber('2026-W01')).toBe(1);
+    expect(isoWeekNumber('raro')).toBeNull();
+  });
+});
+
 describe('weeklySeries', () => {
+  const period = { from: summary().from, to: summary().to }; // 2026-10-29 → 2026-11-25
+
+  it('rotula el eje con el tramo real de cada semana', () => {
+    const s = weeklySeries(summary().weeklyTrend, { period, locale: 'es' });
+    // W48 (23–29 nov) se corta en el 25, último día del periodo.
+    expect(s.categories).toEqual(['16–22 nov', '23–25 nov']);
+    expect(s.partial).toEqual([false, true]);
+    expect(weeklySeries(summary().weeklyTrend, { period, locale: 'en' }).categories)
+      .toEqual(['Nov 16–22', 'Nov 23–25']);
+  });
+
+  it('el tooltip lleva el rango con año, la semana ISO y si es parcial', () => {
+    expect(weeklySeries(summary().weeklyTrend, { period, locale: 'es' }).tooltips).toEqual([
+      '16–22 nov 2026 (semana 47)',
+      '23–25 nov 2026 (semana 48, semana parcial)',
+    ]);
+    expect(weeklySeries(summary().weeklyTrend, { period, locale: 'en' }).tooltips).toEqual([
+      'Nov 16–22, 2026 (week 47)',
+      'Nov 23–25, 2026 (week 48, partial week)',
+    ]);
+  });
+
   it('una semana vacia es un hueco (null) en las lineas, no un 0', () => {
-    const s = weeklySeries(summary().weeklyTrend);
-    expect(s.categories).toEqual(['W47', 'W48']);
+    const s = weeklySeries(summary().weeklyTrend, { period });
     expect(s.weekStarts).toEqual(['2026-11-16', '2026-11-23']);
     expect(s.avg).toEqual([8000, null]);
     expect(s.max).toEqual([12360, null]);
@@ -88,6 +160,29 @@ describe('weeklySeries', () => {
   // Las barras son conteos: una semana sin jornadas tiene 0 cerca del límite.
   it('las barras de cerca del limite si cuentan 0', () => {
     expect(weeklySeries(summary().weeklyTrend).nearLimit).toEqual([2, 0]);
+  });
+});
+
+describe('countAxis', () => {
+  // Con una sola jornada la barra no debe llenar el alto del gráfico.
+  it('empieza en 0 y llega al menos a 5', () => {
+    expect(countAxis([])).toEqual({ min: 0, max: 5, tickAmount: 5 });
+    expect(countAxis([0, 1, 0])).toEqual({ min: 0, max: 5, tickAmount: 5 });
+    expect(countAxis([4])).toEqual({ min: 0, max: 5, tickAmount: 5 });
+  });
+
+  it('deja una unidad de aire sobre el conteo mas alto, con marcas enteras', () => {
+    expect(countAxis([5])).toEqual({ min: 0, max: 6, tickAmount: 6 });
+    expect(countAxis([9, 2])).toEqual({ min: 0, max: 10, tickAmount: 10 });
+  });
+
+  // Más de 10 marcas serían ilegibles: pasos de un múltiplo entero, 5 marcas.
+  it('con conteos altos redondea a un multiplo de 5 con pasos enteros', () => {
+    expect(countAxis([10])).toEqual({ min: 0, max: 15, tickAmount: 5 });
+    expect(countAxis([23])).toEqual({ min: 0, max: 25, tickAmount: 5 });
+    const { max, tickAmount } = countAxis([37]);
+    expect(max % tickAmount).toBe(0);
+    expect(max).toBeGreaterThan(37);
   });
 });
 
