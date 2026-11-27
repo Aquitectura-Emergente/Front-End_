@@ -1,281 +1,246 @@
-<section class="devices">
-  <div class="devices__header">
-    <div>
-      <h2 class="devices__title">{{ 'dev_title' | t }}</h2>
-      <p class="devices__subtitle">{{ 'dev_subtitle' | t }}</p>
-    </div>
-  </div>
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_assets' | t"
+    index="04"
+    [title]="'dev_title' | t"
+    [description]="'dev_subtitle' | t"
+  >
+    <a actions routerLink="/admin/edge-nodes" class="ems-btn">
+      <i class="ph ph-broadcast" aria-hidden="true"></i>{{ 'nav_edgeNodes' | t }}
+    </a>
+  </ems-page-header>
 
-  <!-- Inventory summary -->
-  <div class="inventory">
+  <!-- Inventario por ciclo de vida: actúa como filtro rápido -->
+  <div class="ems-readouts lifecycle" role="group" [attr.aria-label]="'dm_lifecycle' | t">
     @for (lc of lifecycleStatuses; track lc) {
       <button
         type="button"
-        class="inventory__item inventory__item--{{ lc | lowercase }}"
-        [class.inventory__item--on]="filterLifecycle() === lc"
+        class="ems-readout lifecycle__item lifecycle__item--{{ lc | lowercase }}"
+        [class.is-on]="filterLifecycle() === lc"
+        [attr.aria-pressed]="filterLifecycle() === lc"
         (click)="filterLifecycle.set(filterLifecycle() === lc ? 'all' : lc); onFilterChange()"
       >
-        <span class="inventory__count">{{ lifecycleCounts()[lc] }}</span>
-        <span class="inventory__label">{{ lifecycleKey(lc) | t }}</span>
+        <span class="ems-readout__label">
+          <i class="ph" [class.ph-package]="lc === 'IN_STOCK'" [class.ph-plugs-connected]="lc === 'INSTALLED'" [class.ph-archive]="lc === 'RETIRED'" aria-hidden="true"></i>
+          {{ lifecycleKey(lc) | t }}
+        </span>
+        <span class="ems-readout__value">{{ lifecycleCounts()[lc] }}</span>
+        <span class="ems-readout__note">
+          @if (filterLifecycle() === lc) { <i class="ph ph-funnel-simple" aria-hidden="true"></i> {{ 'filter_all' | t }} } @else { &nbsp; }
+        </span>
       </button>
     }
   </div>
 
-  <!-- Toolbar: search + filters -->
-  <div class="toolbar">
-    <div class="toolbar__search">
-      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-      <input
-        class="toolbar__input"
-        type="text"
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange()"
-        [placeholder]="'dev_searchPlaceholder' | t"
-      />
-    </div>
-    <div class="toolbar__filters">
-      <div class="filter-group">
-        <span class="filter-group__label">{{ 'dev_type' | t }}</span>
-        <select class="filter-select" [(ngModel)]="filterType" (ngModelChange)="onFilterChange()">
+  <section class="ems-panel">
+    <div class="ems-toolbar">
+      <label class="ems-search">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        <input
+          class="ems-input"
+          type="search"
+          [attr.aria-label]="'dev_searchPlaceholder' | t"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          [placeholder]="'dev_searchPlaceholder' | t"
+        />
+      </label>
+      <span class="ems-toolbar__spacer"></span>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'dev_type' | t }}</span>
+        <select class="ems-select" [(ngModel)]="filterType" (ngModelChange)="onFilterChange()">
           <option value="all">{{ 'filter_all' | t }}</option>
           @for (ty of deviceTypes; track ty) {
             <option [value]="ty">{{ deviceTypeKey(ty) | t }}</option>
           }
         </select>
-      </div>
-      <div class="filter-group">
-        <span class="filter-group__label">{{ 'dm_lifecycle' | t }}</span>
-        <select class="filter-select" [(ngModel)]="filterLifecycle" (ngModelChange)="onFilterChange()">
+      </label>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'dm_lifecycle' | t }}</span>
+        <select class="ems-select" [(ngModel)]="filterLifecycle" (ngModelChange)="onFilterChange()">
           <option value="all">{{ 'filter_all' | t }}</option>
           @for (lc of lifecycleStatuses; track lc) {
             <option [value]="lc">{{ lifecycleKey(lc) | t }}</option>
           }
         </select>
-      </div>
-      <div class="filter-group">
-        <span class="filter-group__label">{{ 'th_status' | t }}</span>
-        <select class="filter-select" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
+      </label>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'th_status' | t }}</span>
+        <select class="ems-select" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
           <option value="all">{{ 'filter_all' | t }}</option>
           <option value="active">{{ 'dev_active' | t }}</option>
           <option value="unregistered">{{ 'dev_unregistered' | t }}</option>
           <option value="in-maintenance">{{ 'dev_inMaintenance' | t }}</option>
           <option value="requires-maintenance">{{ 'dev_requiresMaintenance' | t }}</option>
         </select>
-      </div>
+      </label>
     </div>
-  </div>
 
-  <!-- Table -->
-  <div class="table-wrap">
     @if (loading()) {
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
-      </div>
+      <div class="ems-progress ems-progress--indeterminate ems-list-progress"><div class="ems-progress__fill"></div></div>
     }
 
-    <table class="table" aria-label="Devices table">
-      <thead>
-        <tr>
-          <th>{{ 'dev_name' | t }}</th>
-          <th>{{ 'dev_type' | t }}</th>
-          <th>{{ 'dev_serial' | t }}</th>
-          <th>{{ 'dev_client' | t }}</th>
-          <th>{{ 'client_location' | t }}</th>
-          <th>{{ 'dm_lifecycle' | t }}</th>
-          <th>{{ 'dm_connectivity' | t }}</th>
-          <th>{{ 'th_status' | t }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (device of pagedItems(); track device.id) {
-          @let s = statusOf(device);
-          <tr class="row-link" (click)="openDetail(device)">
-            <td>
-              <div class="device-cell">
-                <div class="device-icon">
-                  <i class="ph ph-cpu" aria-hidden="true"></i>
-                </div>
-                <span class="device-name">{{ device.name }}</span>
-              </div>
-            </td>
-            <td>
-              @if (s?.deviceType; as ty) {
-                <span class="type-badge type-badge--{{ ty | lowercase }}">{{ deviceTypeKey(ty) | t }}</span>
-              } @else {
-                <span class="type-badge type-badge--{{ device.type | lowercase }}">{{ device.type }}</span>
-              }
-            </td>
-            <td class="mono text-sec">{{ device.serialNumber || '—' }}</td>
-            <td class="text-sec">{{ device.clientName || device.client || '—' }}</td>
-            <td class="text-sec">{{ device.location || '—' }}</td>
-            <td>
-              <span class="lc-badge lc-badge--{{ (s?.lifecycleStatus ?? 'unknown') | lowercase }}">
-                {{ lifecycleKey(s?.lifecycleStatus) | t }}
-              </span>
-            </td>
-            <td>
-              @if (s?.connectivity; as c) {
-                <span class="conn conn--{{ c | lowercase }}" [title]="s?.lastSeenAt ?? ''">
-                  <span class="dot"></span>{{ 'dm_conn_' + c | t }}
-                  <small class="text-sec">· {{ ago(s?.lastSeenAt) }}</small>
-                </span>
-              } @else {
-                <span class="text-sec">—</span>
-              }
-            </td>
-            <td>
-              <span class="status-badge status-badge--{{ statusClass(device.status) }}">
-                <span class="dot"></span>
-                {{ statusKey(device.status) | t }}
-              </span>
-            </td>
-            <td class="table__actions" (click)="$event.stopPropagation()">
-              <div class="menu-wrap">
-                <button
-                  class="btn btn--icon menu-trigger"
-                  type="button"
-                  (click)="toggleMenu(device.id, $event)"
-                  aria-label="Options"
-                >
-                  <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
-                </button>
-
-                @if (openMenuId() === device.id) {
-                  <div class="dropdown-menu" (click)="$event.stopPropagation()">
-                    <button class="dropdown-item" type="button" (click)="openDetail(device)">
-                      <i class="ph ph-sliders-horizontal" aria-hidden="true"></i>
-                      {{ 'dm_viewDetail' | t }}
-                    </button>
-                    <button class="dropdown-item" type="button" (click)="openEdit(device)">
-                      <i class="ph ph-pencil-simple" aria-hidden="true"></i>
-                      {{ 'btn_edit' | t }}
-                    </button>
-                    @if (device.status === 'requires-maintenance') {
-                      <button class="dropdown-item" type="button" (click)="createWorkOrder(device)">
-                        <i class="ph ph-wrench" aria-hidden="true"></i>
-                        {{ 'dev_createWorkOrder' | t }}
-                      </button>
-                    }
-                    @if (device.clientId != null) {
-                      <button class="dropdown-item" type="button" (click)="viewClient(device)">
-                        <i class="ph ph-user" aria-hidden="true"></i>
-                        {{ 'dev_viewClient' | t }}
-                      </button>
-                    }
-                    <div class="dropdown-divider"></div>
-                    <button
-                      class="dropdown-item dropdown-item--danger"
-                      type="button"
-                      [class.dropdown-item--disabled]="!canDeleteDevice(device)"
-                      [title]="canDeleteDevice(device) ? '' : ('dm_deleteBlocked' | t)"
-                      (click)="openDeleteConfirm(device)"
-                    >
-                      <i class="ph ph-trash" aria-hidden="true"></i>
-                      {{ 'btn_delete' | t }}
-                    </button>
-                  </div>
-                }
-              </div>
-            </td>
+    <div class="ems-table-wrap">
+      <table class="ems-table" aria-label="Devices table" [attr.aria-busy]="loading()">
+        <thead>
+          <tr>
+            <th>{{ 'dev_name' | t }}</th>
+            <th>{{ 'dev_type' | t }}</th>
+            <th>{{ 'dev_client' | t }}</th>
+            <th>{{ 'dm_lifecycle' | t }}</th>
+            <th>{{ 'dm_connectivity' | t }}</th>
+            <th>{{ 'th_status' | t }}</th>
+            <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
           </tr>
-        } @empty {
-          @if (!loading()) {
-            <tr>
-              <td colspan="9" class="empty-row">
-                <div class="empty-state">
-                  <i class="ph ph-cpu" aria-hidden="true"></i>
-                  <span>{{ 'dev_noDevices' | t }}</span>
+        </thead>
+        <tbody>
+          @for (device of pagedItems(); track device.id) {
+            @let s = statusOf(device);
+            <tr class="is-clickable" (click)="openDetail(device)">
+              <td>
+                <span class="cell-primary">{{ device.name }}</span>
+                <span class="cell-sub mono">{{ device.serialNumber || '—' }}</span>
+              </td>
+              <td>
+                @if (s?.deviceType; as ty) {
+                  <span class="ems-inline-icon">
+                    <i class="ph" [class.ph-identification-badge]="ty === 'PERSONAL_DOSIMETER'" [class.ph-cell-signal-full]="ty === 'FIXED_SENSOR'" [class.ph-plug]="ty === 'SMART_PLUG'" aria-hidden="true"></i>
+                    {{ deviceTypeKey(ty) | t }}
+                  </span>
+                } @else {
+                  <span class="ems-inline-icon"><i class="ph ph-cpu" aria-hidden="true"></i>{{ device.type }}</span>
+                }
+              </td>
+              <td>
+                {{ device.clientName || device.client || '—' }}
+                <span class="cell-sub">{{ device.location || '—' }}</span>
+              </td>
+              <td>
+                <span class="ems-tag ems-tag--plain lc lc--{{ (s?.lifecycleStatus ?? 'unknown') | lowercase }}">
+                  {{ lifecycleKey(s?.lifecycleStatus) | t }}
+                </span>
+              </td>
+              <td>
+                @if (s?.connectivity; as c) {
+                  <span class="ems-signal" [class.ems-signal--online]="c === 'ONLINE'" [class.ems-signal--offline]="c !== 'ONLINE'" [attr.title]="s?.lastSeenAt ?? ''">
+                    <span class="ems-signal__dot" aria-hidden="true"></span>
+                    <span>{{ 'dm_conn_' + c | t }} <span class="mono ems-muted">· {{ ago(s?.lastSeenAt) }}</span></span>
+                  </span>
+                } @else {
+                  <span class="ems-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="ems-tag"
+                      [class.ems-tag--safe]="statusClass(device.status) === 'active'"
+                      [class.ems-tag--info]="statusClass(device.status) === 'in-maintenance'"
+                      [class.ems-tag--warning]="statusClass(device.status) === 'requires-maintenance'">
+                  {{ statusKey(device.status) | t }}
+                </span>
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <div class="ems-row-menu">
+                  <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm menu-trigger" type="button" (click)="toggleMenu(device.id, $event)" aria-label="Options" [attr.aria-expanded]="openMenuId() === device.id">
+                    <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+                  </button>
+
+                  @if (openMenuId() === device.id) {
+                    <div class="ems-popover ems-row-menu__list" role="menu" (click)="$event.stopPropagation()">
+                      <button class="ems-menu__item" type="button" role="menuitem" (click)="openDetail(device)">
+                        <i class="ph ph-sliders-horizontal" aria-hidden="true"></i>{{ 'dm_viewDetail' | t }}
+                      </button>
+                      <button class="ems-menu__item" type="button" role="menuitem" (click)="openEdit(device)">
+                        <i class="ph ph-pencil-simple" aria-hidden="true"></i>{{ 'btn_edit' | t }}
+                      </button>
+                      @if (device.status === 'requires-maintenance') {
+                        <button class="ems-menu__item" type="button" role="menuitem" (click)="createWorkOrder(device)">
+                          <i class="ph ph-wrench" aria-hidden="true"></i>{{ 'dev_createWorkOrder' | t }}
+                        </button>
+                      }
+                      @if (device.clientId != null) {
+                        <button class="ems-menu__item" type="button" role="menuitem" (click)="viewClient(device)">
+                          <i class="ph ph-user" aria-hidden="true"></i>{{ 'dev_viewClient' | t }}
+                        </button>
+                      }
+                      <hr class="menu-divider" />
+                      <button
+                        class="ems-menu__item ems-menu__item--danger"
+                        type="button"
+                        role="menuitem"
+                        [class.is-disabled]="!canDeleteDevice(device)"
+                        [attr.aria-disabled]="!canDeleteDevice(device)"
+                        [title]="canDeleteDevice(device) ? '' : ('dm_deleteBlocked' | t)"
+                        (click)="openDeleteConfirm(device)"
+                      >
+                        <i class="ph ph-trash" aria-hidden="true"></i>{{ 'btn_delete' | t }}
+                      </button>
+                    </div>
+                  }
                 </div>
               </td>
             </tr>
-          }
-        }
-      </tbody>
-    </table>
-
-    <!-- Pagination -->
-    @if (totalPages() > 1 || filtered().length > 0) {
-      <div class="pagination">
-        <span class="pagination__info">
-          Showing {{ currentPage() * pageSize + 1 }}-{{ min(currentPage() * pageSize + pageSize, filtered().length) }} of {{ filtered().length }}
-        </span>
-        @if (totalPages() > 1) {
-          <div class="pagination__pages">
-            <button class="page-btn" type="button" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
-              <i class="ph ph-caret-left"></i>
-            </button>
-            @for (page of pagesArray(); track page) {
-              <button class="page-btn" type="button" [class.active]="page === currentPage()" (click)="goToPage(page)">
-                {{ page + 1 }}
-              </button>
+          } @empty {
+            @if (!loading()) {
+              <tr><td colspan="7"><ems-empty-state icon="ph-cpu" [text]="'dev_noDevices' | t" /></td></tr>
             }
-            <button class="page-btn" type="button" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)">
-              <i class="ph ph-caret-right"></i>
-            </button>
-          </div>
-        }
-      </div>
-    }
-  </div>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ems-pager [page]="currentPage()" [totalPages]="totalPages()" [total]="filtered().length" [pageSize]="pageSize" (pageChange)="goToPage($event)" />
+  </section>
 </section>
 
-<!-- ── Create / Edit Modal ──────────────────────── -->
+<!-- Alta / edición -->
 @if (showModal()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal__header">
-        <div class="modal__title-wrap">
-          <div class="modal__icon">
-            <i class="ph ph-cpu" aria-hidden="true"></i>
-          </div>
+  <div class="ems-backdrop" (click)="closeModal()">
+    <div class="ems-modal ems-modal--lg" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="device-form-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon ems-modal-title__icon--primary"><i class="ph ph-cpu" aria-hidden="true"></i></span>
           <div>
-            <h3 class="modal__title">
+            <h3 class="ems-modal__title" id="device-form-title">
               @if (editingDevice()) { {{ 'dev_editDevice' | t }} }
               @else { {{ 'dev_addDevice' | t }} }
             </h3>
-            <p class="modal__desc">{{ 'dev_subtitle' | t }}</p>
+            <p class="ems-modal-title__desc">{{ 'dev_subtitle' | t }}</p>
           </div>
         </div>
-        <button class="modal__close" type="button" (click)="closeModal()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeModal()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
+      </header>
 
-      <div class="modal__body">
-        <form class="form" (ngSubmit)="saveDevice()">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">{{ 'dev_name' | t }} *</label>
-              <input
-                class="form-input"
-                type="text"
-                [(ngModel)]="formName"
-                name="formName"
-                [placeholder]="'dev_name' | t"
-                required
-              />
+      <form (ngSubmit)="saveDevice()">
+        <div class="ems-modal__body">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="d-name">{{ 'dev_name' | t }}<span class="ems-field__req">*</span></label>
+              <input id="d-name" class="ems-input" type="text" [(ngModel)]="formName" name="formName" [placeholder]="'dev_name' | t" required />
             </div>
 
-            <div class="form-group">
-              <label class="form-label">{{ 'dev_type' | t }}</label>
+            <div class="ems-field">
+              <label for="d-type">{{ 'dev_type' | t }}</label>
               @if (editingDevice(); as d) {
-                <input class="form-input" type="text" [value]="d.type" name="formTypeRo" disabled />
+                <input id="d-type" class="ems-input" type="text" [value]="d.type" name="formTypeRo" disabled />
               } @else {
-                <select class="form-input" [(ngModel)]="formDeviceType" name="formDeviceType">
+                <select id="d-type" class="ems-select" [(ngModel)]="formDeviceType" name="formDeviceType">
                   @for (ty of deviceTypes; track ty) {
                     <option [value]="ty">{{ deviceTypeKey(ty) | t }}</option>
                   }
                 </select>
               }
             </div>
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">{{ 'dev_client' | t }}</label>
-              <select class="form-input" [(ngModel)]="formClientId" name="formClientId">
+            <div class="ems-field">
+              <label for="d-serial">{{ 'dev_serial' | t }}<span class="ems-field__req">*</span></label>
+              <input id="d-serial" class="ems-input mono" type="text" [(ngModel)]="formSerial" name="formSerial" [placeholder]="'dev_serial' | t" [disabled]="!!editingDevice()" required />
+            </div>
+
+            <div class="ems-field">
+              <label for="d-client">{{ 'dev_client' | t }}</label>
+              <select id="d-client" class="ems-select" [(ngModel)]="formClientId" name="formClientId">
                 <option [ngValue]="null">— {{ 'dev_noClientStock' | t }} —</option>
                 @for (c of clients(); track c.id) {
                   <option [ngValue]="c.id">{{ c.name }}</option>
@@ -283,23 +248,20 @@
               </select>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">{{ 'client_location' | t }}</label>
-              <input
-                class="form-input"
-                type="text"
-                [(ngModel)]="formLocation"
-                name="formLocation"
-                [placeholder]="'client_location' | t"
-              />
+            <div class="ems-field">
+              <label for="d-location">{{ 'client_location' | t }}</label>
+              <input id="d-location" class="ems-input" type="text" [(ngModel)]="formLocation" name="formLocation" [placeholder]="'client_location' | t" />
             </div>
-          </div>
 
-          <div class="form-row">
+            <div class="ems-field">
+              <label for="d-install">{{ 'dev_installDate' | t }}</label>
+              <input id="d-install" class="ems-input" type="date" [(ngModel)]="formInstallDate" name="formInstallDate" />
+            </div>
+
             @if (editingDevice(); as d) {
-              <div class="form-group">
-                <label class="form-label">{{ 'th_status' | t }}</label>
-                <select class="form-input" [(ngModel)]="formStatus" name="formStatus">
+              <div class="ems-field">
+                <label for="d-status">{{ 'th_status' | t }}</label>
+                <select id="d-status" class="ems-select" [(ngModel)]="formStatus" name="formStatus">
                   @if (!isEditableStatus(d.status)) {
                     <option [value]="d.status">{{ statusKey(d.status) | t }}</option>
                   }
@@ -309,75 +271,43 @@
                 </select>
               </div>
             }
-
-            <div class="form-group">
-              <label class="form-label">{{ 'dev_installDate' | t }}</label>
-              <input
-                class="form-input"
-                type="date"
-                [(ngModel)]="formInstallDate"
-                name="formInstallDate"
-              />
-            </div>
           </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">{{ 'dev_serial' | t }} *</label>
-              <input
-                class="form-input mono"
-                type="text"
-                [(ngModel)]="formSerial"
-                name="formSerial"
-                [placeholder]="'dev_serial' | t"
-                [disabled]="!!editingDevice()"
-                required
-              />
-            </div>
-          </div>
-
-          <div class="modal__footer">
-            <button class="btn btn--ghost" type="button" (click)="closeModal()">
-              {{ 'btn_cancel' | t }}
-            </button>
-            <button class="btn btn--primary" type="submit">
-              <i class="ph ph-floppy-disk" aria-hidden="true"></i>
-              {{ (editingDevice() ? 'btn_saveChanges' : 'dev_createDevice') | t }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <footer class="ems-modal__foot">
+          <button class="ems-btn ems-btn--ghost" type="button" (click)="closeModal()">{{ 'btn_cancel' | t }}</button>
+          <button class="ems-btn ems-btn--primary" type="submit">
+            <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+            {{ (editingDevice() ? 'btn_saveChanges' : 'dev_createDevice') | t }}
+          </button>
+        </footer>
+      </form>
     </div>
   </div>
 }
 
-<!-- ── Delete Confirm Modal ──────────────────────── -->
+<!-- Confirmación de borrado -->
 @if (showDeleteModal()) {
-  <div class="modal-overlay" (click)="closeDeleteConfirm()">
-    <div class="modal modal--sm" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal__header">
-        <div class="modal__title-wrap">
-          <div class="modal__icon modal__icon--danger">
-            <i class="ph ph-trash" aria-hidden="true"></i>
-          </div>
+  <div class="ems-backdrop" (click)="closeDeleteConfirm()">
+    <div class="ems-modal" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="device-delete-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon"><i class="ph ph-trash" aria-hidden="true"></i></span>
           <div>
-            <h3 class="modal__title">{{ 'dev_confirmDelete' | t }}</h3>
-            <p class="modal__desc">{{ 'btn_delete' | t }}</p>
+            <h3 class="ems-modal__title" id="device-delete-title">{{ 'dev_confirmDelete' | t }}</h3>
+            <p class="ems-modal-title__desc">{{ 'btn_delete' | t }}</p>
           </div>
         </div>
-        <button class="modal__close" type="button" (click)="closeDeleteConfirm()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeDeleteConfirm()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
-      <div class="modal__footer modal__footer--standalone">
-        <button class="btn btn--ghost" type="button" (click)="closeDeleteConfirm()">
-          {{ 'btn_cancel' | t }}
+      </header>
+      <footer class="ems-modal__foot">
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="closeDeleteConfirm()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--danger" type="button" (click)="confirmDelete()">
+          <i class="ph ph-trash" aria-hidden="true"></i>{{ 'btn_delete' | t }}
         </button>
-        <button class="btn btn--danger" type="button" (click)="confirmDelete()">
-          <i class="ph ph-trash" aria-hidden="true"></i>
-          {{ 'btn_delete' | t }}
-        </button>
-      </div>
+      </footer>
     </div>
   </div>
 }

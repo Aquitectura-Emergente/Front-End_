@@ -1,9 +1,1 @@
-@use '../../../../shared/styles/portal-tables' as portal;
-
-@include portal.portal-page;
-
-.section-title {
-  margin: 0.5rem 0 0;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-}
+:host { display: block; }

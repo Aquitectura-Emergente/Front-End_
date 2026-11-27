@@ -1,241 +1,206 @@
-<section class="work-orders">
-  <div class="work-orders__header">
-    <div>
-      <h2 class="work-orders__title">{{ 'wo_title' | t }}</h2>
-      <p class="work-orders__description">{{ 'wo_subtitle' | t }}</p>
-    </div>
-
-    <div class="work-orders__actions">
-      <a routerLink="/admin/work-orders/new" class="btn btn--primary">
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_operations' | t"
+    index="01"
+    [title]="'wo_title' | t"
+    [description]="'wo_subtitle' | t"
+  >
+    <ng-container actions>
+      <a routerLink="/admin/calendar" class="ems-btn">
+        <i class="ph ph-calendar-dots" aria-hidden="true"></i>
+        <span>{{ 'nav_calendar' | t }}</span>
+      </a>
+      <a routerLink="/admin/work-orders/new" class="ems-btn ems-btn--primary">
         <i class="ph ph-plus" aria-hidden="true"></i>
         <span>{{ 'wo_createNew' | t }}</span>
       </a>
-    </div>
-  </div>
+    </ng-container>
+  </ems-page-header>
 
-  <!-- Filters -->
-  <div class="filters">
-    <div class="field">
-      <i class="ph ph-magnifying-glass field__icon" aria-hidden="true"></i>
-      <input
-        class="field__input"
-        type="text"
-        [placeholder]="'wo_searchPlaceholder' | t"
-        (input)="searchQuery.set($any($event.target).value); applyFilters()"
-      />
-    </div>
+  <section class="ems-panel">
+    <!-- Filtros -->
+    <div class="ems-toolbar">
+      <label class="ems-search">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        <input
+          class="ems-input"
+          type="search"
+          [attr.aria-label]="'wo_searchPlaceholder' | t"
+          [placeholder]="'wo_searchPlaceholder' | t"
+          (input)="searchQuery.set($any($event.target).value); applyFilters()"
+        />
+      </label>
 
-    <div class="filter-group">
-      <span class="filter-group__label">{{ 'th_type' | t }}</span>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          aria-label="Filter by type"
-          (change)="selectedType.set($any($event.target).value); applyFilters()"
-        >
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'th_type' | t }}</span>
+        <select class="ems-select" aria-label="Filter by type" (change)="selectedType.set($any($event.target).value); applyFilters()">
           <option value="all">{{ 'filter_all' | t }}</option>
           <option value="Installation">{{ 'wo_installation' | t }}</option>
           <option value="Maintenance">{{ 'wo_maintenance' | t }}</option>
           <option value="Collection">{{ 'wo_collection' | t }}</option>
         </select>
-        <i class="ph ph-caret-down select-caret"></i>
-      </div>
-    </div>
+      </label>
 
-    <div class="filter-group">
-      <span class="filter-group__label">{{ 'th_status' | t }}</span>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          aria-label="Filter by status"
-          (change)="selectedStatus.set($any($event.target).value); applyFilters()"
-        >
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'th_status' | t }}</span>
+        <select class="ems-select" aria-label="Filter by status" (change)="selectedStatus.set($any($event.target).value); applyFilters()">
           <option value="all">{{ 'filter_all' | t }}</option>
           <option value="pending">{{ 'status_pending' | t }}</option>
           <option value="in-progress">{{ 'status_inProgress' | t }}</option>
         </select>
-        <i class="ph ph-caret-down select-caret"></i>
-      </div>
-    </div>
+      </label>
 
-    <div class="filter-group">
-      <span class="filter-group__label">{{ 'wo_sortBy' | t }}</span>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          aria-label="Sort by"
-          (change)="sortBy.set($any($event.target).value); applyFilters()"
-        >
+      <span class="ems-toolbar__spacer"></span>
+
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'wo_sortBy' | t }}</span>
+        <select class="ems-select" aria-label="Sort by" (change)="sortBy.set($any($event.target).value); applyFilters()">
           <option value="date">{{ 'wo_sortDate' | t }}</option>
           <option value="created">{{ 'wo_sortCreated' | t }}</option>
         </select>
-        <i class="ph ph-caret-down select-caret"></i>
-      </div>
+      </label>
     </div>
-  </div>
 
-  <!-- Table -->
-  <div class="table-wrap">
     @if (loading()) {
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
-      </div>
+      <div class="ems-progress ems-progress--indeterminate ems-list-progress"><div class="ems-progress__fill"></div></div>
     }
-    <table class="table" aria-label="Work orders table">
-      <thead>
-        <tr>
-          <th>{{ 'th_type' | t }}</th>
-          <th>{{ 'th_client' | t }}</th>
-          <th>{{ 'th_location' | t }}</th>
-          <th>{{ 'th_date' | t }}</th>
-          <th>{{ 'th_technician' | t }}</th>
-          <th>{{ 'th_status' | t }}</th>
-          <th>{{ 'th_actions' | t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (order of orders(); track order.id; let i = $index) {
-          <tr>
-            <td>
-              <span class="type-badge type-badge--{{ order.type.toLowerCase() }}">
-                @if (order.type === 'Installation') {
-                  <i class="ph ph-monitor"></i>
-                  {{ 'wo_installation' | t }}
-                } @else if (order.type === 'Maintenance') {
-                  <i class="ph ph-wrench"></i>
-                  {{ 'wo_maintenance' | t }}
-                } @else {
-                  <i class="ph ph-package"></i>
-                  {{ 'wo_collection' | t }}
-                }
-              </span>
-            </td>
-            <td>{{ order.client }}</td>
-            <td>
-              {{ order.location }}<br>
-              <small class="city-text">{{ order.city }}</small>
-            </td>
-            <td>{{ order.date }}</td>
-            <td>
-              <div class="tech-cell">
-                <div class="tech-avatar">{{ order.technicianInitials }}</div>
-                <span>{{ order.technician }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="status status--{{ order.status }}">
-                @if (order.status === 'completed') { {{ 'status_completed' | t }} }
-                @else if (order.status === 'in-progress') { {{ 'status_inProgress' | t }} }
-                @else if (order.status === 'cancelled') { {{ 'status_cancelled' | t }} }
-                @else { {{ 'status_pending' | t }} }
-              </span>
-            </td>
-            <td class="table__actions">
-              <div class="actions-wrap" (click)="$event.stopPropagation()">
-                <button
-                  class="btn btn--icon"
-                  type="button"
-                  (click)="toggleMenu(i, $event)"
-                  aria-label="Actions"
-                >
-                  <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
-                </button>
 
-                @if (openMenuIndex === i) {
-                  <div class="dropdown">
-                    @if (order.status === 'pending') {
-                      <button class="dropdown-item" type="button" (click)="editOrder(order.id, $event)">
-                        <i class="ph ph-pencil-simple" aria-hidden="true"></i>
-                        {{ 'wo_edit' | t }}
-                      </button>
-                    }
-                    @if (order.status === 'pending' || order.status === 'in-progress') {
-                      <button
-                        class="dropdown-item dropdown-item--danger"
-                        type="button"
-                        (click)="openDeleteModal(order.id, $event)"
-                      >
-                        <i class="ph ph-trash" aria-hidden="true"></i>
-                        {{ 'btn_delete' | t }}
-                      </button>
-                    }
-                  </div>
-                }
-              </div>
-            </td>
-          </tr>
-        } @empty {
+    <div class="ems-table-wrap">
+      <table class="ems-table" aria-label="Work orders table" [attr.aria-busy]="loading()">
+        <thead>
           <tr>
-            <td colspan="7" class="empty-row">No work orders found.</td>
+            <th>{{ 'th_type' | t }}</th>
+            <th>{{ 'th_client' | t }}</th>
+            <th>{{ 'th_location' | t }}</th>
+            <th>{{ 'th_date' | t }}</th>
+            <th>{{ 'th_technician' | t }}</th>
+            <th>{{ 'th_status' | t }}</th>
+            <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.id; let i = $index) {
+            <tr>
+              <td>
+                <span class="ems-inline-icon">
+                  @if (order.type === 'Installation') {
+                    <i class="ph ph-plugs-connected" aria-hidden="true"></i>{{ 'wo_installation' | t }}
+                  } @else if (order.type === 'Maintenance') {
+                    <i class="ph ph-wrench" aria-hidden="true"></i>{{ 'wo_maintenance' | t }}
+                  } @else {
+                    <i class="ph ph-package" aria-hidden="true"></i>{{ 'wo_collection' | t }}
+                  }
+                </span>
+              </td>
+              <td class="cell-primary">{{ order.client }}</td>
+              <td>
+                {{ order.location }}
+                <span class="cell-sub">{{ order.city }}</span>
+              </td>
+              <td class="mono">{{ order.date }}</td>
+              <td>
+                <span class="ems-person">
+                  <span class="ems-avatar">{{ order.technicianInitials }}</span>
+                  <span>{{ order.technician }}</span>
+                </span>
+              </td>
+              <td>
+                <span class="ems-tag"
+                      [class.ems-tag--safe]="order.status === 'completed'"
+                      [class.ems-tag--info]="order.status === 'in-progress'"
+                      [class.ems-tag--warning]="order.status === 'pending'">
+                  @if (order.status === 'completed') { {{ 'status_completed' | t }} }
+                  @else if (order.status === 'in-progress') { {{ 'status_inProgress' | t }} }
+                  @else if (order.status === 'cancelled') { {{ 'status_cancelled' | t }} }
+                  @else { {{ 'status_pending' | t }} }
+                </span>
+              </td>
+              <td class="cell-actions">
+                <div class="ems-row-menu" (click)="$event.stopPropagation()">
+                  <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="toggleMenu(i, $event)" aria-label="Actions" [attr.aria-expanded]="openMenuIndex === i">
+                    <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+                  </button>
 
-    <div class="pagination">
-      <span class="pagination__info">
-        Showing {{ currentPage() * pageSize + 1 }}-{{ min(currentPage() * pageSize + pageSize, totalElements()) }} of {{ totalElements() }}
-      </span>
-      @if (totalPages() > 1) {
-        <div class="pagination__pages">
-          <button class="page-btn" type="button" aria-label="Previous" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
-            <i class="ph ph-caret-left"></i>
-          </button>
-          @for (page of getPagesArray(); track page) {
-            <button class="page-btn" type="button" [class.active]="page === currentPage()" (click)="goToPage(page)">
-              {{ page + 1 }}
-            </button>
+                  @if (openMenuIndex === i) {
+                    <div class="ems-popover ems-row-menu__list" role="menu">
+                      @if (order.status === 'pending') {
+                        <button class="ems-menu__item" type="button" role="menuitem" (click)="editOrder(order.id, $event)">
+                          <i class="ph ph-pencil-simple" aria-hidden="true"></i>{{ 'wo_edit' | t }}
+                        </button>
+                      }
+                      @if (order.status === 'pending' || order.status === 'in-progress') {
+                        <button class="ems-menu__item ems-menu__item--danger" type="button" role="menuitem" (click)="openDeleteModal(order.id, $event)">
+                          <i class="ph ph-trash" aria-hidden="true"></i>{{ 'btn_delete' | t }}
+                        </button>
+                      }
+                      @if (order.status !== 'pending' && order.status !== 'in-progress') {
+                        <span class="ems-menu__item ems-menu__item--muted">—</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            @if (!loading()) {
+              <tr>
+                <td colspan="7"><ems-empty-state icon="ph-clipboard-text" [text]="'ui_noResults' | t" /></td>
+              </tr>
+            }
           }
-          <button class="page-btn" type="button" aria-label="Next" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)">
-            <i class="ph ph-caret-right"></i>
-          </button>
-        </div>
+        </tbody>
+      </table>
+    </div>
+
+    <ems-pager [page]="currentPage()" [totalPages]="totalPages()" [total]="totalElements()" [pageSize]="pageSize" (pageChange)="goToPage($event)" />
+  </section>
+
+  <!-- Actividad por ciudad -->
+  <section class="ems-panel">
+    <header class="ems-panel__head">
+      <h2 class="ems-panel__title"><span class="ems-panel__index">02</span>{{ 'wo_regional' | t }}</h2>
+    </header>
+    <div class="ems-panel__body">
+      @if ((regionalSeries()[0].data.length) > 0) {
+        <apx-chart
+          [series]="regionalSeries()"
+          [chart]="regionalChart"
+          [xaxis]="regionalXAxis()"
+          [yaxis]="regionalYAxis()"
+          [plotOptions]="regionalPlotOptions"
+          [colors]="regionalColors()"
+          [grid]="regionalGrid()"
+          [dataLabels]="regionalDataLabels"
+          [tooltip]="regionalTooltip()"
+          type="bar"
+        ></apx-chart>
+      } @else {
+        <ems-empty-state icon="ph-chart-bar" [compact]="true" [text]="'ui_noResults' | t" />
       }
     </div>
-  </div>
-
-  <!-- Bottom Chart — Regional Activity only -->
-  <div class="work-orders__bottom">
-    <div class="stat-card stat-card--full">
-      <div class="stat-card__label">{{ 'wo_regional' | t }}</div>
-      <apx-chart
-        [series]="regionalSeries"
-        [chart]="regionalChart"
-        [xaxis]="regionalXAxis"
-        [plotOptions]="regionalPlotOptions"
-        [colors]="regionalColors"
-        [grid]="regionalGrid"
-        [dataLabels]="regionalDataLabels"
-        [tooltip]="regionalTooltip"
-        type="bar"
-      ></apx-chart>
-    </div>
-  </div>
+  </section>
 </section>
 
-<!-- ── Delete Confirm Modal (captures cancellation reason) ──────────────── -->
+<!-- Confirmación de borrado con motivo de cancelación -->
 @if (showDeleteModal()) {
-  <div class="modal-overlay" (click)="closeDeleteModal()">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal__header">
-        <div class="modal__title-wrap">
-          <div class="modal__icon modal__icon--danger">
-            <i class="ph ph-trash" aria-hidden="true"></i>
-          </div>
+  <div class="ems-backdrop" (click)="closeDeleteModal()">
+    <div class="ems-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="wo-delete-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon"><i class="ph ph-trash" aria-hidden="true"></i></span>
           <div>
-            <h3 class="modal__title">{{ 'btn_delete' | t }}</h3>
-            <p class="modal__desc">{{ 'wo_deleteConfirm' | t }}</p>
+            <h3 class="ems-modal__title" id="wo-delete-title">{{ 'btn_delete' | t }}</h3>
+            <p class="ems-modal-title__desc">{{ 'wo_deleteConfirm' | t }}</p>
           </div>
         </div>
-        <button class="modal__close" type="button" (click)="closeDeleteModal()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeDeleteModal()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
-      <div class="modal__body">
-        <div class="form-group">
-          <label class="form-label">{{ 'wo_cancelReason' | t }} *</label>
-          <select class="form-input" [(ngModel)]="deleteReason" name="deleteReason">
+      </header>
+      <div class="ems-modal__body">
+        <div class="ems-field">
+          <label for="wo-delete-reason">{{ 'wo_cancelReason' | t }}<span class="ems-field__req">*</span></label>
+          <select id="wo-delete-reason" class="ems-select" [(ngModel)]="deleteReason" name="deleteReason">
             <option value="">— {{ 'wo_selectReason' | t }} —</option>
             <option value="Equipment issue">{{ 'wo_cancelReasonEquip' | t }}</option>
             <option value="Client request">{{ 'wo_cancelReasonClient' | t }}</option>
@@ -243,14 +208,13 @@
             <option value="Other">{{ 'wo_cancelReasonOther' | t }}</option>
           </select>
         </div>
-        <div class="modal__footer">
-          <button class="btn btn--ghost" type="button" (click)="closeDeleteModal()">{{ 'btn_cancel' | t }}</button>
-          <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="!deleteReason">
-            <i class="ph ph-trash" aria-hidden="true"></i>
-            {{ 'btn_delete' | t }}
-          </button>
-        </div>
       </div>
+      <footer class="ems-modal__foot">
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="closeDeleteModal()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--danger" type="button" (click)="confirmDelete()" [disabled]="!deleteReason">
+          <i class="ph ph-trash" aria-hidden="true"></i>{{ 'btn_delete' | t }}
+        </button>
+      </footer>
     </div>
   </div>
 }

@@ -1,7 +1,7 @@
-@use '../../../../shared/styles/portal-tables' as portal;
+@use 'styles/mixins' as ems;
 
-@include portal.portal-page;
+:host { display: block; }
 
-// Los operarios y los avisos se apilan dentro de la celda.
-.grid td .pill { margin-right: 0.3rem; }
-.grid td .muted { display: block; margin-top: 0.2rem; }
+
+.grid td .pill { margin-right: var(--ems-space-2); }
+.grid td .muted { margin-top: var(--ems-space-1); }

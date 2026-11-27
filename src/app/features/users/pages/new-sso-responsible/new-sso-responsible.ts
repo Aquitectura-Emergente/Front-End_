@@ -22,7 +22,7 @@ function passwordsMatch(group: AbstractControl) {
   selector: 'app-new-sso-responsible',
   imports: [ReactiveFormsModule, TranslatePipe, RouterLink, CommonModule],
   templateUrl: './new-sso-responsible.html',
-  styleUrl: '../new-technician/new-technician.scss',
+  styleUrl: '../account-form.scss',
 })
 export class NewSsoResponsible implements OnInit {
   private fb     = inject(FormBuilder);

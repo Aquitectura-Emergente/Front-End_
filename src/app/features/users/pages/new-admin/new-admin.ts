@@ -16,7 +16,7 @@ function passwordsMatch(group: AbstractControl) {
   selector: 'app-new-admin',
   imports: [CommonModule, ReactiveFormsModule, TranslatePipe, RouterLink],
   templateUrl: './new-admin.html',
-  styleUrl: './new-admin.scss',
+  styleUrl: '../account-form.scss',
 })
 export class NewAdmin implements OnInit {
   private fb     = inject(FormBuilder);

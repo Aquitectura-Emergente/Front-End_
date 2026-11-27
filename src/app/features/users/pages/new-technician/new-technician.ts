@@ -16,7 +16,7 @@ function passwordsMatch(group: AbstractControl) {
   selector: 'app-new-technician',
   imports: [ReactiveFormsModule, TranslatePipe, RouterLink, CommonModule],
   templateUrl: './new-technician.html',
-  styleUrl: './new-technician.scss',
+  styleUrl: '../account-form.scss',
 })
 export class NewTechnician implements OnInit {
   private fb     = inject(FormBuilder);

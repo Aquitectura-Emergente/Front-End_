@@ -1,4 +1,12 @@
-import { Component, inject, HostListener, signal, OnInit } from '@angular/core';
+import { Component, inject, HostListener, signal, OnInit, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { MonitoringFacade } from '../../../../contexts/radiationmonitoring/application/monitoring-facade';
+import { ThemeService } from '../../../../core/services/theme.service';
+import { axisLabels, chartTokens, gridOptions } from '../../../../core/utils/chart-theme';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { Pager } from '../../../../shared/ui/pager/pager';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -11,9 +19,8 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-work-orders',
-  imports: [NgApexchartsModule, TranslatePipe, RouterLink, FormsModule],
+  imports: [NgApexchartsModule, TranslatePipe, RouterLink, FormsModule, PageHeader, EmptyState, Pager],
   templateUrl: './work-orders.html',
-  styleUrl: './work-orders.scss',
 })
 export class WorkOrders implements OnInit {
   protected lang    = inject(LanguageService);
@@ -21,6 +28,8 @@ export class WorkOrders implements OnInit {
   private toast     = inject(ToastService);
   private activity  = inject(ActivityService);
   private router    = inject(Router);
+  private monitoring = inject(MonitoringFacade);
+  private theme     = inject(ThemeService);
 
   orders = signal<WorkOrder[]>([]);
   loading = signal(true);
@@ -123,18 +132,24 @@ export class WorkOrders implements OnInit {
     });
   }
 
-  // ── Regional chart — hardcoded Peru cities ─────────────────
-  regionalSeries: { name: string; data: number[] }[] = [{ name: 'Orders', data: [38, 24, 18, 14, 10] }];
-  regionalChart  = { type: 'bar', height: 130, toolbar: { show: false }, background: 'transparent' } as const;
-  regionalXAxis: { categories: string[]; labels: object; axisBorder: object; axisTicks: object } = {
-    categories: ['Lima', 'Arequipa', 'Trujillo', 'Cusco', 'Piura'],
-    labels: { style: { colors: '#6b7280', fontSize: '12px', fontFamily: 'Inter, sans-serif' } },
-    axisBorder: { show: false },
-    axisTicks:  { show: false },
-  };
-  regionalPlotOptions = { bar: { borderRadius: 4, columnWidth: '55%' } };
-  regionalColors      = ['#1a6eff'];
-  regionalGrid        = { borderColor: '#f0f2f5', yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } };
-  regionalDataLabels  = { enabled: false };
-  regionalTooltip     = { theme: 'light' };
+  // Actividad por ciudad: datos reales de /chart-data (antes eran valores fijos).
+  private chartTheme = computed(() => {
+    this.theme.darkMode();
+    return chartTokens();
+  });
+  private regional = toSignal(this.monitoring.chartData().pipe(map((c) => c?.regional ?? null)), { initialValue: null });
+  regionalSeries = computed(() => [{ name: this.lang.t('nav_workOrders'), data: this.regional()?.series ?? [] }]);
+  regionalChart = { type: 'bar', height: 180, toolbar: { show: false }, background: 'transparent' } as const;
+  regionalXAxis = computed(() => ({
+    categories: this.regional()?.categories ?? [],
+    labels: axisLabels(this.chartTheme()),
+    axisBorder: { show: true, color: this.chartTheme().border },
+    axisTicks: { show: false },
+  }));
+  regionalYAxis = computed(() => ({ labels: axisLabels(this.chartTheme()), tickAmount: 3 }));
+  regionalPlotOptions = { bar: { borderRadius: 1, columnWidth: '40%' } };
+  regionalColors = computed(() => [this.chartTheme().series[0]]);
+  regionalGrid = computed(() => gridOptions(this.chartTheme()));
+  regionalDataLabels = { enabled: false };
+  regionalTooltip = computed(() => ({ theme: this.chartTheme().dark ? 'dark' : 'light' }));
 }

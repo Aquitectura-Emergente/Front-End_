@@ -1,3 +1,4 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -28,7 +29,7 @@ const AUDIT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-device-detail',
-  imports: [TranslatePipe, FormsModule, RouterLink, DecimalPipe, LowerCasePipe],
+  imports: [TranslatePipe, FormsModule, RouterLink, DecimalPipe, LowerCasePipe, EmptyState],
   templateUrl: './device-detail.html',
   styleUrl: './device-detail.scss',
 })

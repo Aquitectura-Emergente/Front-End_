@@ -1,61 +1,85 @@
-<section class="edges">
-  <header>
-    <h2 class="edges__title">{{ 'edge_title' | t }}</h2>
-    <p class="edges__subtitle">{{ 'edge_subtitle' | t }}</p>
-  </header>
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_assets' | t"
+    index="05"
+    [title]="'edge_title' | t"
+    [description]="'edge_subtitle' | t"
+  />
 
-  <div class="stats">
-    <div class="stat"><span>{{ 'edge_total' | t }}</span><strong>{{ edges().length }}</strong></div>
-    <div class="stat stat--online"><span>{{ 'dm_conn_ONLINE' | t }}</span><strong>{{ online() }}</strong></div>
-    <div class="stat stat--offline"><span>{{ 'dm_conn_OFFLINE' | t }}</span><strong>{{ offline() }}</strong></div>
-  </div>
-
-  <div class="toolbar">
-    <div class="search">
-      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-      <input type="text" [ngModel]="search()" (ngModelChange)="search.set($event)" [placeholder]="'edge_search' | t" />
+  <div class="ems-readouts">
+    <div class="ems-readout">
+      <span class="ems-readout__label"><i class="ph ph-broadcast" aria-hidden="true"></i>{{ 'edge_total' | t }}</span>
+      <span class="ems-readout__value">{{ edges().length }}</span>
     </div>
-    <select class="select" [ngModel]="segment()" (ngModelChange)="segment.set($event)">
-      <option value="all">{{ 'filter_all' | t }}</option>
-      <option value="PLANT">{{ 'edge_seg_PLANT' | t }}</option>
-      <option value="HOME">{{ 'edge_seg_HOME' | t }}</option>
-    </select>
+    <div class="ems-readout ems-readout--safe">
+      <span class="ems-readout__label"><span class="ems-signal ems-signal--online"><span class="ems-signal__dot"></span></span>{{ 'dm_conn_ONLINE' | t }}</span>
+      <span class="ems-readout__value">{{ online() }}</span>
+    </div>
+    <div class="ems-readout" [class.ems-readout--warning]="offline() > 0">
+      <span class="ems-readout__label"><span class="ems-signal ems-signal--offline"><span class="ems-signal__dot"></span></span>{{ 'dm_conn_OFFLINE' | t }}</span>
+      <span class="ems-readout__value">{{ offline() }}</span>
+    </div>
   </div>
 
-  <div class="table-wrap">
-    <table class="table" aria-label="Edge nodes">
-      <thead>
-        <tr>
-          <th>{{ 'edge_id' | t }}</th>
-          <th>{{ 'edge_org' | t }}</th>
-          <th>{{ 'edge_segment' | t }}</th>
-          <th>{{ 'dm_connectivity' | t }}</th>
-          <th>{{ 'dm_lastSeen' | t }}</th>
-          <th>{{ 'edge_changedAt' | t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="6" class="muted"><i class="ph ph-circle-notch ph-spin"></i></td></tr>
-        } @else {
-          @for (e of filtered(); track e.edgeNodeId) {
-            <tr>
-              <td class="mono">{{ e.edgeNodeId }}</td>
-              <td>{{ orgName(e) }}</td>
-              <td><span class="pill">{{ 'edge_seg_' + e.segment | t }}</span></td>
-              <td>
-                @if (e.connectivity; as c) {
-                  <span class="conn conn--{{ c | lowercase }}"><span class="dot"></span>{{ 'dm_conn_' + c | t }}</span>
-                } @else { <span class="muted">—</span> }
-              </td>
-              <td [title]="when(e.lastSeenAt)">{{ ago(e.lastSeenAt) }}</td>
-              <td class="muted">{{ when(e.connectivityChangedAt) }}</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="6" class="muted">{{ 'edge_empty' | t }}</td></tr>
+  <section class="ems-panel">
+    <div class="ems-toolbar">
+      <label class="ems-search">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        <input class="ems-input" type="search" [attr.aria-label]="'edge_search' | t" [ngModel]="search()" (ngModelChange)="search.set($event)" [placeholder]="'edge_search' | t" />
+      </label>
+      <span class="ems-toolbar__spacer"></span>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'edge_segment' | t }}</span>
+        <select class="ems-select" [ngModel]="segment()" (ngModelChange)="segment.set($event)">
+          <option value="all">{{ 'filter_all' | t }}</option>
+          <option value="PLANT">{{ 'edge_seg_PLANT' | t }}</option>
+          <option value="HOME">{{ 'edge_seg_HOME' | t }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="ems-table-wrap">
+      <table class="ems-table" aria-label="Edge nodes" [attr.aria-busy]="loading()">
+        <thead>
+          <tr>
+            <th>{{ 'edge_id' | t }}</th>
+            <th>{{ 'edge_org' | t }}</th>
+            <th>{{ 'edge_segment' | t }}</th>
+            <th>{{ 'dm_connectivity' | t }}</th>
+            <th>{{ 'dm_lastSeen' | t }}</th>
+            <th>{{ 'edge_changedAt' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr><td colspan="6"><div class="ems-loading"><i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>{{ 'ui_loading' | t }}</div></td></tr>
+          } @else {
+            @for (e of filtered(); track e.edgeNodeId) {
+              <tr>
+                <td class="mono cell-primary">{{ e.edgeNodeId }}</td>
+                <td>{{ orgName(e) }}</td>
+                <td>
+                  <span class="ems-inline-icon">
+                    <i class="ph" [class.ph-factory]="e.segment === 'PLANT'" [class.ph-house-line]="e.segment === 'HOME'" aria-hidden="true"></i>
+                    {{ 'edge_seg_' + e.segment | t }}
+                  </span>
+                </td>
+                <td>
+                  @if (e.connectivity; as c) {
+                    <span class="ems-signal" [class.ems-signal--online]="c === 'ONLINE'" [class.ems-signal--offline]="c !== 'ONLINE'">
+                      <span class="ems-signal__dot" aria-hidden="true"></span>{{ 'dm_conn_' + c | t }}
+                    </span>
+                  } @else { <span class="ems-muted">—</span> }
+                </td>
+                <td class="mono" [title]="when(e.lastSeenAt)">{{ ago(e.lastSeenAt) }}</td>
+                <td class="mono ems-muted">{{ when(e.connectivityChangedAt) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6"><ems-empty-state icon="ph-broadcast" [text]="'edge_empty' | t" /></td></tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </section>

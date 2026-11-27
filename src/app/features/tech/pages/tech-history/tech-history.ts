@@ -1,3 +1,6 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -8,7 +11,7 @@ import { WorkOrderDetailModal } from '../../../../shared/components/work-order-d
 
 @Component({
   selector: 'app-tech-history',
-  imports: [FormsModule, TranslatePipe, WorkOrderDetailModal],
+  imports: [FormsModule, TranslatePipe, WorkOrderDetailModal, PageHeader, EmptyState, Pager],
   templateUrl: './tech-history.html',
   styleUrl: './tech-history.scss',
 })
@@ -158,7 +161,7 @@ export class TechHistory implements OnInit {
   }
 
   protected typeIcon(type: string): string {
-    return type === 'Installation' ? 'ph-monitor'
+    return type === 'Installation' ? 'ph-plugs-connected'
       : type === 'Maintenance'    ? 'ph-wrench'
       : 'ph-package';
   }

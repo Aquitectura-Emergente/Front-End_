@@ -1,265 +1,241 @@
-<section class="alarms">
-  <div class="alarms__header">
-    <div>
-      <h2 class="alarms__title">{{ 'alarm_title' | t }}</h2>
-      <p class="alarms__subtitle">{{ 'alarm_subtitle' | t }}</p>
-    </div>
-    <div class="alarms__actions">
-      <button class="btn btn--primary" type="button" (click)="openCreateModal()">
-        <i class="ph ph-bell-plus" aria-hidden="true"></i>
-        <span>{{ 'alarm_addAlarm' | t }}</span>
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_monitoring' | t"
+    index="08"
+    [title]="'alarm_title' | t"
+    [description]="'alarm_subtitle' | t"
+  >
+    <button actions class="ems-btn ems-btn--primary" type="button" (click)="openCreateModal()">
+      <i class="ph ph-bell-plus" aria-hidden="true"></i>
+      <span>{{ 'alarm_addAlarm' | t }}</span>
+    </button>
+  </ems-page-header>
+
+  <section class="ems-panel">
+    <div class="ems-tabs log-tabs" role="tablist">
+      <button class="ems-tabs__tab" [class.is-active]="filter() === 'all'" [attr.aria-selected]="filter() === 'all'" type="button" role="tab" (click)="setFilter('all')">
+        {{ 'alarm_all' | t }} <span class="ems-count">{{ alarms().length }}</span>
+      </button>
+      <button class="ems-tabs__tab" [class.is-active]="filter() === 'sensor'" [attr.aria-selected]="filter() === 'sensor'" type="button" role="tab" (click)="setFilter('sensor')">
+        <i class="ph ph-cell-signal-full" aria-hidden="true"></i>{{ 'alarm_sensorAlarms' | t }}
+      </button>
+      <button class="ems-tabs__tab" [class.is-active]="filter() === 'system'" [attr.aria-selected]="filter() === 'system'" type="button" role="tab" (click)="setFilter('system')">
+        <i class="ph ph-gear-six" aria-hidden="true"></i>{{ 'alarm_systemAlerts' | t }}
       </button>
     </div>
-  </div>
 
-  <!-- Filter tabs -->
-  <div class="toolbar">
-    <div class="tabs" role="tablist">
-      <button class="tab" [class.tab--active]="filter() === 'all'" type="button" role="tab" (click)="setFilter('all')">
-        {{ 'alarm_all' | t }}
-        <span class="tab-count">{{ alarms().length }}</span>
-      </button>
-      <button class="tab" [class.tab--active]="filter() === 'sensor'" type="button" role="tab" (click)="setFilter('sensor')">
-        {{ 'alarm_sensorAlarms' | t }}
-      </button>
-      <button class="tab" [class.tab--active]="filter() === 'system'" type="button" role="tab" (click)="setFilter('system')">
-        {{ 'alarm_systemAlerts' | t }}
-      </button>
+    <div class="ems-toolbar">
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'alarm_client' | t }}</span>
+        <select class="ems-select" [(ngModel)]="clientFilter" (ngModelChange)="setClientFilter($event)">
+          <option value="">{{ 'alarm_allClients' | t }}</option>
+          @for (c of clients(); track c.id) {
+            <option [value]="c.name">{{ c.name }}</option>
+          }
+        </select>
+      </label>
     </div>
-    <select class="client-filter-select" [(ngModel)]="clientFilter" (ngModelChange)="setClientFilter($event)">
-      <option value="">{{ 'alarm_allClients' | t }}</option>
-      @for (c of clients(); track c.id) {
-        <option [value]="c.name">{{ c.name }}</option>
-      }
-    </select>
-  </div>
 
-  <!-- Alarm cards -->
-  @if (loading()) {
-    <div class="loading-state">
-      <i class="ph ph-circle-notch ph-spin"></i>
-      <span>Loading...</span>
-    </div>
-  }
+    @if (loading()) {
+      <div class="ems-progress ems-progress--indeterminate ems-list-progress"><div class="ems-progress__fill"></div></div>
+    }
 
-  <div class="alarms-list">
-    @for (alarm of filtered(); track alarm.id) {
-      <div
-        class="alarm-card alarm-card--{{ alarm.type }}"
-        [class.alarm-card--resolved]="alarm.resolved"
-        (click)="openDetail(alarm)"
-        role="button"
-        tabindex="0"
-      >
-        <div class="alarm-card__icon alarm-icon--{{ alarm.type }}">
-          <i class="ph {{ alarm.icon || 'ph-bell' }}" aria-hidden="true"></i>
-        </div>
-
-        <div class="alarm-card__body">
-          <div class="alarm-card__meta">
-            <span class="alarm-type-badge alarm-type-badge--{{ alarm.type }}">
+    <ol class="log" [attr.aria-busy]="loading()">
+      @for (alarm of filtered(); track alarm.id) {
+        <li
+          class="log__row log__row--{{ alarm.type }}"
+          [class.is-resolved]="alarm.resolved"
+          (click)="openDetail(alarm)"
+          (keydown.enter)="openDetail(alarm)"
+          role="button"
+          tabindex="0"
+        >
+          <span class="log__icon"><i class="ph {{ alarm.icon || 'ph-bell' }}" aria-hidden="true"></i></span>
+          <span class="log__severity">
+            <span class="ems-tag"
+                  [class.ems-tag--danger]="alarm.type === 'danger'"
+                  [class.ems-tag--warning]="alarm.type === 'warning'"
+                  [class.ems-tag--safe]="alarm.type === 'success'"
+                  [class.ems-tag--info]="alarm.type !== 'danger' && alarm.type !== 'warning' && alarm.type !== 'success'">
               @if (alarm.type === 'danger') { {{ 'alarm_danger' | t }} }
               @else if (alarm.type === 'warning') { {{ 'alarm_warning' | t }} }
               @else if (alarm.type === 'success') { {{ 'alarm_success' | t }} }
               @else { {{ 'alarm_info' | t }} }
             </span>
-          </div>
-          <h4 class="alarm-card__title">{{ alarm.title }}</h4>
-          @if (alarm.description) {
-            <p class="alarm-card__desc">{{ alarm.description }}</p>
-          }
-          <span class="alarm-card__time">
-            <i class="ph ph-clock" aria-hidden="true"></i>
-            {{ alarm.time }}
           </span>
-        </div>
-
-        <button
-          class="alarm-card__delete"
-          type="button"
-          (click)="deleteAlarm(alarm.id, $event)"
-          [title]="'btn_delete' | t"
-          aria-label="Delete alarm"
-        >
-          <i class="ph ph-trash" aria-hidden="true"></i>
-        </button>
-      </div>
-    } @empty {
-      @if (!loading()) {
-        <div class="empty-state">
-          <i class="ph ph-bell-slash" aria-hidden="true"></i>
-          <span>{{ 'alarm_noAlarms' | t }}</span>
-        </div>
+          <span class="log__body">
+            <span class="log__title">{{ alarm.title }}</span>
+            @if (alarm.description) {
+              <span class="log__desc">{{ alarm.description }}</span>
+            }
+          </span>
+          <span class="log__state">
+            @if (alarm.resolved) {
+              <span class="ems-inline-icon resolved"><i class="ph ph-check-circle" aria-hidden="true"></i>{{ 'alarm_resolved' | t }}</span>
+            } @else {
+              <span class="ems-inline-icon open"><i class="ph ph-circle-dashed" aria-hidden="true"></i>{{ 'alarm_unresolved' | t }}</span>
+            }
+          </span>
+          <time class="log__time">{{ alarm.time }}</time>
+          <button
+            class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm log__delete"
+            type="button"
+            (click)="deleteAlarm(alarm.id, $event)"
+            [attr.data-tooltip]="'btn_delete' | t"
+            aria-label="Delete alarm"
+          >
+            <i class="ph ph-trash" aria-hidden="true"></i>
+          </button>
+        </li>
+      } @empty {
+        @if (!loading()) {
+          <li><ems-empty-state icon="ph-bell-slash" [text]="'alarm_noAlarms' | t" /></li>
+        }
       }
-    }
-  </div>
+    </ol>
+  </section>
 </section>
 
-<!-- ── Detail Modal ─────────────────────────────────── -->
+<!-- Detalle -->
 @if (showDetail() && detailAlarm()) {
-  <div class="modal-overlay" (click)="closeDetail()">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal__header">
-        <div class="modal__title-wrap">
-          <div class="modal__icon alarm-modal-icon--{{ detailAlarm()!.type }}">
+  <div class="ems-backdrop" (click)="closeDetail()">
+    <div class="ems-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="alarm-detail-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon"
+                [class.ems-modal-title__icon--warning]="detailAlarm()!.type === 'warning'"
+                [class.ems-modal-title__icon--primary]="detailAlarm()!.type !== 'danger' && detailAlarm()!.type !== 'warning'">
             <i class="ph {{ detailAlarm()!.icon || 'ph-bell' }}" aria-hidden="true"></i>
-          </div>
+          </span>
           <div>
-            <h3 class="modal__title">{{ detailAlarm()!.title }}</h3>
-            <p class="modal__desc">{{ 'alarm_detail_title' | t }}</p>
+            <h3 class="ems-modal__title" id="alarm-detail-title">{{ detailAlarm()!.title }}</h3>
+            <p class="ems-modal-title__desc">{{ 'alarm_detail_title' | t }}</p>
           </div>
         </div>
-        <button class="modal__close" type="button" (click)="closeDetail()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeDetail()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
-      <div class="modal__body">
+      </header>
+      <div class="ems-modal__body">
         @if (detailAlarm()!.description) {
-          <p class="alarm-detail-desc">{{ detailAlarm()!.description }}</p>
+          <p class="detail-desc">{{ detailAlarm()!.description }}</p>
         }
-        <div class="detail-row">
-          <span class="detail-label">{{ 'alarm_type' | t }}</span>
-          <span class="alarm-type-badge alarm-type-badge--{{ detailAlarm()!.type }}">
-            @if (detailAlarm()!.type === 'danger') { {{ 'alarm_danger' | t }} }
-            @else if (detailAlarm()!.type === 'warning') { {{ 'alarm_warning' | t }} }
-            @else if (detailAlarm()!.type === 'success') { {{ 'alarm_success' | t }} }
-            @else { {{ 'alarm_info' | t }} }
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">{{ 'alarm_client' | t }}</span>
-          <span>{{ detailAlarm()!.clientName || ('alarm_allUsers' | t) }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">{{ 'alarm_sensor' | t }}</span>
-          <span>{{ detailAlarm()!.sensor || '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">{{ 'alarm_time' | t }}</span>
-          <span>{{ detailAlarm()!.time }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">{{ 'alarm_status' | t }}</span>
-          @if (detailAlarm()!.resolved) {
-            <span>{{ 'alarm_resolved' | t }}@if (detailAlarm()!.resolvedAt) { — {{ detailAlarm()!.resolvedAt | dt }}}</span>
-          } @else {
-            <span>{{ 'alarm_unresolved' | t }}</span>
-          }
-        </div>
+        <dl class="ems-kv">
+          <dt>{{ 'alarm_type' | t }}</dt>
+          <dd>
+            <span class="ems-tag"
+                  [class.ems-tag--danger]="detailAlarm()!.type === 'danger'"
+                  [class.ems-tag--warning]="detailAlarm()!.type === 'warning'"
+                  [class.ems-tag--safe]="detailAlarm()!.type === 'success'"
+                  [class.ems-tag--info]="detailAlarm()!.type === 'info'">
+              @if (detailAlarm()!.type === 'danger') { {{ 'alarm_danger' | t }} }
+              @else if (detailAlarm()!.type === 'warning') { {{ 'alarm_warning' | t }} }
+              @else if (detailAlarm()!.type === 'success') { {{ 'alarm_success' | t }} }
+              @else { {{ 'alarm_info' | t }} }
+            </span>
+          </dd>
+          <dt>{{ 'alarm_client' | t }}</dt>
+          <dd>{{ detailAlarm()!.clientName || ('alarm_allUsers' | t) }}</dd>
+          <dt>{{ 'alarm_sensor' | t }}</dt>
+          <dd class="mono">{{ detailAlarm()!.sensor || '—' }}</dd>
+          <dt>{{ 'alarm_time' | t }}</dt>
+          <dd class="mono">{{ detailAlarm()!.time }}</dd>
+          <dt>{{ 'alarm_status' | t }}</dt>
+          <dd>
+            @if (detailAlarm()!.resolved) {
+              <span>{{ 'alarm_resolved' | t }}@if (detailAlarm()!.resolvedAt) { — {{ detailAlarm()!.resolvedAt | dt }}}</span>
+            } @else {
+              <span>{{ 'alarm_unresolved' | t }}</span>
+            }
+          </dd>
+        </dl>
       </div>
-      <div class="modal__footer">
-        <button class="btn btn--ghost" type="button" (click)="closeDetail()">{{ 'btn_close' | t }}</button>
+      <footer class="ems-modal__foot">
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="closeDetail()">{{ 'btn_close' | t }}</button>
         @if (canResolve(detailAlarm()!)) {
-          <button
-            class="btn btn--resolve"
-            type="button"
-            (click)="resolveAlarm(detailAlarm()!.id)"
-          >
+          <button class="ems-btn ems-btn--primary btn--resolve" type="button" (click)="resolveAlarm(detailAlarm()!.id)">
             <i class="ph ph-check-circle" aria-hidden="true"></i>
             {{ 'alarm_resolve' | t }}
           </button>
         }
-      </div>
+      </footer>
     </div>
   </div>
 }
 
-<!-- ── Create Alarm Modal ────────────────────────── -->
+<!-- Nueva alarma -->
 @if (showModal()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal__header">
-        <div class="modal__title-wrap">
-          <div class="modal__icon">
-            <i class="ph ph-bell-plus" aria-hidden="true"></i>
-          </div>
+  <div class="ems-backdrop" (click)="closeModal()">
+    <div class="ems-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="alarm-create-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon ems-modal-title__icon--primary"><i class="ph ph-bell-plus" aria-hidden="true"></i></span>
           <div>
-            <h3 class="modal__title">{{ 'alarm_addAlarm' | t }}</h3>
-            <p class="modal__desc">{{ 'alarm_subtitle' | t }}</p>
+            <h3 class="ems-modal__title" id="alarm-create-title">{{ 'alarm_addAlarm' | t }}</h3>
+            <p class="ems-modal-title__desc">{{ 'alarm_subtitle' | t }}</p>
           </div>
         </div>
-        <button class="modal__close" type="button" (click)="closeModal()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeModal()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
+      </header>
 
-      <div class="modal__body">
-        <form class="form" (ngSubmit)="createAlarm()">
-          <div class="form-group">
-            <label class="form-label">{{ 'alarm_type' | t }}</label>
-            <select class="form-input" [(ngModel)]="formType" name="formType">
-              <option value="info">{{ 'alarm_info' | t }}</option>
-              <option value="warning">{{ 'alarm_warning' | t }}</option>
-              <option value="danger">{{ 'alarm_danger' | t }}</option>
-              <option value="success">{{ 'alarm_success' | t }}</option>
-            </select>
+      <form (ngSubmit)="createAlarm()">
+        <div class="ems-modal__body ems-stack">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="al-type">{{ 'alarm_type' | t }}</label>
+              <select id="al-type" class="ems-select" [(ngModel)]="formType" name="formType">
+                <option value="info">{{ 'alarm_info' | t }}</option>
+                <option value="warning">{{ 'alarm_warning' | t }}</option>
+                <option value="danger">{{ 'alarm_danger' | t }}</option>
+                <option value="success">{{ 'alarm_success' | t }}</option>
+              </select>
+            </div>
+            <div class="ems-field">
+              <label for="al-sensor">{{ 'alarm_sensor' | t }}</label>
+              <input id="al-sensor" class="ems-input mono" type="text" [(ngModel)]="formSensor" name="formSensor" [placeholder]="'alarm_sensorPlaceholder' | t" />
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">{{ 'alarm_titleField' | t }} *</label>
-            <input
-              class="form-input"
-              type="text"
-              [(ngModel)]="formTitle"
-              name="formTitle"
-              [placeholder]="'alarm_titleField' | t"
-              required
-            />
+          <div class="ems-field">
+            <label for="al-title">{{ 'alarm_titleField' | t }}<span class="ems-field__req">*</span></label>
+            <input id="al-title" class="ems-input" type="text" [(ngModel)]="formTitle" name="formTitle" [placeholder]="'alarm_titleField' | t" required />
           </div>
 
-          <div class="form-group">
-            <label class="form-label">{{ 'alarm_description' | t }}</label>
-            <textarea
-              class="form-input form-textarea"
-              [(ngModel)]="formDescription"
-              name="formDescription"
-              [placeholder]="'alarm_description' | t"
-              rows="3"
-            ></textarea>
+          <div class="ems-field">
+            <label for="al-desc">{{ 'alarm_description' | t }}</label>
+            <textarea id="al-desc" class="ems-textarea" [(ngModel)]="formDescription" name="formDescription" [placeholder]="'alarm_description' | t" rows="3"></textarea>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">{{ 'alarm_sensor' | t }}</label>
-            <input
-              class="form-input"
-              type="text"
-              [(ngModel)]="formSensor"
-              name="formSensor"
-              [placeholder]="'alarm_sensorPlaceholder' | t"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">{{ 'alarm_recipients' | t }}</label>
-            <select class="form-input" [(ngModel)]="formRecipients" name="formRecipients">
+          <div class="ems-field">
+            <label for="al-rec">{{ 'alarm_recipients' | t }}</label>
+            <select id="al-rec" class="ems-select" [(ngModel)]="formRecipients" name="formRecipients">
               <option value="all">{{ 'alarm_allUsers' | t }}</option>
               <option value="specific">{{ 'alarm_specificUsers' | t }}</option>
             </select>
           </div>
 
           @if (formRecipients === 'specific') {
-            <div class="form-group">
-              <label class="form-label">{{ 'alarm_client' | t }}</label>
-              <select class="form-input" multiple [(ngModel)]="formClientIds" name="formClientIds" size="5">
+            <div class="ems-field">
+              <label for="al-clients">{{ 'alarm_client' | t }}</label>
+              <select id="al-clients" class="ems-select multi" multiple [(ngModel)]="formClientIds" name="formClientIds" size="5">
                 @for (client of clients(); track client.id) {
                   <option [value]="client.id">{{ client.name }}</option>
                 }
               </select>
-              <span class="form-hint">{{ 'alarm_clientHint' | t }}</span>
+              <span class="ems-field__hint">{{ 'alarm_clientHint' | t }}</span>
             </div>
           }
+        </div>
 
-          <div class="modal__footer">
-            <button class="btn btn--ghost" type="button" (click)="closeModal()">
-              {{ 'btn_cancel' | t }}
-            </button>
-            <button class="btn btn--primary" type="submit">
-              <i class="ph ph-bell-plus" aria-hidden="true"></i>
-              {{ 'btn_create' | t }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <footer class="ems-modal__foot">
+          <button class="ems-btn ems-btn--ghost" type="button" (click)="closeModal()">{{ 'btn_cancel' | t }}</button>
+          <button class="ems-btn ems-btn--primary" type="submit">
+            <i class="ph ph-bell-plus" aria-hidden="true"></i>{{ 'btn_create' | t }}
+          </button>
+        </footer>
+      </form>
     </div>
   </div>
 }

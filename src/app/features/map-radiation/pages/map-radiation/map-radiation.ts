@@ -1,3 +1,6 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import {
   Component, inject, signal, computed,
   OnInit, OnDestroy, AfterViewInit,
@@ -14,7 +17,7 @@ import { loadLeaflet } from '../../../../core/maps/leaflet';
 
 @Component({
   selector: 'app-map-radiation',
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, PageHeader, EmptyState, Pager],
   templateUrl: './map-radiation.html',
   styleUrl: './map-radiation.scss',
 })
@@ -154,53 +157,32 @@ export class MapRadiation implements OnInit, AfterViewInit, OnDestroy {
     if (validPts.length === 0) return;
 
     validPts.forEach(cp => {
-      const color = this.monitoring.colorFor(cp.level);
       const icon  = this.L.divIcon({
         className: '',
-        html: `<div style="
-          width:18px; height:18px;
-          border-radius:50%;
-          background:${color};
-          border:3px solid #fff;
-          box-shadow:0 2px 6px rgba(0,0,0,0.4);
-        "></div>`,
+        html: `<span class="ems-map-marker ems-map-marker--${cp.level}"></span>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
       });
 
       const devRows = cp.devices
         .map(d => {
-          const c = this.monitoring.colorFor(d.level ?? this.monitoring.levelFor(d.latestValue));
+          const lvl = d.level ?? this.monitoring.levelFor(d.latestValue);
           return `
-          <tr style="border-bottom:1px solid #f3f4f6;">
-            <td style="padding:5px 8px;font-size:12px;color:#374151;">${d.deviceLocation}</td>
-            <td style="padding:5px 8px;font-size:12px;font-family:monospace;font-weight:700;color:${c}">
-              ${d.latestValue.toFixed(1)} µT
-            </td>
+          <tr>
+            <td>${d.deviceLocation}</td>
+            <td class="ems-map-popup__val ems-map-popup__val--${lvl}">${d.latestValue.toFixed(1)} µT</td>
           </tr>`;
         })
         .join('');
 
       const popup = `
-        <div style="min-width:260px;font-family:system-ui,sans-serif;">
-          <div style="font-weight:800;font-size:15px;color:#111827;margin-bottom:2px;">
-            ${cp.clientName}
-          </div>
-          <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${cp.location ?? ''}</div>
-          <div style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;
-               background:${color}22;color:${color};margin-bottom:10px;">
-            Pico: ${cp.maxValue.toFixed(1)} µT
-          </div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:6px;">
-            Sensores instalados (${cp.devices.length})
-          </div>
-          <table style="width:100%;border-collapse:collapse;background:#fafafa;border-radius:6px;overflow:hidden;">
-            <thead>
-              <tr style="background:#f3f4f6;">
-                <th style="padding:5px 8px;text-align:left;font-size:11px;color:#6b7280;font-weight:600;">Zona / Área</th>
-                <th style="padding:5px 8px;text-align:left;font-size:11px;color:#6b7280;font-weight:600;">Lectura</th>
-              </tr>
-            </thead>
+        <div class="ems-map-popup">
+          <div class="ems-map-popup__title">${cp.clientName}</div>
+          <div class="ems-map-popup__sub">${cp.location ?? ''}</div>
+          <div class="ems-map-popup__peak ems-map-popup__peak--${cp.level}">Pico: ${cp.maxValue.toFixed(1)} µT</div>
+          <div class="ems-map-popup__label">Sensores instalados (${cp.devices.length})</div>
+          <table class="ems-map-popup__table">
+            <thead><tr><th>Zona / Área</th><th>Lectura</th></tr></thead>
             <tbody>${devRows}</tbody>
           </table>
         </div>`;

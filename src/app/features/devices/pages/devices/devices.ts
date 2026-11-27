@@ -1,3 +1,7 @@
+import { RouterLink } from '@angular/router';
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,7 +27,7 @@ import { timeAgo } from '../../../../core/utils/time';
 
 @Component({
   selector: 'app-devices',
-  imports: [TranslatePipe, FormsModule, LowerCasePipe],
+  imports: [TranslatePipe, FormsModule, LowerCasePipe, RouterLink, PageHeader, EmptyState, Pager],
   templateUrl: './devices.html',
   styleUrl: './devices.scss',
 })

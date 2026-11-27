@@ -1,64 +1,47 @@
-@use '../../../../shared/styles/portal-tables' as portal;
+@use 'styles/mixins' as ems;
 
-@include portal.portal-page;
+:host { display: block; }
 
-// Selector de operario: la pantalla no muestra nada hasta elegir a alguien, asi
-// que el desplegable es el punto de entrada y va suelto, no dentro de un modal.
+
+// Selector de operario: punto de entrada de la pantalla
 .picker {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  max-width: 22rem;
-  margin: 0 0 1rem;
-
-  > span {
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-  }
-
+  gap: var(--ems-space-2);
+  max-width: 24rem;
+  > span { @include ems.type(label); color: var(--ems-text-secondary); }
   select {
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    background: var(--color-surface);
-    color: var(--color-text-primary);
-    font: inherit;
+    min-height: var(--ems-size-control-md);
+    padding: 0 var(--ems-space-4);
+    border: var(--ems-border-hairline) solid var(--ems-border-strong);
+    border-radius: var(--ems-radius-sm);
+    background: var(--ems-surface);
+    color: var(--ems-text);
+    @include ems.type(body);
   }
 }
 
-// Fila de la sesion abierta en el detalle: hay que poder volver a ella de un
-// vistazo cuando la tabla de lecturas es larga.
-.row--active > td {
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
+// Sesión abierta resaltada en el detalle
+.row--active > td { background: var(--ems-primary-subtle); box-shadow: inset 3px 0 0 var(--ems-primary); }
+.row--active > td:not(:first-child) { box-shadow: none; }
 
 .panel {
-  margin-top: 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1rem;
-  background: var(--color-surface);
+  border: var(--ems-border-hairline) solid var(--ems-border);
+  border-radius: var(--ems-radius-md);
+  padding: var(--ems-space-6);
+  background: var(--ems-surface);
 }
-
 .panel__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-
-  h2 {
-    margin: 0;
-    font-size: 1rem;
-  }
+  gap: var(--ems-space-4);
+  margin-bottom: var(--ems-space-5);
+  h2 { @include ems.type(h4); }
 }
 
-// Las lecturas de un turno son muchas: la tabla del detalle aprieta las filas
-// para que quepa el recorrido completo sin scroll interminable.
+// Lecturas de un turno: filas compactas
 .grid--dense {
-  th,
-  td {
-    padding: 0.3rem 0.5rem;
-    font-size: 0.82rem;
-  }
+  th, td { padding: var(--ems-space-2) var(--ems-space-4); height: 34px; @include ems.type(caption); }
+  td { font-family: var(--ems-font-mono); }
 }

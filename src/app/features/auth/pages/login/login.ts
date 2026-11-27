@@ -1,3 +1,4 @@
+import { BrandMark } from '../../../../shared/ui/brand-mark/brand-mark';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,7 +9,7 @@ import { homeRouteFor } from '../../../../contexts/iam/domain/auth-user.model';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, BrandMark],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

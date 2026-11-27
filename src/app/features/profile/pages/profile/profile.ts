@@ -1,3 +1,5 @@
+import { initialsFrom } from '../../../../contexts/iam/domain/initials';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
@@ -9,7 +11,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-profile',
-  imports: [TranslatePipe, FormsModule, NgClass],
+  imports: [TranslatePipe, FormsModule, NgClass, PageHeader],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
@@ -100,5 +102,9 @@ export class Profile implements OnInit {
   formatJoinDate(dateStr: string): string {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  protected initialsOf(name: string | undefined): string {
+    return initialsFrom(name);
   }
 }

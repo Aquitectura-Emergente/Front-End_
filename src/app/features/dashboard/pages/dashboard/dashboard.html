@@ -1,222 +1,208 @@
-<section class="dashboard">
-  <div class="dashboard__header">
-    <div class="dashboard__titles">
-      <h2 class="dashboard__title">{{ 'dash_title' | t }}</h2>
-      <p class="dashboard__subtitle">{{ 'dash_subtitle' | t }}</p>
-    </div>
-    <div class="dashboard__actions">
-      <button class="btn btn--ghost" type="button" (click)="exportReport()">
+<section class="ems-page dashboard">
+  <ems-page-header
+    [eyebrow]="'shell_portal_admin' | t"
+    index="00"
+    [title]="'dash_title' | t"
+    [description]="'dash_subtitle' | t"
+  >
+    <ng-container actions>
+      <button class="ems-btn" type="button" (click)="exportReport()">
         <i class="ph ph-download-simple" aria-hidden="true"></i>
         <span>{{ 'btn_exportReport' | t }}</span>
       </button>
-      <a routerLink="/admin/work-orders/new" class="btn btn--primary">
+      <a routerLink="/admin/work-orders/new" class="ems-btn ems-btn--primary">
         <i class="ph ph-plus" aria-hidden="true"></i>
         <span>{{ 'dash_newWorkOrder' | t }}</span>
       </a>
-    </div>
+    </ng-container>
+  </ems-page-header>
+
+  <!-- Lecturas principales: una tira de instrumentos, no cuatro tarjetas -->
+  <div class="ems-readouts readouts">
+    <a class="ems-readout readout-link" routerLink="/admin/devices">
+      <span class="ems-readout__label"><i class="ph ph-cpu" aria-hidden="true"></i>{{ 'dash_totalDevices' | t }}</span>
+      <span class="ems-readout__value">{{ stats() ? (stats()!.totalSensors | number) : '—' }}</span>
+      <span class="ems-readout__note">{{ 'nav_devices' | t }} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></span>
+    </a>
+    <a class="ems-readout readout-link" routerLink="/admin/users">
+      <span class="ems-readout__label"><i class="ph ph-buildings" aria-hidden="true"></i>{{ 'dash_totalUsers' | t }}</span>
+      <span class="ems-readout__value">{{ stats()?.activeClients ?? '—' }}</span>
+      <span class="ems-readout__note">{{ 'nav_users' | t }} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></span>
+    </a>
+    <a class="ems-readout readout-link" routerLink="/admin/work-orders" [class.ems-readout--primary]="(stats()?.pendingTasks ?? 0) > 0">
+      <span class="ems-readout__label"><i class="ph ph-clipboard-text" aria-hidden="true"></i>{{ 'dash_workOrders' | t }}</span>
+      <span class="ems-readout__value">{{ stats()?.pendingTasks ?? '—' }}</span>
+      <span class="ems-readout__note">{{ 'nav_workOrders' | t }} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></span>
+    </a>
+    <a class="ems-readout readout-link" routerLink="/admin/alarms" [class.ems-readout--danger]="(stats()?.criticalAlerts ?? 0) > 0">
+      <span class="ems-readout__label"><i class="ph ph-warning" aria-hidden="true"></i>{{ 'dash_alarmsCount' | t }}</span>
+      <span class="ems-readout__value">{{ stats() ? (stats()!.criticalAlerts | number: '2.0') : '—' }}</span>
+      <span class="ems-readout__note">{{ 'nav_alarms' | t }} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></span>
+    </a>
   </div>
 
-  <!-- Metric Cards -->
-  <div class="dashboard__metrics">
-    <div class="metric-card metric-card--link" routerLink="/admin/devices">
-      <div class="metric-card__header">
-        <div class="metric-card__icon metric-card__icon--blue">
-          <i class="ph ph-broadcast" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div class="metric-card__label">{{ 'dash_totalDevices' | t }}</div>
-      <div class="metric-card__value">{{ (stats()?.totalSensors ?? 0) | number }}</div>
-      <div class="metric-card__progress">
-        <div class="metric-card__progress-bar metric-card__progress-bar--blue" style="width: 78%"></div>
-      </div>
-    </div>
-
-    <div class="metric-card metric-card--link" routerLink="/admin/users">
-      <div class="metric-card__header">
-        <div class="metric-card__icon metric-card__icon--green">
-          <i class="ph ph-buildings" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div class="metric-card__label">{{ 'dash_totalUsers' | t }}</div>
-      <div class="metric-card__value">{{ stats()?.activeClients ?? 0 }}</div>
-      <div class="metric-card__progress">
-        <div class="metric-card__progress-bar metric-card__progress-bar--green" style="width: 64%"></div>
-      </div>
-    </div>
-
-    <div class="metric-card metric-card--link" routerLink="/admin/work-orders">
-      <div class="metric-card__header">
-        <div class="metric-card__icon metric-card__icon--purple">
-          <i class="ph ph-clipboard-text" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div class="metric-card__label">{{ 'dash_workOrders' | t }}</div>
-      <div class="metric-card__value">{{ stats()?.pendingTasks ?? 0 }}</div>
-      <div class="metric-card__progress">
-        <div class="metric-card__progress-bar metric-card__progress-bar--purple" style="width: 40%"></div>
-      </div>
-    </div>
-
-    <div class="metric-card metric-card--link" routerLink="/admin/alarms">
-      <div class="metric-card__header">
-        <div class="metric-card__icon metric-card__icon--red">
-          <i class="ph ph-warning" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div class="metric-card__label">{{ 'dash_alarmsCount' | t }}</div>
-      <div class="metric-card__value">{{ (stats()?.criticalAlerts ?? 0) | number:'2.0' }}</div>
-      <div class="metric-card__progress">
-        <div class="metric-card__progress-bar metric-card__progress-bar--red" style="width: 18%"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts Row -->
-  <div class="dashboard__grid">
-    <div class="panel">
-      <div class="panel__header">
+  <div class="ems-grid">
+    <!-- Actividad del sistema -->
+    <section class="ems-panel span-8">
+      <header class="ems-panel__head">
         <div>
-          <div class="panel__title">{{ 'dash_serviceHistory' | t }}</div>
-          <div class="panel__hint">{{ 'dash_serviceHistoryHint' | t }}</div>
+          <h2 class="ems-panel__title"><span class="ems-panel__index">01</span>{{ 'dash_serviceHistory' | t }}</h2>
+          <span class="ems-panel__meta">{{ 'dash_serviceHistoryHint' | t }}</span>
         </div>
-        <span class="period-btn">{{ 'dash_last30Days' | t }}</span>
-      </div>
-      <div class="panel__body">
+        <span class="ems-tag ems-tag--plain">{{ 'dash_last30Days' | t }}</span>
+      </header>
+      <div class="ems-panel__body chart-body">
         @if (chartsReady()) {
           <apx-chart
-            class="chart"
             [series]="serviceHistorySeries"
             [chart]="serviceHistoryChart"
-            [xaxis]="serviceHistoryXAxis"
-            [yaxis]="serviceHistoryYAxis"
+            [xaxis]="serviceHistoryXAxis()"
+            [yaxis]="serviceHistoryYAxis()"
             [plotOptions]="serviceHistoryPlotOptions"
-            [colors]="serviceHistoryColors"
-            [grid]="serviceHistoryGrid"
-            [dataLabels]="serviceHistoryDataLabels"
-            [tooltip]="serviceHistoryTooltip"
-            [legend]="serviceHistoryLegend"
+            [colors]="[chart().series[0]]"
+            [grid]="grid()"
+            [dataLabels]="noLabels"
+            [tooltip]="tooltip()"
+            [legend]="legend"
             type="bar"
           ></apx-chart>
+        } @else {
+          <div class="chart-skeleton" aria-hidden="true">
+            @for (h of skeletonBars; track $index) {
+              <span class="ems-skeleton" [style.height.%]="h"></span>
+            }
+          </div>
         }
       </div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <div class="panel__header">
+    <!-- Campo medio frente al umbral -->
+    <section class="ems-panel span-4 field">
+      <header class="ems-panel__head">
         <div>
-          <div class="panel__title">{{ 'dash_radiationTrends' | t }}</div>
-          <div class="panel__hint">{{ 'dash_radiationHint' | t }}</div>
+          <h2 class="ems-panel__title"><span class="ems-panel__index">02</span>{{ 'dash_radiationTrends' | t }}</h2>
+          <span class="ems-panel__meta">{{ 'dash_radiationHint' | t }}</span>
         </div>
-      </div>
-      <div class="panel__body">
-        @if (chartsReady()) {
-          <apx-chart
-            class="chart"
-            [series]="radiationTrendsSeries"
-            [chart]="radiationTrendsChart"
-            [xaxis]="radiationTrendsXAxis"
-            [yaxis]="radiationTrendsYAxis"
-            [stroke]="radiationTrendsStroke"
-            [fill]="radiationTrendsFill"
-            [colors]="radiationTrendsColors"
-            [grid]="radiationTrendsGrid"
-            [dataLabels]="radiationTrendsDataLabels"
-            [tooltip]="radiationTrendsTooltip"
-            [markers]="radiationTrendsMarkers"
-          ></apx-chart>
+      </header>
+      <div class="ems-panel__body">
+        <div class="field__reading">
+          <span class="ems-eyebrow">{{ 'dash_currentAvg' | t }}</span>
+          <div class="field__value">
+            <span class="field__number">{{ stats()?.currentRadiationAvg ?? '—' }}</span>
+            <span class="field__unit">µT</span>
+          </div>
+        </div>
+
+        @if (stats(); as s) {
+          <div class="ems-dosebar field__bar"
+               [class.ems-dosebar--danger]="s.currentRadiationAvg >= s.safetyThreshold"
+               [style.--fill.%]="s.safetyThreshold ? (s.currentRadiationAvg / s.safetyThreshold) * 100 : 0">
+            <div class="ems-dosebar__track"><div class="ems-dosebar__fill"></div></div>
+            <span class="ems-dosebar__mark ems-dosebar__mark--limit" aria-hidden="true"></span>
+            <div class="ems-dosebar__scale" aria-hidden="true"></div>
+          </div>
+          <dl class="field__thresholds">
+            <dt>{{ 'dash_safetyThreshold' | t }}</dt>
+            <dd class="mono">{{ s.safetyThreshold }} µT</dd>
+          </dl>
+          @if (s.currentRadiationAvg < s.safetyThreshold) {
+            <span class="ems-tag ems-tag--safe"><i class="ph ph-check-circle" aria-hidden="true"></i>{{ 'dash_safeMsg' | t }}</span>
+          }
         }
 
-        <div class="radiation-stats">
-          <div class="radiation-row">
-            <span class="radiation-label">{{ 'dash_currentAvg' | t }}</span>
-            <span class="radiation-value radiation-value--safe">{{ stats()?.currentRadiationAvg ?? 110 }} µT</span>
-          </div>
-          <div class="radiation-row">
-            <span class="radiation-label">{{ 'dash_safetyThreshold' | t }}</span>
-            <span class="radiation-value radiation-value--danger">{{ stats()?.safetyThreshold ?? 200 }} µT</span>
-          </div>
-          <div class="radiation-safe-badge">
-            <i class="ph ph-check-circle" aria-hidden="true"></i>
-            <span>{{ 'dash_safeMsg' | t }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lower Row -->
-  <div class="dashboard__lower">
-    <div class="panel">
-      <div class="panel__header">
-        <div class="panel__title">{{ 'dash_latestOrders' | t }}</div>
-        <a class="view-all-link" routerLink="/admin/work-orders">{{ 'btn_viewAll' | t }}</a>
-      </div>
-      <div class="panel__body">
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>{{ 'th_orderId' | t }}</th>
-                <th>{{ 'th_siteLocation' | t }}</th>
-                <th>{{ 'th_technician' | t }}</th>
-                <th>{{ 'th_status' | t }}</th>
-                <th>{{ 'th_date' | t }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (order of (latestOrders() ?? []).slice(0, 5); track order.id) {
-                <tr>
-                  <td><a class="order-link" href="#">{{ order.orderId }}</a></td>
-                  <td>{{ order.siteLocation }}</td>
-                  <td>{{ order.technician }}</td>
-                  <td>
-                    <span class="status status--{{ order.status }}">
-                      @if (order.status === 'completed') { {{ 'status_completed' | t }} }
-                      @else if (order.status === 'in-progress') { {{ 'status_inProgress' | t }} }
-                      @else { {{ 'status_pending' | t }} }
-                    </span>
-                  </td>
-                  <td>{{ order.date }}</td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" class="empty-row">
-                    <i class="ph ph-clipboard-text" aria-hidden="true"></i>
-                    <span>No recent work orders</span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel__header">
-        <div class="panel__title">{{ 'dash_alerts' | t }}</div>
-      </div>
-      <div class="panel__body">
-        <div class="alerts">
-          @for (alert of (alerts() ?? []).slice(0, 5); track alert.id) {
-            <div class="alert-item">
-              <div class="alert-icon alert-icon--{{ alert.type }}">
-                <i class="ph {{ alert.icon }}" aria-hidden="true"></i>
-              </div>
-              <div class="alert-content">
-                <div class="alert-title">{{ alert.title }}</div>
-                <div class="alert-desc">{{ alert.description }}</div>
-                <div class="alert-time">{{ alert.time }}</div>
-              </div>
-            </div>
-          } @empty {
-            <div class="empty-row">
-              <i class="ph ph-bell-slash" aria-hidden="true"></i>
-              <span>No alerts at this time</span>
-            </div>
+        <div class="field__trend">
+          @if (chartsReady()) {
+            <apx-chart
+              [series]="radiationTrendsSeries"
+              [chart]="radiationTrendsChart"
+              [xaxis]="radiationTrendsXAxis"
+              [yaxis]="radiationTrendsYAxis()"
+              [stroke]="radiationTrendsStroke"
+              [fill]="radiationTrendsFill"
+              [colors]="[chart().live]"
+              [grid]="grid()"
+              [dataLabels]="noLabels"
+              [tooltip]="radiationTooltip()"
+              [markers]="radiationTrendsMarkers"
+            ></apx-chart>
+          } @else {
+            <span class="ems-skeleton ems-skeleton--block"></span>
           }
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Últimas órdenes -->
+    <section class="ems-panel span-7">
+      <header class="ems-panel__head">
+        <h2 class="ems-panel__title"><span class="ems-panel__index">03</span>{{ 'dash_latestOrders' | t }}</h2>
+        <a class="ems-btn ems-btn--ghost ems-btn--sm" routerLink="/admin/work-orders">
+          {{ 'btn_viewAll' | t }} <i class="ph ph-arrow-right" aria-hidden="true"></i>
+        </a>
+      </header>
+      <div class="ems-table-wrap">
+        <table class="ems-table">
+          <thead>
+            <tr>
+              <th>{{ 'th_orderId' | t }}</th>
+              <th>{{ 'th_siteLocation' | t }}</th>
+              <th>{{ 'th_technician' | t }}</th>
+              <th>{{ 'th_status' | t }}</th>
+              <th class="num">{{ 'th_date' | t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of (latestOrders() ?? []).slice(0, 5); track order.id) {
+              <tr>
+                <td class="mono cell-primary">{{ order.orderId }}</td>
+                <td>{{ order.siteLocation }}</td>
+                <td>{{ order.technician }}</td>
+                <td>
+                  <span class="ems-tag"
+                        [class.ems-tag--safe]="order.status === 'completed'"
+                        [class.ems-tag--info]="order.status === 'in-progress'"
+                        [class.ems-tag--warning]="order.status === 'pending'">
+                    @if (order.status === 'completed') { {{ 'status_completed' | t }} }
+                    @else if (order.status === 'in-progress') { {{ 'status_inProgress' | t }} }
+                    @else { {{ 'status_pending' | t }} }
+                  </span>
+                </td>
+                <td class="num">{{ order.date }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">
+                  <ems-empty-state icon="ph-clipboard-text" [compact]="true" [text]="'ui_noResults' | t" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Alertas -->
+    <section class="ems-panel span-5">
+      <header class="ems-panel__head">
+        <h2 class="ems-panel__title"><span class="ems-panel__index">04</span>{{ 'dash_alerts' | t }}</h2>
+        <a class="ems-btn ems-btn--ghost ems-btn--sm" routerLink="/admin/alarms">
+          {{ 'nav_alarms' | t }} <i class="ph ph-arrow-right" aria-hidden="true"></i>
+        </a>
+      </header>
+      <ol class="feed">
+        @for (alert of (alerts() ?? []).slice(0, 5); track alert.id) {
+          <li class="feed__item feed__item--{{ alert.type }}">
+            <span class="feed__icon"><i class="ph {{ alert.icon }}" aria-hidden="true"></i></span>
+            <div class="feed__body">
+              <span class="feed__title">{{ alert.title }}</span>
+              <span class="feed__desc">{{ alert.description }}</span>
+            </div>
+            <time class="feed__time">{{ alert.time }}</time>
+          </li>
+        } @empty {
+          <li><ems-empty-state icon="ph-bell-slash" [compact]="true" [text]="'ui_noResults' | t" /></li>
+        }
+      </ol>
+    </section>
   </div>
 </section>

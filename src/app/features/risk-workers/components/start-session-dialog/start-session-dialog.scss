@@ -1,64 +1,45 @@
-@use '../../../../shared/styles/portal-tables' as portal;
+@use 'styles/mixins' as ems;
 
-// Trae .modal, .modal-backdrop, .btn y .muted del portal industrial.
-@include portal.portal-page;
 
-:host {
-  display: contents;
-}
+:host { display: contents; }
 
 .device {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--ems-space-2);
 
-  &__label {
-    font-size: 0.82rem;
-    color: var(--color-text-secondary);
-  }
-
+  &__label { @include ems.type(label); color: var(--ems-text-secondary); }
   &__chosen {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--ems-space-3);
     margin: 0;
+    padding: var(--ems-space-3) var(--ems-space-4);
+    border: var(--ems-border-hairline) solid var(--ems-primary-border);
+    border-radius: var(--ems-radius-sm);
+    background: var(--ems-primary-subtle);
+    font-family: var(--ems-font-mono);
   }
-
   &__search {
     display: flex;
-    gap: 0.5rem;
-
-    input {
-      flex: 1;
-      padding: 0.5rem 0.6rem;
-      border: 1px solid var(--color-border);
-      border-radius: 6px;
-      background: var(--color-background);
-      color: var(--color-text-primary);
-      font: inherit;
-      font-size: 0.9rem;
-    }
+    gap: var(--ems-space-3);
+    input { flex: 1; font-family: var(--ems-font-mono); }
   }
 }
 
-.field-error {
-  color: var(--color-danger);
-  font-size: 0.8rem;
-}
+.field-error { color: var(--ems-danger); @include ems.type(caption); }
 
 .command-error {
+  @include ems.tone(danger);
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.65rem 0.8rem;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
-  color: var(--color-danger);
-  font-size: 0.88rem;
-
-  &__message {
-    color: var(--color-text-primary);
-    word-break: break-word;
-  }
+  gap: var(--ems-space-1);
+  padding: var(--ems-space-4) var(--ems-space-5);
+  border: var(--ems-border-hairline) solid var(--tone-border);
+  border-left: var(--ems-border-rail) solid var(--tone-signal);
+  border-radius: var(--ems-radius-sm);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  @include ems.type(body-sm);
+  &__message { color: var(--ems-text); word-break: break-word; }
 }

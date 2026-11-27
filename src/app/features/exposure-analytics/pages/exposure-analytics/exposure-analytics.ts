@@ -1,3 +1,4 @@
+import { axisLabels, chartTokens, gridOptions } from '../../../../core/utils/chart-theme';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -56,10 +57,12 @@ import { WorkerNames } from '../../../../contexts/aiforecasting/domain/worker-na
 
 // Mismos tonos que --color-primary, --color-danger y --color-warning de
 // styles.scss: ApexCharts necesita colores literales, como en el dashboard.
-const PRIMARY = '#1a6eff';
-const DANGER = '#f85149';
-const WARNING = '#d29922';
-const AXIS_LABELS = { style: { colors: '#6b7280', fontSize: '11px' } };
+// Colores del tema activo (tokens del sistema de diseño), leídos al crear la vista.
+const PRIMARY = (): string => chartTokens().series[0];
+const DANGER = (): string => chartTokens().danger;
+const WARNING = (): string => chartTokens().warning;
+const AXIS_LABELS = (): ReturnType<typeof axisLabels> => axisLabels(chartTokens());
+const TOOLTIP_THEME = (): string => (chartTokens().dark ? 'dark' : 'light');
 
 const integer = (v: number | null | undefined) =>
   v == null || !Number.isFinite(v) ? '—' : Math.round(v).toLocaleString('en-US');
@@ -157,7 +160,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
 
   trendXAxis = computed<ApexXAxis>(() => ({
     categories: this.weekly().categories,
-    labels: AXIS_LABELS,
+    labels: AXIS_LABELS(),
     axisBorder: { show: false },
     axisTicks: { show: false },
   }));
@@ -166,7 +169,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
     const avg = this.lang.t('ea_trend_avg');
     const unit = this.summary()?.unit ?? '';
     return [
-      { seriesName: avg, title: { text: unit }, labels: { ...AXIS_LABELS, formatter: integer } },
+      { seriesName: avg, title: { text: unit }, labels: { ...AXIS_LABELS(), formatter: integer } },
       // El máximo comparte el eje del promedio: misma unidad y misma escala.
       { seriesName: avg, show: false, labels: { formatter: integer } },
       {
@@ -177,13 +180,13 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
         ...countAxis(this.weekly().nearLimit),
         decimalsInFloat: 0,
         title: { text: this.lang.t('ea_trend_sessions') },
-        labels: { ...AXIS_LABELS, formatter: integer },
+        labels: { ...AXIS_LABELS(), formatter: integer },
       },
     ];
   });
 
   trendTooltip = computed<ApexTooltip>(() => ({
-    theme: 'light',
+    theme: TOOLTIP_THEME(),
     shared: true,
     intersect: false,
     // «16–22 nov 2026 (semana 47)», o «(semana 47, semana parcial)».
@@ -204,7 +207,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
   // entre dos vacías siga viéndose.
   readonly trendStroke: ApexStroke = { width: [2, 2, 0], curve: 'straight', dashArray: [0, 5, 0] };
   readonly trendMarkers: ApexMarkers = { size: [4, 3, 0] };
-  readonly trendColors = [PRIMARY, DANGER, WARNING];
+  readonly trendColors = [PRIMARY(), DANGER(), WARNING()];
   // Barras angostas y semitransparentes: son un conteo de apoyo y no deben
   // tapar las líneas de índice, que son el dato principal.
   readonly trendPlotOptions: ApexPlotOptions = { bar: { columnWidth: '18%', borderRadius: 2 } };
@@ -221,7 +224,7 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
 
   positionXAxis = computed<ApexXAxis>(() => ({
     categories: this.positions().labels,
-    labels: { ...AXIS_LABELS, formatter: (v: string) => integer(Number(v)) },
+    labels: { ...AXIS_LABELS(), formatter: (v: string) => integer(Number(v)) },
     axisBorder: { show: false },
     axisTicks: { show: false },
   }));
@@ -236,11 +239,11 @@ export class ExposureAnalytics implements OnInit, OnDestroy {
   }));
 
   readonly positionPlotOptions: ApexPlotOptions = { bar: { horizontal: true, borderRadius: 3, barHeight: '70%' } };
-  readonly positionColors = [PRIMARY, DANGER];
-  readonly positionTooltip: ApexTooltip = { theme: 'light', y: { formatter: (v: number) => integer(v) } };
-  readonly positionYAxis: ApexYAxis = { labels: { style: { colors: '#6b7280', fontSize: '12px' }, maxWidth: 220 } };
+  readonly positionColors = [PRIMARY(), DANGER()];
+  readonly positionTooltip: ApexTooltip = { theme: TOOLTIP_THEME(), y: { formatter: (v: number) => integer(v) } };
+  readonly positionYAxis: ApexYAxis = { labels: { ...AXIS_LABELS(), maxWidth: 220 } };
 
-  readonly grid: ApexGrid = { borderColor: '#f0f2f5', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } };
+  readonly grid: ApexGrid = gridOptions(chartTokens());
   readonly dataLabels: ApexDataLabels = { enabled: false };
   readonly legend: ApexLegend = { position: 'top', horizontalAlign: 'right', fontSize: '12px' };
 

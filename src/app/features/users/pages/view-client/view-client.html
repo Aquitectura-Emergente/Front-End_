@@ -1,122 +1,142 @@
-<section class="view-client">
-  <div class="vc-header">
+<section class="ems-page">
+  <header class="ems-page-head">
     <div>
-      <p class="breadcrumb">
+      <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
         <a routerLink="/admin/users">{{ 'nav_users' | t }}</a>
-        › {{ 'vc_title' | t }}
-      </p>
-      <h2 class="vc-title">{{ client()?.name ?? ('vc_title' | t) }}</h2>
+        <span aria-hidden="true">/</span>
+        <span>{{ 'vc_title' | t }}</span>
+      </nav>
+      <h1 class="ems-page-head__title">{{ client()?.name ?? ('vc_title' | t) }}</h1>
     </div>
-    <a routerLink="/admin/users" class="btn btn--back">{{ 'btn_backToList' | t }}</a>
-  </div>
-
-  @if (loading()) {
-    <div class="loading-state"><i class="ph ph-circle-notch ph-spin"></i><span>Loading...</span></div>
-  } @else if (client(); as c) {
-
-    <!-- Client info -->
-    <div class="vc-card">
-      <div class="vc-card__head">
-        <div class="vc-avatar">{{ initials(c.name) }}</div>
-        <div>
-          <h3 class="vc-name">{{ c.name }}</h3>
-          <span class="vc-type">{{ c.clientType === 'individual' ? ('client_individual' | t) : ('client_company' | t) }}</span>
-        </div>
-        <span class="status-dot status-dot--{{ c.status }}">
-          <span class="dot"></span>
-          {{ c.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}
-        </span>
-      </div>
-
-      <div class="vc-grid">
-        <div class="vc-cell"><span class="vc-k">{{ 'th_email' | t }}</span><span class="vc-v">{{ c.email }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_ruc' | t }}</span><span class="vc-v">{{ c.taxId || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_industry' | t }}</span><span class="vc-v">{{ c.industry || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_address' | t }}</span><span class="vc-v">{{ c.address || c.location || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_country' | t }}</span><span class="vc-v">{{ c.country || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_contactName' | t }}</span><span class="vc-v">{{ c.contactName || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_contactEmail' | t }}</span><span class="vc-v">{{ c.contactEmail || '—' }}</span></div>
-        <div class="vc-cell"><span class="vc-k">{{ 'client_contactPhone' | t }}</span><span class="vc-v">{{ c.contactPhone || c.phone || '—' }}</span></div>
-      </div>
-
-      @if (c.notes) {
-        <div class="vc-notes">
-          <span class="vc-k">{{ 'client_internalNotes' | t }}</span>
-          <p>{{ c.notes }}</p>
-        </div>
+    <div class="ems-page-head__actions">
+      <a routerLink="/admin/users" class="ems-btn ems-btn--ghost">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>{{ 'btn_backToList' | t }}
+      </a>
+      @if (client(); as c) {
+        <a [routerLink]="['/admin/users/edit-client', c.id]" class="ems-btn">
+          <i class="ph ph-pencil-simple" aria-hidden="true"></i>{{ 'btn_edit' | t }}
+        </a>
       }
     </div>
+  </header>
 
-    @if (isCompany(c)) {
-      <!-- SSO officers -->
-      <div class="vc-card">
-        <div class="vc-section-head">
-          <h3 class="vc-section-title">{{ 'vc_ssoOfficers' | t }} ({{ ssoOfficers().length }})</h3>
-          <a class="btn btn--back" routerLink="/admin/users/new-sso-responsible" [queryParams]="{ organizationId: c.id }">
-            <i class="ph ph-plus" aria-hidden="true"></i> {{ 'vc_addSso' | t }}
-          </a>
+  @if (loading()) {
+    <div class="ems-loading"><i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i><span>{{ 'ui_loading' | t }}</span></div>
+  } @else if (client(); as c) {
+    <div class="vc-layout">
+      <!-- Ficha del cliente -->
+      <aside class="ems-panel vc-profile">
+        <div class="vc-profile__head">
+          <span class="ems-avatar ems-avatar--lg">{{ initials(c.name) }}</span>
+          <div class="vc-profile__id">
+            <span class="ems-inline-icon">
+              <i class="ph" [class.ph-house-line]="c.clientType === 'individual'" [class.ph-buildings]="c.clientType !== 'individual'" aria-hidden="true"></i>
+              {{ c.clientType === 'individual' ? ('client_individual' | t) : ('client_company' | t) }}
+            </span>
+            <span class="ems-tag" [class.ems-tag--safe]="c.status === 'active'">
+              {{ c.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}
+            </span>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>{{ 'th_name' | t }}</th>
-                <th>{{ 'th_email' | t }}</th>
-                <th>{{ 'th_status' | t }}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (o of ssoOfficers(); track o.id) {
+
+        <dl class="ems-kv vc-profile__kv">
+          <dt>{{ 'th_email' | t }}</dt><dd class="mono">{{ c.email }}</dd>
+          <dt>{{ 'client_ruc' | t }}</dt><dd class="mono">{{ c.taxId || '—' }}</dd>
+          <dt>{{ 'client_industry' | t }}</dt><dd>{{ c.industry || '—' }}</dd>
+          <dt>{{ 'client_address' | t }}</dt><dd>{{ c.address || c.location || '—' }}</dd>
+          <dt>{{ 'client_country' | t }}</dt><dd>{{ c.country || '—' }}</dd>
+          <dt>{{ 'client_contactName' | t }}</dt><dd>{{ c.contactName || '—' }}</dd>
+          <dt>{{ 'client_contactEmail' | t }}</dt><dd class="mono">{{ c.contactEmail || '—' }}</dd>
+          <dt>{{ 'client_contactPhone' | t }}</dt><dd class="mono">{{ c.contactPhone || c.phone || '—' }}</dd>
+        </dl>
+
+        @if (c.notes) {
+          <div class="vc-profile__notes">
+            <span class="ems-eyebrow">{{ 'client_internalNotes' | t }}</span>
+            <p>{{ c.notes }}</p>
+          </div>
+        }
+      </aside>
+
+      <div class="ems-stack vc-main">
+        @if (isCompany(c)) {
+          <section class="ems-panel">
+            <header class="ems-panel__head">
+              <h2 class="ems-panel__title"><span class="ems-panel__index">01</span>{{ 'vc_ssoOfficers' | t }} <span class="ems-count">{{ ssoOfficers().length }}</span></h2>
+              <a class="ems-btn ems-btn--sm" routerLink="/admin/users/new-sso-responsible" [queryParams]="{ organizationId: c.id }">
+                <i class="ph ph-plus" aria-hidden="true"></i>{{ 'vc_addSso' | t }}
+              </a>
+            </header>
+            <div class="ems-table-wrap">
+              <table class="ems-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'th_name' | t }}</th>
+                    <th>{{ 'th_email' | t }}</th>
+                    <th>{{ 'th_status' | t }}</th>
+                    <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (o of ssoOfficers(); track o.id) {
+                    <tr>
+                      <td class="cell-primary">{{ o.name }}</td>
+                      <td class="mono">{{ o.email }}</td>
+                      <td><span class="ems-tag" [class.ems-tag--safe]="o.status === 'active'">{{ o.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}</span></td>
+                      <td class="cell-actions">
+                        <a class="ems-btn ems-btn--ghost ems-btn--sm" [routerLink]="['/admin/users/edit-sso-responsible', o.id]">
+                          <i class="ph ph-pencil-simple" aria-hidden="true"></i>{{ 'btn_edit' | t }}
+                        </a>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4"><ems-empty-state icon="ph-first-aid-kit" [compact]="true" [text]="'vc_noSso' | t" /></td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
+        <section class="ems-panel">
+          <header class="ems-panel__head">
+            <h2 class="ems-panel__title"><span class="ems-panel__index">{{ isCompany(c) ? '02' : '01' }}</span>{{ 'vc_devices' | t }} <span class="ems-count">{{ devices().length }}</span></h2>
+          </header>
+          <div class="ems-table-wrap">
+            <table class="ems-table">
+              <thead>
                 <tr>
-                  <td>{{ o.name }}</td>
-                  <td>{{ o.email }}</td>
-                  <td>{{ o.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}</td>
-                  <td><a [routerLink]="['/admin/users/edit-sso-responsible', o.id]">{{ 'btn_edit' | t }}</a></td>
+                  <th>{{ 'dev_name' | t }}</th>
+                  <th>{{ 'dev_type' | t }}</th>
+                  <th>{{ 'client_location' | t }}</th>
+                  <th>{{ 'dev_serial' | t }}</th>
+                  <th>{{ 'th_status' | t }}</th>
                 </tr>
-              } @empty {
-                <tr><td colspan="4" class="empty-row">{{ 'vc_noSso' | t }}</td></tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    }
-
-    <!-- Devices -->
-    <div class="vc-card">
-      <h3 class="vc-section-title">{{ 'vc_devices' | t }} ({{ devices().length }})</h3>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{{ 'dev_name' | t }}</th>
-              <th>{{ 'dev_type' | t }}</th>
-              <th>{{ 'client_location' | t }}</th>
-              <th>{{ 'dev_serial' | t }}</th>
-              <th>{{ 'th_status' | t }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of devices(); track d.id) {
-              <tr>
-                <td><a [routerLink]="['/admin/devices', d.id]">{{ d.name }}</a></td>
-                <td>{{ d.type }}</td>
-                <td>{{ d.location }}</td>
-                <td class="mono">{{ d.serialNumber }}</td>
-                <td>
-                  <span class="device-status device-status--{{ d.status }}">{{ deviceStatusLabel(d.status) }}</span>
-                </td>
-              </tr>
-            } @empty {
-              <tr><td colspan="5" class="empty-row">{{ 'vc_noDevices' | t }}</td></tr>
-            }
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                @for (d of devices(); track d.id) {
+                  <tr>
+                    <td><a class="link" [routerLink]="['/admin/devices', d.id]">{{ d.name }}</a></td>
+                    <td>{{ d.type }}</td>
+                    <td>{{ d.location }}</td>
+                    <td class="mono">{{ d.serialNumber }}</td>
+                    <td>
+                      <span class="ems-tag"
+                            [class.ems-tag--safe]="d.status === 'active'"
+                            [class.ems-tag--warning]="d.status === 'requires-maintenance'"
+                            [class.ems-tag--info]="d.status === 'in-maintenance'">{{ deviceStatusLabel(d.status) }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5"><ems-empty-state icon="ph-cpu" [compact]="true" [text]="'vc_noDevices' | t" /></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </div>
-
   } @else {
-    <div class="vc-card"><p class="empty-row">{{ 'vc_notFound' | t }}</p></div>
+    <ems-empty-state kind="error" [title]="'vc_notFound' | t" />
   }
 </section>

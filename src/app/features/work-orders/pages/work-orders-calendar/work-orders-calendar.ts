@@ -1,3 +1,5 @@
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -14,7 +16,7 @@ import { WorkOrderDetailModal } from '../../../../shared/components/work-order-d
 /** Agenda semanal de instalaciones, mantenimientos y recolecciones por técnico. */
 @Component({
   selector: 'app-work-orders-calendar',
-  imports: [TranslatePipe, FormsModule, RouterLink, LowerCasePipe, WorkOrderDetailModal],
+  imports: [TranslatePipe, FormsModule, RouterLink, LowerCasePipe, WorkOrderDetailModal, PageHeader, EmptyState],
   templateUrl: './work-orders-calendar.html',
   styleUrl: './work-orders-calendar.scss',
 })

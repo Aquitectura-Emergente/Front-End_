@@ -1,164 +1,120 @@
-<div class="two-panel">
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_work' | t"
+    index="02"
+    [title]="'nav_workOrders' | t"
+  >
+    <button actions class="ems-btn" type="button" (click)="exportReport()">
+      <i class="ph ph-export" aria-hidden="true"></i>
+      {{ 'tech_wo_export' | t }}
+    </button>
+  </ems-page-header>
 
-  <div class="main-panel">
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <div class="search-wrap">
-        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-        <input
-          type="search"
-          [placeholder]="'tech_wo_search' | t"
-          [ngModel]="search()"
-          (ngModelChange)="search.set($event); onFilterChange()"
-        />
-      </div>
-
-      <div class="right-tools">
-        <div class="filter-group">
-          <span class="filter-group__label">{{ 'tech_wo_serviceType' | t }}</span>
-          <select [ngModel]="serviceFilter()" (ngModelChange)="serviceFilter.set($event); onFilterChange()" class="filter-select">
+  <div class="tech-wo">
+    <section class="ems-panel">
+      <div class="ems-toolbar">
+        <label class="ems-search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input class="ems-input" type="search" [attr.aria-label]="'tech_wo_search' | t" [placeholder]="'tech_wo_search' | t" [ngModel]="search()" (ngModelChange)="search.set($event); onFilterChange()" />
+        </label>
+        <label class="ems-filter">
+          <span class="ems-filter__label">{{ 'tech_wo_serviceType' | t }}</span>
+          <select class="ems-select" [ngModel]="serviceFilter()" (ngModelChange)="serviceFilter.set($event); onFilterChange()">
             <option value="all">{{ 'filter_all' | t }}</option>
             <option value="Installation">{{ 'wo_installation' | t }}</option>
             <option value="Maintenance">{{ 'wo_maintenance' | t }}</option>
             <option value="Collection">{{ 'wo_collection' | t }}</option>
           </select>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-group__label">{{ 'th_status' | t }}</span>
-          <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); onFilterChange()" class="filter-select">
+        </label>
+        <label class="ems-filter">
+          <span class="ems-filter__label">{{ 'th_status' | t }}</span>
+          <select class="ems-select" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); onFilterChange()">
             <option value="all">{{ 'filter_all' | t }}</option>
             <option value="pending">{{ 'status_pending' | t }}</option>
             <option value="in-progress">{{ 'status_inProgress' | t }}</option>
           </select>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-group__label">{{ 'wo_sortBy' | t }}</span>
-          <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event); onFilterChange()" class="filter-select">
+        </label>
+        <label class="ems-filter">
+          <span class="ems-filter__label">{{ 'wo_sortBy' | t }}</span>
+          <select class="ems-select" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event); onFilterChange()">
             <option value="date">{{ 'wo_sortDate' | t }}</option>
             <option value="created">{{ 'wo_sortCreated' | t }}</option>
           </select>
-        </div>
-
-        <button class="btn-export" type="button" (click)="exportReport()">
-          <i class="ph ph-export" aria-hidden="true"></i>
-          {{ 'tech_wo_export' | t }}
-        </button>
+        </label>
       </div>
-    </div>
 
-    <!-- Table (same design as the admin work-orders table) -->
-    <div class="table-card">
-      <table class="orders-table">
-        <thead>
-          <tr>
-            <th>{{ 'th_type' | t }}</th>
-            <th>{{ 'th_client' | t }}</th>
-            <th>{{ 'th_location' | t }}</th>
-            <th>{{ 'th_date' | t }}</th>
-            <th>{{ 'th_status' | t }}</th>
-            <th>{{ 'th_actions' | t }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (order of paged(); track order.id) {
+      <div class="ems-table-wrap">
+        <table class="ems-table" aria-label="Work orders">
+          <thead>
             <tr>
-              <td>
-                <span class="service-badge">
-                  <i [class]="'ph ' + typeIcon(order.type)" aria-hidden="true"></i>
-                  {{ order.type }}
-                </span>
-              </td>
-              <td>
-                <a class="order-link" [routerLink]="['/tech/work-orders', order.id]">{{ order.client }}</a>
-                <span class="order-id">{{ order.orderId }}</span>
-              </td>
-              <td>
-                <span class="location-wrap">
-                  <i class="ph ph-map-pin" aria-hidden="true"></i>
-                  {{ order.location }}
-                </span>
-              </td>
-              <td class="mono">{{ order.scheduledDate }} &bull; {{ order.scheduledTime }}</td>
-              <td>
-                <span class="status-badge" [class]="statusClass(order.status)">
-                  {{ statusLabel(order.status) }}
-                </span>
-              </td>
-              <td>
-                <a class="action-link" [routerLink]="['/tech/work-orders', order.id]">
-                  <i class="ph ph-eye" aria-hidden="true"></i>
-                </a>
-              </td>
+              <th>{{ 'th_type' | t }}</th>
+              <th>{{ 'th_client' | t }}</th>
+              <th>{{ 'th_location' | t }}</th>
+              <th>{{ 'th_date' | t }}</th>
+              <th>{{ 'th_status' | t }}</th>
+              <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
             </tr>
-          }
-          @empty {
-            <tr>
-              <td colspan="6" class="empty-row">
-                <i class="ph ph-clipboard-text" aria-hidden="true"></i>
-                <span>No work orders found.</span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      <div class="table-footer">
-        <span class="showing-text">
-          Showing {{ filtered().length === 0 ? 0 : currentPage() * pageSize + 1 }}-{{ min(currentPage() * pageSize + pageSize, filtered().length) }} of {{ filtered().length }} work orders
-        </span>
-        @if (totalPages() > 1) {
-          <div class="pagination">
-            <button class="page-btn" type="button" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)"><i class="ph ph-caret-left"></i></button>
-            @for (page of getPagesArray(); track page) {
-              <button class="page-btn" type="button" [class.page-btn--active]="page === currentPage()" (click)="goToPage(page)">{{ page + 1 }}</button>
+          </thead>
+          <tbody>
+            @for (order of paged(); track order.id) {
+              <tr>
+                <td><span class="ems-inline-icon"><i class="ph {{ typeIcon(order.type) }}" aria-hidden="true"></i>{{ order.type }}</span></td>
+                <td>
+                  <a class="link" [routerLink]="['/tech/work-orders', order.id]">{{ order.client }}</a>
+                  <span class="cell-sub mono">{{ order.orderId }}</span>
+                </td>
+                <td>{{ order.location }}</td>
+                <td class="mono nowrap">{{ order.scheduledDate }} · {{ order.scheduledTime }}</td>
+                <td><span class="ems-tag {{ statusClass(order.status) }}">{{ statusLabel(order.status) }}</span></td>
+                <td class="cell-actions">
+                  <a class="ems-btn ems-btn--ghost ems-btn--sm" [routerLink]="['/tech/work-orders', order.id]">
+                    {{ 'hist_view' | t }} <i class="ph ph-arrow-right" aria-hidden="true"></i>
+                  </a>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6"><ems-empty-state icon="ph-clipboard-text" [text]="'ui_noResults' | t" /></td></tr>
             }
-            <button class="page-btn" type="button" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)"><i class="ph ph-caret-right"></i></button>
-          </div>
-        }
+          </tbody>
+        </table>
       </div>
-    </div>
-  </div>
 
-  <!-- Side summary -->
-  <div class="side-panel">
-    <div class="summary-card summary-card--priority">
-      <div class="s-icon">
-        <i class="ph ph-warning" aria-hidden="true"></i>
-      </div>
-      <div class="s-body">
-        <span class="s-label">{{ 'tech_sched_priorityTasks' | t }}</span>
+      <ems-pager [page]="currentPage()" [totalPages]="totalPages()" [total]="filtered().length" [pageSize]="pageSize" (pageChange)="goToPage($event)" />
+    </section>
+
+    <!-- Resumen lateral -->
+    <aside class="ems-stack">
+      <section class="ems-panel">
+        <header class="ems-panel__head">
+          <h2 class="ems-panel__title"><i class="ph ph-flag" aria-hidden="true"></i>{{ 'tech_sched_priorityTasks' | t }}</h2>
+          <span class="ems-count" [class.ems-count--danger]="priorityTasks().length > 0">{{ priorityTasks().length }}</span>
+        </header>
         @if (priorityTasks().length > 0) {
-          <ul class="priority-list">
+          <ul class="prio">
             @for (task of priorityTasks(); track task.id) {
               <li>
-                <a class="priority-item" [routerLink]="['/tech/work-orders', task.id]">
-                  <span class="priority-item__client">{{ task.client }}</span>
-                  <span class="priority-item__meta">{{ task.location }} &bull; {{ task.scheduledDate }}</span>
+                <a class="prio__item" [routerLink]="['/tech/work-orders', task.id]">
+                  <span class="prio__client">{{ task.client }}</span>
+                  <span class="prio__meta">{{ task.location }} · <span class="mono">{{ task.scheduledDate }}</span></span>
                 </a>
               </li>
             }
           </ul>
         } @else {
-          <p class="priority-empty">{{ 'tech_sched_noPriority' | t }}</p>
+          <ems-empty-state icon="ph-check-circle" [compact]="true" [text]="'tech_sched_noPriority' | t" />
         }
-      </div>
-    </div>
+      </section>
 
-    <div class="summary-card summary-card--progress">
-      <div class="s-icon s-icon--green">
-        <i class="ph ph-check-circle" aria-hidden="true"></i>
-      </div>
-      <div class="s-body">
-        <span class="s-label">{{ 'tech_sched_weekProgress' | t }}</span>
-        <h4>{{ weekProgress().done }}/{{ weekProgress().total }} {{ 'tech_sched_tasksCompleted' | t }}</h4>
-        <div class="progress-bar">
-          <div class="progress-fill"
-               [style.width.%]="weekProgress().total > 0 ? (weekProgress().done / weekProgress().total) * 100 : 0">
+      <section class="ems-panel">
+        <div class="ems-readout">
+          <span class="ems-readout__label"><i class="ph ph-check-square" aria-hidden="true"></i>{{ 'tech_sched_weekProgress' | t }}</span>
+          <span class="ems-readout__value">{{ weekProgress().done }}<span class="ems-readout__unit">/ {{ weekProgress().total }}</span></span>
+          <span class="ems-readout__note">{{ 'tech_sched_tasksCompleted' | t }}</span>
+          <div class="ems-progress progress">
+            <div class="ems-progress__fill" [style.width.%]="weekProgress().total > 0 ? (weekProgress().done / weekProgress().total) * 100 : 0"></div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </aside>
   </div>
-
-</div>
+</section>

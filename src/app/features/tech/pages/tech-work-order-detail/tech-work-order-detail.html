@@ -1,37 +1,35 @@
 @if (order(); as o) {
-  <div class="detail-page">
+  <div class="ems-page detail-page">
 
-    <!-- Breadcrumb + title -->
-    <div class="detail-header">
-      <div class="header-left">
-        <p class="breadcrumb">
+    <header class="ems-page-head">
+      <div>
+        <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
           <a routerLink="/tech/work-orders">Work Orders</a>
-          &rsaquo; {{ o.orderId }}
-        </p>
+          <span aria-hidden="true">/</span>
+          <span class="mono">{{ o.orderId }}</span>
+        </nav>
         <div class="title-row">
-          <h1>Work Order {{ o.orderId }}</h1>
-          <span class="status-badge" [class]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+          <h1 class="ems-page-head__title">Work Order <span class="mono">{{ o.orderId }}</span></h1>
+          <span class="ems-tag {{ statusClass(o.status) }}">{{ statusLabel(o.status) }}</span>
         </div>
-        <p class="detail-subtitle">{{ o.type }} &mdash; {{ o.client }}</p>
+        <p class="ems-page-head__desc"><span class="ems-inline-icon"><i class="ph {{ typeIcon(o.type) }}" aria-hidden="true"></i>{{ o.type }}</span> — {{ o.client }}</p>
       </div>
 
-      <div class="header-actions">
+      <div class="ems-page-head__actions">
         @if (o.status === 'pending') {
-          <button class="btn-primary" type="button" [disabled]="saving()" (click)="startJob()">
-            @if (saving()) { <span class="spinner"></span> }
-            <i class="ph ph-play" aria-hidden="true"></i>
+          <button class="ems-btn ems-btn--primary ems-btn--lg" type="button" [disabled]="saving()" (click)="startJob()">
+            @if (saving()) { <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i> } @else { <i class="ph ph-play" aria-hidden="true"></i> }
             {{ 'tech_detail_startJob' | t }}
           </button>
         }
         @if (o.status === 'in-progress') {
-          <button class="btn-primary" type="button" [disabled]="saving() || !canComplete()" (click)="markCompleted()">
-            @if (saving()) { <span class="spinner"></span> }
-            <i class="ph ph-check-circle" aria-hidden="true"></i>
+          <button class="ems-btn ems-btn--primary ems-btn--lg" type="button" [disabled]="saving() || !canComplete()" (click)="markCompleted()">
+            @if (saving()) { <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i> } @else { <i class="ph ph-check-circle" aria-hidden="true"></i> }
             {{ 'tech_detail_markCompleted' | t }}
           </button>
         }
       </div>
-    </div>
+    </header>
 
     <div class="detail-grid">
       <div class="detail-main">
@@ -71,7 +69,7 @@
               <div class="card-header">
                 <i class="ph ph-broadcast" aria-hidden="true"></i>
                 <h3>{{ 'tech_detail_discoverTitle' | t }}</h3>
-                <span class="live-chip"><span class="live-dot"></span>{{ 'tech_detail_live' | t }}</span>
+                <span class="ems-signal ems-signal--live"><span class="ems-signal__dot" aria-hidden="true"></span>{{ 'tech_detail_live' | t }}</span>
               </div>
               <p class="discover-hint">{{ 'tech_detail_discoverHint' | t }}</p>
               @for (d of discoverable(); track d.serialNumber) {
@@ -87,13 +85,13 @@
                     </span>
                     <span class="discover-seen">{{ 'tech_detail_lastSeen' | t }}: {{ lastSeenLabel(d.lastSeen) }}</span>
                   </div>
-                  <input class="d-input" type="text" [placeholder]="('tech_detail_deviceName' | t) + ' *'" [(ngModel)]="d.name" [disabled]="!d.claimed" />
-                  <select class="d-input" [(ngModel)]="d.type" [disabled]="!d.claimed">
+                  <input class="ems-input d-input" type="text" [placeholder]="('tech_detail_deviceName' | t) + ' *'" [(ngModel)]="d.name" [disabled]="!d.claimed" />
+                  <select class="ems-select d-input" [(ngModel)]="d.type" [disabled]="!d.claimed">
                     @for (st of sensorTypes; track st) { <option [value]="st">{{ st }}</option> }
                   </select>
                 </div>
               } @empty {
-                <p class="no-devices">{{ 'tech_detail_discoverEmpty' | t }}</p>
+                <p class="no-devices ems-muted">{{ 'tech_detail_discoverEmpty' | t }}</p>
               }
               <ng-container [ngTemplateOutlet]="uploadTpl"></ng-container>
             </div>
@@ -104,7 +102,7 @@
               <div class="card-header">
                 <i class="ph ph-wrench" aria-hidden="true"></i>
                 <h3>{{ 'tech_detail_deviceCheck' | t }}</h3>
-                <span class="required-chip">REQUIRED</span>
+                <span class="ems-tag ems-tag--warning">REQUIRED</span>
               </div>
               @for (d of deviceChecks(); track d.deviceId) {
                 <div class="device-check-row">
@@ -112,13 +110,13 @@
                     <span class="dc-name">{{ d.name }}</span>
                     <span class="dc-type">{{ d.type }}</span>
                   </div>
-                  <select class="d-input" [(ngModel)]="d.status">
+                  <select class="ems-select d-input" [(ngModel)]="d.status">
                     @for (st of deviceStatuses; track st) { <option [value]="st">{{ deviceStatusLabel(st) }}</option> }
                   </select>
-                  <input class="d-input" type="text" [placeholder]="'tech_detail_observation' | t" [(ngModel)]="d.observation" />
+                  <input class="ems-input d-input" type="text" [placeholder]="'tech_detail_observation' | t" [(ngModel)]="d.observation" />
                 </div>
               } @empty {
-                <p class="no-devices">{{ 'tech_detail_noDevices' | t }}</p>
+                <p class="no-devices ems-muted">{{ 'tech_detail_noDevices' | t }}</p>
               }
             </div>
 
@@ -126,21 +124,21 @@
               <div class="card-header">
                 <i class="ph ph-list-checks" aria-hidden="true"></i>
                 <h3>{{ 'tech_detail_maintActions' | t }}</h3>
-                <button class="add-btn" type="button" (click)="addAction()" aria-label="Add action">
+                <button class="ems-btn ems-btn--sm ems-btn--icon add-btn" type="button" (click)="addAction()" aria-label="Add action">
                   <i class="ph ph-plus" aria-hidden="true"></i>
                 </button>
               </div>
               @for (a of actions(); track $index) {
                 <div class="device-edit-row">
-                  <input class="d-input" type="text" [placeholder]="'tech_detail_action' | t" [(ngModel)]="a.action" />
-                  <select class="d-input" [(ngModel)]="a.deviceId">
+                  <input class="ems-input d-input" type="text" [placeholder]="'tech_detail_action' | t" [(ngModel)]="a.action" />
+                  <select class="ems-select d-input" [(ngModel)]="a.deviceId">
                     <option [ngValue]="null">{{ 'tech_detail_device' | t }}</option>
                     @for (d of requiresMaintenanceDevices(); track d.id) {
                       <option [ngValue]="d.id">{{ d.name }}</option>
                     }
                   </select>
-                  <input class="d-input" type="text" [placeholder]="'tech_detail_description' | t" [(ngModel)]="a.description" />
-                  <button class="trash-btn" type="button" (click)="removeAction($index)" aria-label="Remove">
+                  <input class="ems-input d-input" type="text" [placeholder]="'tech_detail_description' | t" [(ngModel)]="a.description" />
+                  <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm trash-btn" type="button" (click)="removeAction($index)" aria-label="Remove">
                     <i class="ph ph-trash" aria-hidden="true"></i>
                   </button>
                 </div>
@@ -172,10 +170,10 @@
                     <input type="checkbox" [(ngModel)]="r.removed" />
                     <span>{{ 'tech_detail_removed' | t }}</span>
                   </label>
-                  <input class="d-input" type="text" [placeholder]="'tech_detail_observation' | t" [(ngModel)]="r.observation" />
+                  <input class="ems-input d-input" type="text" [placeholder]="'tech_detail_observation' | t" [(ngModel)]="r.observation" />
                 </div>
               } @empty {
-                <p class="no-devices">{{ 'tech_detail_noDevices' | t }}</p>
+                <p class="no-devices ems-muted">{{ 'tech_detail_noDevices' | t }}</p>
               }
             </div>
 
@@ -192,7 +190,7 @@
           <div class="card">
             <h3>{{ 'tech_detail_techNotes' | t }}</h3>
             <textarea
-              class="notes-textarea"
+              class="ems-textarea notes-textarea"
               placeholder="Enter notes here..."
               [ngModel]="techNotes()"
               (ngModelChange)="techNotes.set($event)"
@@ -206,7 +204,7 @@
           @if (o.type === 'Installation') {
             <div class="card">
               <div class="card-header">
-                <i class="ph ph-monitor" aria-hidden="true"></i>
+                <i class="ph ph-plugs-connected" aria-hidden="true"></i>
                 <h3>{{ 'tech_detail_sensorInfo' | t }}</h3>
               </div>
               <ng-container [ngTemplateOutlet]="deviceListTpl"
@@ -323,13 +321,13 @@
         </div>
         <div class="info-row">
           <span class="info-label">{{ 'tech_detail_priority' | t }}</span>
-          <span class="priority-chip" [class.priority-chip--high]="o.priority === 'Urgent' || o.priority === 'High Priority'">{{ o.priority }}</span>
+          <span class="ems-tag ems-tag--plain" [class.ems-tag--danger]="o.priority === 'Urgent' || o.priority === 'High Priority'">{{ o.priority }}</span>
         </div>
         <div class="info-row tools-row">
           <span class="info-label">{{ 'tech_detail_requiredTools' | t }}</span>
           <div class="tools-wrap">
             @for (tool of o.requiredTools; track tool) {
-              <span class="tool-chip">{{ tool }}</span>
+              <span class="ems-tag ems-tag--plain">{{ tool }}</span>
             }
           </div>
         </div>
@@ -339,21 +337,21 @@
     <ng-template #clientContact>
       <div class="card">
         <h3>{{ 'tech_detail_clientContact' | t }}</h3>
-        <div class="contact-avatar"><span>{{ initials(o.contactName) }}</span></div>
+        <span class="ems-avatar ems-avatar--lg contact-avatar">{{ initials(o.contactName) }}</span>
         <p class="contact-name">{{ o.contactName }}</p>
         <p class="contact-role">{{ o.contactRole || o.client }}</p>
         <div class="contact-btns">
-          <a class="contact-btn" [href]="'tel:' + o.contactPhone">
+          <a class="ems-btn ems-btn--sm" [href]="'tel:' + o.contactPhone">
             <i class="ph ph-phone" aria-hidden="true"></i>
             {{ 'tech_detail_callClient' | t }}
           </a>
-          <a class="contact-btn" [href]="'mailto:' + o.contactEmail">
+          <a class="ems-btn ems-btn--sm" [href]="'mailto:' + o.contactEmail">
             <i class="ph ph-envelope" aria-hidden="true"></i>
             {{ 'tech_detail_emailClient' | t }}
           </a>
         </div>
         @if (o.accessInstructions) {
-          <div class="access-note">
+          <div class="ems-banner ems-banner--warning access-note">
             <i class="ph ph-info" aria-hidden="true"></i>
             <p>{{ o.accessInstructions }}</p>
           </div>
@@ -370,12 +368,12 @@
                 <span class="dc-name">{{ d.name }}</span>
                 <span class="dc-type">{{ d.type }}@if (serial) { &bull; {{ d.serialNumber }} }</span>
               </div>
-              <span class="device-status device-status--{{ d.status }}">{{ deviceStatusLabel(d.status) }}</span>
+              <span class="ems-tag" [class.ems-tag--safe]="d.status === 'active'" [class.ems-tag--warning]="d.status === 'requires-maintenance'" [class.ems-tag--info]="d.status === 'in-maintenance'">{{ deviceStatusLabel(d.status) }}</span>
             </div>
           }
         </div>
       } @else {
-        <p class="no-devices">{{ 'tech_detail_noDevices' | t }}</p>
+        <p class="no-devices ems-muted">{{ 'tech_detail_noDevices' | t }}</p>
       }
     </ng-template>
 
@@ -390,7 +388,7 @@
           @for (img of evidence(); track $index) {
             <div class="evidence-thumb">
               <img [src]="img" alt="Evidence" />
-              <button class="evidence-remove" type="button" (click)="removeEvidence($index)" aria-label="Remove">
+              <button class="ems-btn ems-btn--icon ems-btn--sm evidence-remove" type="button" (click)="removeEvidence($index)" aria-label="Remove">
                 <i class="ph ph-x" aria-hidden="true"></i>
               </button>
             </div>
@@ -401,8 +399,8 @@
 
   </div>
 } @else {
-  <div class="loading-state">
-    <span class="spinner spinner--dark"></span>
-    <p>Loading work order...</p>
+  <div class="ems-loading">
+    <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>
+    <span>Loading work order...</span>
   </div>
 }

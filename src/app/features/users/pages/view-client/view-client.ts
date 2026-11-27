@@ -1,3 +1,4 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -12,7 +13,7 @@ import { Device } from '../../../../contexts/devicemanagement/domain/device.mode
  */
 @Component({
   selector: 'app-view-client',
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink, EmptyState],
   templateUrl: './view-client.html',
   styleUrl: './view-client.scss',
 })
