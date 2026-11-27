@@ -6,8 +6,7 @@ import {
   ApiResponse,
   queryString,
   unwrap,
-  unwrapOrNull,
-} from '../../../core/http/api-response';
+  unwrapOrNull, MutationResult, toResult } from '../../../core/http/api-response';
 import {
   ApproveMitigationPayload,
   MitigationAction,
@@ -45,8 +44,8 @@ export class MitigationActionApi {
    * `POST` y no `PATCH` del estado: aprobar ejecuta una transición de dominio
    * con efectos —reasigna turnos y publica eventos—, no es editar un campo.
    */
-  approve(id: number, payload: ApproveMitigationPayload): Observable<MitigationAction | null> {
-    return unwrapOrNull(
+  approve(id: number, payload: ApproveMitigationPayload): Observable<MutationResult<MitigationAction>> {
+    return toResult(
       this.http.post<ApiResponse<MitigationAction>>(
         `${this.base}/v1/occupational-health/mitigation-actions/${id}/approve`,
         payload
@@ -55,8 +54,8 @@ export class MitigationActionApi {
   }
 
   /** El motivo es obligatorio: el backend lo valida con `@NotBlank`. */
-  reject(id: number, payload: RejectMitigationPayload): Observable<MitigationAction | null> {
-    return unwrapOrNull(
+  reject(id: number, payload: RejectMitigationPayload): Observable<MutationResult<MitigationAction>> {
+    return toResult(
       this.http.post<ApiResponse<MitigationAction>>(
         `${this.base}/v1/occupational-health/mitigation-actions/${id}/reject`,
         payload

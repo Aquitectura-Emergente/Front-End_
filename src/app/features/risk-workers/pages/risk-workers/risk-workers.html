@@ -143,18 +143,18 @@
 
         <dl class="facts">
           <div><dt>{{ 'af_current' | t }}</dt>
-            <dd>{{ d.projection.currentIndex | number: '1.0-2' }} {{ d.projection.unit }}
+            <dd>{{ d.projection.currentIndex | number: '1.0-2' }} {{ d.projection.unit | unit }}
               <span class="muted">({{ percentLabel(forecasting.consumedPercent(d)) }})</span></dd></div>
           <div><dt>{{ 'af_limit' | t }}</dt>
-            <dd>{{ d.projection.limitIndex | number: '1.0-2' }} {{ d.projection.unit }}</dd></div>
+            <dd>{{ d.projection.limitIndex | number: '1.0-2' }} {{ d.projection.unit | unit }}</dd></div>
           <div><dt>{{ 'af_rate' | t }}</dt>
-            <dd class="rate">{{ d.projection.accumulationRate | number: '1.0-4' }} {{ d.projection.unit }}/s</dd></div>
+            <dd class="rate">{{ d.projection.accumulationRate | number: '1.0-4' }} {{ d.projection.unit | unit }}/s</dd></div>
           <div><dt>{{ 'af_projected' | t }}</dt>
-            <dd>{{ d.projection.projectedIndexAtShiftEnd | number: '1.0-2' }} {{ d.projection.unit }}
+            <dd>{{ d.projection.projectedIndexAtShiftEnd | number: '1.0-2' }} {{ d.projection.unit | unit }}
               <span class="muted">({{ percentLabel(forecasting.projectedPercent(d)) }})</span></dd></div>
           <div><dt>{{ 'af_margin' | t }}</dt>
             <dd [class.is-danger]="d.projection.remainingMargin < 0">
-              {{ d.projection.remainingMargin | number: '1.0-2' }} {{ d.projection.unit }}</dd></div>
+              {{ d.projection.remainingMargin | number: '1.0-2' }} {{ d.projection.unit | unit }}</dd></div>
           <div><dt>{{ 'af_shiftEnd' | t }}</dt>
             <dd>{{ forecasting.limaDateTime(d.projection.shiftEnd) }}</dd></div>
           <div><dt>{{ 'af_th_exceedance' | t }}</dt>
@@ -175,7 +175,7 @@
               · {{ 'af_target' | t }} {{ workerName(r.targetWorkerId) }}
             }
             @if (r.estimatedBenefitIndex != null) {
-              · {{ 'af_benefit' | t }} {{ r.estimatedBenefitIndex | number: '1.0-2' }} {{ d.projection.unit }}
+              · {{ 'af_benefit' | t }} {{ r.estimatedBenefitIndex | number: '1.0-2' }} {{ d.projection.unit | unit }}
             }
           </p>
         } @else {
@@ -191,11 +191,7 @@
             </span>
           }
         </h3>
-        @if (d.redaction; as red) {
-          <p class="redaction">{{ red.text }}</p>
-        } @else {
-          <p class="muted">{{ 'af_noRedaction' | t }}</p>
-        }
+        <p class="redaction">{{ explanation(d) }}</p>
       }
 
       <!-- ── Jornada de dosimetría: cerrar y finalizar ─────────────────────── -->
@@ -246,7 +242,7 @@
               </p>
               <dl class="facts">
                 <div><dt>{{ 'sc_finalIndex' | t }}</dt>
-                  <dd class="final-index">{{ s.accumulatedIndex | number: '1.0-2' }} {{ s.unit }}
+                  <dd class="final-index">{{ s.accumulatedIndex | number: '1.0-2' }} {{ s.unit | unit }}
                     <span class="muted">({{ s.percentage }}%)</span></dd></div>
                 <div><dt>{{ 'sc_coverage' | t }}</dt>
                   <dd class="coverage" [class.is-warn]="!s.coverageComplete">{{ s.coveragePercentage }}%</dd></div>

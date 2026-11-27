@@ -90,12 +90,18 @@ describe('RiskWorkers', () => {
     fixture.detectChanges();
   }
 
-  /** Monta la página y responde a las dos llamadas iniciales. */
+  /** Los puestos, para nombrarlos en la explicación. */
+  function flushPositions(): void {
+    http.match(r => r.url.includes('/v1/plant-config/job-positions')).forEach(r => r.flush({ data: [] }));
+  }
+
+  /** Monta la página y responde a las llamadas iniciales. */
   function start(list: object | 'error' = page([HIGH, CRITICAL])): void {
     fixture = TestBed.createComponent(RiskWorkers);
     component = fixture.componentInstance;
     render();
     http.expectOne(WORKERS).flush({ data: NAMES });
+    flushPositions();
     const req = http.expectOne(`${LIST}?page=0&size=50`);
     if (list === 'error') req.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
     else req.flush(list);
@@ -223,17 +229,17 @@ describe('RiskWorkers', () => {
       const panel = el().querySelector('.detail')!;
       expect(panel.textContent).toContain('Carlos Rojas');
       expect(panel.textContent).toContain('Projection');
-      expect(panel.textContent).toContain('7,200 uT*s');           // actual
-      expect(panel.textContent).toContain('12,000 uT*s');          // límite
-      expect(panel.querySelector('.rate')!.textContent).toContain('0.5 uT*s/s');
-      expect(panel.textContent).toContain('14,400 uT*s');          // proyectado
-      expect(panel.textContent).toContain('4,800 uT*s');           // margen
+      expect(panel.textContent).toContain('7,200 µT·s');           // actual
+      expect(panel.textContent).toContain('12,000 µT·s');          // límite
+      expect(panel.querySelector('.rate')!.textContent).toContain('0.5 µT·s/s');
+      expect(panel.textContent).toContain('14,400 µT·s');          // proyectado
+      expect(panel.textContent).toContain('4,800 µT·s');           // margen
       expect(panel.textContent).toContain('Nov 10, 11:00 AM');     // fin de turno (16:00 UTC)
       expect(panel.textContent).toContain('swap with Ana Quispe');
       expect(panel.textContent).toContain('Rotar al operario 101 con el 200.');
     });
 
-    it('etiqueta la explicacion como IA o Plantilla segun generatedBy', () => {
+    it('etiqueta la explicacion como IA o Automatica segun generatedBy', () => {
       start();
       openDetail(1, HIGH, pdSession({ id: 'S-101', workerId: 101 }));
       expect(el().querySelector('.redaction-tag')!.textContent!.trim()).toBe('AI');
@@ -241,7 +247,17 @@ describe('RiskWorkers', () => {
       component.closeDetail();
       render();
       openDetail(0, CRITICAL);
-      expect(el().querySelector('.redaction-tag')!.textContent!.trim()).toBe('Template');
+      expect(el().querySelector('.redaction-tag')!.textContent!.trim()).toBe('Automatic');
+    });
+
+    it('la explicacion automatica usa el nombre y cifras legibles, sin ids ni UTC', () => {
+      start();
+      openDetail(0, CRITICAL);
+      const text = el().querySelector('.redaction')!.textContent!;
+      expect(text).not.toContain('UTC');
+      expect(text).not.toContain('operario 300');
+      expect(text).toContain('µT·s');
+      expect(text).toMatch(/\d{1,3}(,\d{3})+ µT·s|\d+ µT·s/);
     });
 
     it('si el operario ya no tiene evaluacion activa (404) lo dice', () => {
@@ -290,6 +306,8 @@ describe('RiskWorkers', () => {
       req.flush({ data: pdSession({
         state: 'CLOSING', endedAt: '2026-11-25T19:00:00Z', reconciliationDeadline: '2026-11-25T19:30:00Z',
       }) });
+      // Con la jornada se cierra también el turno del operario (sale del mapa de planta).
+      http.expectOne(`${environment.apiUrl}/v1/occupational-health/workers/300/shifts/current/close`).flush({ data: null });
       // Refresca la lista al cerrar.
       http.expectOne(`${LIST}?page=0&size=50`).flush(page([HIGH, CRITICAL]));
       render();
@@ -351,7 +369,7 @@ describe('RiskWorkers', () => {
       render();
 
       expect(el().querySelector('.closed')!.textContent).toContain('Shift closed');
-      expect(el().querySelector('.final-index')!.textContent).toContain('11,800 uT*s');
+      expect(el().querySelector('.final-index')!.textContent).toContain('11,800 µT·s');
       expect(el().querySelector('.coverage')!.textContent!.trim()).toBe('97.5%');
       expect(el().querySelector('.incomplete')!.textContent).toContain('Incomplete coverage');
     });
@@ -405,6 +423,7 @@ describe('RiskWorkers', () => {
       render();
       expect(el().querySelector('.loading-state')).not.toBeNull();
       http.expectOne(WORKERS).flush({ data: [] });
+      flushPositions();
       http.expectOne(`${LIST}?page=0&size=50`).flush(page([]));
     });
 
