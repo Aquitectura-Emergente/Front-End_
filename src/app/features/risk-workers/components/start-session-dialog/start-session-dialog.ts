@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, output, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, input, output, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -11,9 +11,11 @@ import {
 } from '../../../../contexts/personaldosimetry/domain/session-control.model';
 import { User } from '../../../../contexts/iam/domain/user.model';
 import { JobPosition } from '../../../../contexts/plantconfiguration/domain/job-position.model';
+import { DosimeterOption } from '../../../../contexts/devicemanagement/domain/device-status.model';
+import { translateDetail } from '../../../../core/http/backend-error';
 
 /** De dónde salió el dosímetro elegido, para decírselo al SSO. */
-type DeviceSource = 'lastSession' | 'serial';
+type DeviceSource = 'usual' | 'lastSession' | 'serial' | 'list';
 
 /**
  * Modal «Iniciar jornada» (`POST /personal-dosimetry/sessions`).
@@ -21,8 +23,9 @@ type DeviceSource = 'lastSession' | 'serial';
  * - **Operario**: los del SSO (`/sso/workers`).
  * - **Puesto**: solo los que tienen un límite vigente; el backend rechaza el
  *   resto con 422.
- * - **Dosímetro**: no hay un listado de dosímetros para el SSO, así que se
- *   prellena con el de la última jornada del operario o se busca por serial.
+ * - **Dosímetro**: se elige de los dosímetros de la empresa (los que ya están
+ *   en una jornada aparecen deshabilitados), se prellena con el de la última
+ *   jornada del operario o se busca por serial.
  *
  * Sin `startedAt`: la jornada empieza a la hora del servidor. Un 409 o un 422 se
  * muestran con un título traducido y el mensaje del backend tal cual.
@@ -38,11 +41,14 @@ export class StartSessionDialog implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   protected lang = inject(LanguageService);
 
+  /** Operario ya elegido (al abrir el diálogo desde el mapa de planta). */
+  readonly initialWorkerId = input<number | null>(null);
   readonly started = output<ExposureSession>();
   readonly cancelled = output<void>();
 
   workers = signal<User[]>([]);
   positions = signal<JobPosition[]>([]);
+  dosimeters = signal<DosimeterOption[]>([]);
   optionsLoading = signal(true);
 
   workerId = signal<number | null>(null);
@@ -63,6 +69,9 @@ export class StartSessionDialog implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subs.push(this.control.workers().subscribe(w => this.workers.set(w)));
+    this.subs.push(this.control.dosimeters().subscribe(d => this.dosimeters.set(d)));
+    const preselected = this.initialWorkerId();
+    if (preselected) this.selectWorker(String(preselected));
     this.subs.push(this.control.startablePositions().subscribe(p => {
       this.positions.set(p);
       this.optionsLoading.set(false);
@@ -74,9 +83,9 @@ export class StartSessionDialog implements OnInit, OnDestroy {
   }
 
   /**
-   * Al elegir operario se prellenan el dosímetro y el puesto de su última
-   * jornada. El puesto solo si sigue teniendo límite vigente: si no, el backend
-   * lo rechazaría y es mejor que el SSO elija otro.
+   * Al elegir operario se prellenan su dosímetro y su puesto habituales o, si no
+   * los tiene, los de su última jornada. El puesto solo si sigue teniendo límite
+   * vigente: si no, el backend lo rechazaría y es mejor que el SSO elija otro.
    */
   selectWorker(value: string): void {
     const id = Number(value) || null;
@@ -84,17 +93,36 @@ export class StartSessionDialog implements OnInit, OnDestroy {
     this.error.set(null);
     this.clearDevice();
     if (!id) return;
-    this.subs.push(this.control.lastSessionDefaults(id).subscribe(defaults => {
+    this.subs.push(this.control.startSuggestion(id).subscribe(defaults => {
       if (this.workerId() !== id) return; // el SSO ya eligió a otro
       if (defaults.deviceId) {
+        const known = this.dosimeters().find(d => d.device.id === defaults.deviceId);
         this.deviceId.set(defaults.deviceId);
-        this.deviceLabel.set(`#${defaults.deviceId}`);
-        this.deviceSource.set('lastSession');
+        this.deviceLabel.set(known ? `${known.device.deviceId} (#${defaults.deviceId})` : `#${defaults.deviceId}`);
+        this.deviceSource.set(defaults.deviceFrom ?? 'lastSession');
       }
       if (defaults.jobPositionId && this.positions().some(p => p.id === defaults.jobPositionId)) {
         this.jobPositionId.set(defaults.jobPositionId);
       }
     }));
+  }
+
+  /** Dosímetro elegido de la lista de la empresa. */
+  selectDosimeter(value: string): void {
+    const option = this.dosimeters().find(d => d.device.id === Number(value));
+    this.serialError.set(null);
+    if (!option) {
+      this.clearDevice();
+      return;
+    }
+    this.deviceId.set(option.device.id);
+    this.deviceLabel.set(`${option.device.deviceId} (#${option.device.id})`);
+    this.deviceSource.set('list');
+  }
+
+  /** Detalle del error del backend, traducido si es un caso conocido. */
+  errorDetail(message: string): string {
+    return translateDetail(key => this.lang.t(key), message);
   }
 
   selectPosition(value: string): void {

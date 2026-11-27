@@ -1,3 +1,5 @@
+import { SessionControlFacade } from '../../../../contexts/personaldosimetry/application/session-control-facade';
+import { DosimeterOption } from '../../../../contexts/devicemanagement/domain/device-status.model';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -59,7 +61,12 @@ export class SsoAlerts implements OnInit, OnDestroy {
   );
   pendingCount = computed(() => this.alerts().filter(a => workerAlertStatus(a) === 'pending').length);
 
-  // Umbral del dosímetro
+  // Umbral del dosímetro: se elige de los dosímetros de la empresa o se busca por serial.
+  private control = inject(SessionControlFacade);
+  dosimeters = signal<DosimeterOption[]>([]);
+  /** Dosímetro elegido en el selector ('' = ninguno). Independiente de la búsqueda. */
+  picked = '';
+  /** Texto del campo de búsqueda por serial. */
   serial = '';
   thresholdUT: number | null = null;
   config = signal<DeviceConfigView | null>(null);
@@ -68,6 +75,7 @@ export class SsoAlerts implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.sso.workers().subscribe(workers => this.workers.set(workers));
+    this.control.dosimeters().subscribe(d => this.dosimeters.set(d));
     this.load();
 
     const organizationId = this.sso.organizationId();
@@ -132,12 +140,26 @@ export class SsoAlerts implements OnInit, OnDestroy {
 
   // ── Umbral del dosímetro ──────────────────────────────────────────────
 
+  /** Dosímetro elegido de la lista de la empresa: carga su umbral al momento. */
+  pickDosimeter(serial: string): void {
+    this.picked = serial;
+    this.serial = '';
+    if (serial) this.fetchConfig(serial);
+    else this.config.set(null);
+  }
+
+  /** Búsqueda por serial: deja el selector en blanco. */
   loadConfig(): void {
     const serial = this.serial.trim();
     if (!serial) {
       this.toast.error(this.lang.t('dm_thr_serialRequired'));
       return;
     }
+    this.picked = '';
+    this.fetchConfig(serial);
+  }
+
+  private fetchConfig(serial: string): void {
     this.busy.set(true);
     this.devices.config(serial).subscribe(config => {
       this.busy.set(false);

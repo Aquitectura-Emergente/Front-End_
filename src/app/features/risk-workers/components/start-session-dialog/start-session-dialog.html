@@ -2,6 +2,7 @@
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="start-session-title">
   <h2 id="start-session-title">{{ 'sc_start_title' | t }}</h2>
   <p class="muted">{{ 'sc_start_hint' | t }}</p>
+  <p class="muted">{{ 'sc_start_shiftHint' | t }}</p>
 
   <label>
     <span>{{ 'af_th_worker' | t }}</span>
@@ -20,7 +21,7 @@
             (change)="selectPosition($any($event.target).value)">
       <option value="">—</option>
       @for (p of positions(); track p.id) {
-        <option [value]="p.id">{{ p.name }} · {{ p.plantZoneName }}</option>
+        <option [value]="p.id">{{ p.name }} ({{ p.plantZoneName }})</option>
       }
     </select>
     @if (!optionsLoading() && positions().length === 0) {
@@ -35,8 +36,19 @@
       <p class="device__chosen">
         <i class="ph ph-identification-badge" aria-hidden="true"></i>
         <strong>{{ deviceLabel() }}</strong>
-        <span class="muted">· {{ (deviceSource() === 'lastSession' ? 'sc_device_fromLast' : 'sc_device_fromSerial') | t }}</span>
+        <span class="muted">· {{ (deviceSource() === 'usual' ? 'sc_device_fromUsual' : deviceSource() === 'lastSession' ? 'sc_device_fromLast' : deviceSource() === 'list' ? 'sc_device_fromList' : 'sc_device_fromSerial') | t }}</span>
       </p>
+    }
+    @if (dosimeters().length > 0) {
+      <select class="field-dosimeter" [value]="deviceId() ?? ''" (change)="selectDosimeter($any($event.target).value)">
+        <option value="">{{ 'sc_dosimeter_pick' | t }}</option>
+        @for (d of dosimeters(); track d.device.id) {
+          <option [value]="d.device.id" [disabled]="d.inSession">
+            {{ d.device.deviceId }}{{ d.inSession ? ' · ' + ('sc_dosimeter_inSession' | t) : '' }}{{ d.device.connectivity === 'ONLINE' ? ' · ' + ('sc_dosimeter_online' | t) : '' }}
+          </option>
+        }
+      </select>
+      <small class="muted">{{ 'sc_orSerial' | t }}</small>
     }
     <div class="device__search">
       <input type="text" class="field-serial" [placeholder]="'sc_serialPlaceholder' | t"
@@ -53,7 +65,7 @@
   @if (error(); as e) {
     <div class="command-error" role="alert">
       <strong>{{ errorTitleKey(e.status) | t }}</strong>
-      @if (e.message) { <span class="command-error__message">{{ e.message }}</span> }
+      @if (e.message) { <span class="command-error__message">{{ errorDetail(e.message) }}</span> }
     </div>
   }
 
