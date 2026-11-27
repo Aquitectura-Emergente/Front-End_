@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { UserApi } from '../infrastructure/user-api';
 import { initialsFrom } from '../domain/initials';
+import { MutationResult } from '../../../core/http/api-response';
 import { User, CreateUserPayload, UpdateUserPayload, UserProfile } from '../domain/user.model';
 
 /**
@@ -29,6 +30,14 @@ export class UserFacade {
 
   update(id: number | string, payload: UpdateUserPayload): Observable<User | null> {
     return this.api.update(id, payload);
+  }
+
+  save(payload: CreateUserPayload): Observable<MutationResult<User>> {
+    return this.api.save(payload);
+  }
+
+  change(id: number | string, payload: UpdateUserPayload): Observable<MutationResult<User>> {
+    return this.api.change(id, payload);
   }
 
   remove(id: number | string): Observable<void> {

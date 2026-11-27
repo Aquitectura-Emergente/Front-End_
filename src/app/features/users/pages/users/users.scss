@@ -6,6 +6,7 @@
   &--admin { background: var(--ems-primary-subtle); color: var(--ems-primary); }
   &--technician { background: var(--ems-accent-subtle); color: var(--ems-accent); }
   &--ssoresponsible { background: var(--ems-info-subtle); color: var(--ems-info); }
+  &--worker { background: var(--ems-safe-subtle); color: var(--ems-safe); }
   &--client { background: var(--ems-bg-sunken); color: var(--ems-text-secondary); }
 }
 .email { color: var(--ems-text-secondary); font-size: ems.rem(12.5px); }

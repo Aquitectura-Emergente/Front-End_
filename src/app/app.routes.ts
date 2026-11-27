@@ -64,6 +64,8 @@ export const routes: Routes = [
       { path: 'users/edit-technician/:id', component: NewTechnician },
       { path: 'users/new-sso-responsible',       component: NewSsoResponsible },
       { path: 'users/edit-sso-responsible/:id',  component: NewSsoResponsible },
+      { path: 'users/new-worker',                component: NewSsoResponsible, data: { role: 'WORKER' } },
+      { path: 'users/edit-worker/:id',           component: NewSsoResponsible, data: { role: 'WORKER' } },
       { path: 'users/edit-client/:id',     component: EditClient },
       { path: 'users/view-client/:id',     component: ViewClient },
       { path: 'profile',                   component: Profile },

@@ -96,11 +96,47 @@
               </table>
             </div>
           </section>
+          <section class="ems-panel">
+            <header class="ems-panel__head">
+              <h2 class="ems-panel__title"><span class="ems-panel__index">02</span>{{ 'vc_workers' | t }} <span class="ems-count">{{ workers().length }}</span></h2>
+              <a class="ems-btn ems-btn--sm" routerLink="/admin/users/new-worker" [queryParams]="{ organizationId: c.id }">
+                <i class="ph ph-plus" aria-hidden="true"></i>{{ 'vc_addWorker' | t }}
+              </a>
+            </header>
+            <div class="ems-table-wrap">
+              <table class="ems-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'th_name' | t }}</th>
+                    <th>{{ 'th_email' | t }}</th>
+                    <th>{{ 'th_status' | t }}</th>
+                    <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (w of workers(); track w.id) {
+                    <tr>
+                      <td class="cell-primary">{{ w.name }}</td>
+                      <td class="mono">{{ w.email }}</td>
+                      <td><span class="ems-tag" [class.ems-tag--safe]="w.status === 'active'">{{ w.status === 'active' ? ('status_active' | t) : ('status_inactive' | t) }}</span></td>
+                      <td class="cell-actions">
+                        <a class="ems-btn ems-btn--ghost ems-btn--sm" [routerLink]="['/admin/users/edit-worker', w.id]">
+                          <i class="ph ph-pencil-simple" aria-hidden="true"></i>{{ 'btn_edit' | t }}
+                        </a>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4"><ems-empty-state icon="ph-identification-badge" [compact]="true" [text]="'vc_noWorkers' | t" /></td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
         }
 
         <section class="ems-panel">
           <header class="ems-panel__head">
-            <h2 class="ems-panel__title"><span class="ems-panel__index">{{ isCompany(c) ? '02' : '01' }}</span>{{ 'vc_devices' | t }} <span class="ems-count">{{ devices().length }}</span></h2>
+            <h2 class="ems-panel__title"><span class="ems-panel__index">{{ isCompany(c) ? '03' : '01' }}</span>{{ 'vc_devices' | t }} <span class="ems-count">{{ devices().length }}</span></h2>
           </header>
           <div class="ems-table-wrap">
             <table class="ems-table">
