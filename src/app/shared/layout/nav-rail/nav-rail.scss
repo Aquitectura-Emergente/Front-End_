@@ -1,0 +1,143 @@
+@use 'styles/mixins' as ems;
+
+:host { display: block; height: 100%; }
+
+// El rail es "chrome": siempre grafito, en tema claro y oscuro.
+.rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: var(--ems-size-nav-rail);
+  background: var(--ems-chrome);
+  color: var(--ems-chrome-text);
+  border-right: var(--ems-border-hairline) solid var(--ems-chrome-border);
+  @include ems.transition(width);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--ems-space-4);
+    height: var(--ems-size-topbar);
+    padding: 0 var(--ems-space-6);
+    border-bottom: var(--ems-border-hairline) solid var(--ems-chrome-border);
+    flex: none;
+  }
+  &__brand-text { display: flex; flex-direction: column; min-width: 0; }
+  &__product {
+    font-family: var(--ems-font-heading);
+    font-weight: 700;
+    font-size: ems.rem(19px);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+  &__portal {
+    @include ems.type(mono-sm);
+    color: var(--ems-chrome-text-muted);
+    text-transform: uppercase;
+    @include ems.truncate;
+  }
+
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--ems-space-5) var(--ems-space-4);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ems-chrome-border) transparent;
+  }
+  &__section + &__section { margin-top: var(--ems-space-6); }
+  &__label {
+    display: block;
+    padding: 0 var(--ems-space-4) var(--ems-space-3);
+    @include ems.type(eyebrow);
+    font-size: ems.rem(11px);
+    color: var(--ems-chrome-text-muted);
+    @include ems.truncate;
+  }
+
+  &__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--ems-space-4);
+    width: 100%;
+    height: 38px;
+    padding: 0 var(--ems-space-4);
+    border-radius: var(--ems-radius-sm);
+    color: var(--ems-chrome-text-muted);
+    @include ems.type(label);
+    font-weight: 500;
+    text-align: left;
+    @include ems.transition(background-color, color);
+
+    i.ph { font-size: 19px; flex: none; width: 20px; text-align: center; }
+
+    &:hover { background: var(--ems-chrome-raised); color: var(--ems-chrome-text); }
+    &:focus-visible { outline: 2px solid var(--ems-chrome-accent); outline-offset: -2px; }
+
+    &.active {
+      background: var(--ems-chrome-raised);
+      color: var(--ems-chrome-text);
+      i.ph { color: var(--ems-chrome-accent); }
+      &::before {
+        content: '';
+        position: absolute;
+        left: calc(-1 * var(--ems-space-4));
+        top: 8px;
+        bottom: 8px;
+        width: var(--ems-border-rail);
+        background: var(--ems-chrome-accent);
+      }
+    }
+    &--danger:hover { color: #ff9c92; }
+  }
+  &__text { @include ems.truncate; }
+
+  &__foot {
+    flex: none;
+    padding: var(--ems-space-4);
+    border-top: var(--ems-border-hairline) solid var(--ems-chrome-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ems-space-1);
+  }
+
+  // Compacto: solo iconos con etiqueta flotante.
+  &.is-collapsed {
+    width: var(--ems-size-nav-rail-collapsed);
+    .rail__brand { padding: 0; justify-content: center; }
+    .rail__brand-text, .rail__text, .rail__label { display: none; }
+    .rail__section + .rail__section {
+      margin-top: var(--ems-space-4);
+      padding-top: var(--ems-space-4);
+      border-top: var(--ems-border-hairline) solid var(--ems-chrome-border);
+    }
+    .rail__link {
+      justify-content: center;
+      padding: 0;
+      &[data-label]:hover::after {
+        content: attr(data-label);
+        position: absolute;
+        left: calc(100% + 10px);
+        z-index: 20;
+        padding: 6px 10px;
+        border-radius: var(--ems-radius-xs);
+        background: var(--ems-chrome-raised);
+        border: var(--ems-border-hairline) solid var(--ems-chrome-border);
+        color: var(--ems-chrome-text);
+        white-space: nowrap;
+        @include ems.type(caption);
+      }
+    }
+  }
+
+  // En drawer (tablet/móvil) siempre se muestra completo.
+  @include ems.down(lg) {
+    &.is-collapsed { width: var(--ems-size-nav-rail); }
+    &.is-collapsed .rail__brand { padding: 0 var(--ems-space-6); justify-content: flex-start; }
+    &.is-collapsed .rail__brand-text,
+    &.is-collapsed .rail__text,
+    &.is-collapsed .rail__label { display: initial; }
+    &.is-collapsed .rail__link { justify-content: flex-start; padding: 0 var(--ems-space-4); }
+    .rail__collapse { display: none; }
+  }
+}

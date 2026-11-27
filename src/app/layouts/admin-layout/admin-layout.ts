@@ -11,7 +11,6 @@ import { LayoutService } from '../../core/services/layout.service';
   selector: 'app-admin-layout',
   imports: [RouterOutlet, Sidebar, Topbar, ToastComponent],
   templateUrl: './admin-layout.html',
-  styleUrl: './admin-layout.scss',
 })
 export class AdminLayout {
   protected layout = inject(LayoutService);

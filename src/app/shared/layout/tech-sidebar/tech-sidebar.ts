@@ -1,16 +1,21 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { LanguageService } from '../../../core/services/language.service';
-import { AuthService } from '../../../contexts/iam/application/auth.service';
+import { Component } from '@angular/core';
+import { NavRail, NavSection } from '../nav-rail/nav-rail';
 
 @Component({
   selector: 'app-tech-sidebar',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe],
-  templateUrl: './tech-sidebar.html',
-  styleUrl: './tech-sidebar.scss',
+  imports: [NavRail],
+  template: `<app-nav-rail portalKey="nav_techPortal" ariaLabel="Technician navigation" [sections]="sections" />`,
+  styles: `:host { display: block; height: 100%; }`,
 })
 export class TechSidebar {
-  protected lang = inject(LanguageService);
-  protected auth = inject(AuthService);
+  protected readonly sections: NavSection[] = [
+    {
+      labelKey: 'shell_group_work',
+      items: [
+        { route: '/tech', icon: 'ph-calendar-blank', labelKey: 'nav_mySchedule', exact: true },
+        { route: '/tech/work-orders', icon: 'ph-clipboard-text', labelKey: 'nav_workOrders' },
+        { route: '/tech/history', icon: 'ph-clock-counter-clockwise', labelKey: 'nav_history' },
+      ],
+    },
+  ];
 }

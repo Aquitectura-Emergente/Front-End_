@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { UI_TRANSLATIONS } from '../i18n-ui';
 
 export type Lang = 'en' | 'es';
 
@@ -2032,6 +2033,6 @@ export class LanguageService {
   }
 
   t(key: string): string {
-    return TRANSLATIONS[this._lang()][key] ?? key;
+    return TRANSLATIONS[this._lang()][key] ?? UI_TRANSLATIONS[this._lang()][key] ?? key;
   }
 }

@@ -10,6 +10,13 @@ export class LayoutService {
   /** true → el drawer está abierto (solo aplica en ≤1024px). */
   readonly sidebarOpen = signal(false);
 
+  /** true → el rail de escritorio se muestra compacto (solo iconos). */
+  readonly railCollapsed = signal(false);
+
+  toggleRail(): void {
+    this.railCollapsed.update((v) => !v);
+  }
+
   toggle(): void {
     this.sidebarOpen.update((v) => !v);
   }

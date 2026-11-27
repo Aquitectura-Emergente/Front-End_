@@ -1,0 +1,47 @@
+<nav class="rail" [class.is-collapsed]="layout.railCollapsed()" [attr.aria-label]="ariaLabel()">
+  <div class="rail__brand">
+    <ems-brand-mark [size]="28" />
+    <div class="rail__brand-text">
+      <span class="rail__product">EMSafe</span>
+      <span class="rail__portal">{{ portalKey() | t }}</span>
+    </div>
+  </div>
+
+  <div class="rail__scroll">
+    @for (section of sections(); track $index) {
+      <div class="rail__section">
+        @if (section.labelKey) {
+          <span class="rail__label">{{ section.labelKey | t }}</span>
+        }
+        @for (item of section.items; track item.route) {
+          <a
+            class="rail__link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!item.exact }"
+            [attr.data-label]="item.labelKey | t"
+          >
+            <i class="ph {{ item.icon }}" aria-hidden="true"></i>
+            <span class="rail__text">{{ item.labelKey | t }}</span>
+          </a>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="rail__foot">
+    <button
+      class="rail__link rail__collapse"
+      type="button"
+      (click)="layout.toggleRail()"
+      [attr.aria-label]="(layout.railCollapsed() ? 'shell_expand' : 'shell_collapse') | t"
+    >
+      <i class="ph" [class.ph-sidebar-simple]="!layout.railCollapsed()" [class.ph-caret-double-right]="layout.railCollapsed()" aria-hidden="true"></i>
+      <span class="rail__text">{{ 'shell_collapse' | t }}</span>
+    </button>
+    <a class="rail__link rail__link--danger" href="#" (click)="$event.preventDefault(); auth.logout()" [attr.data-label]="'nav_logout' | t">
+      <i class="ph ph-sign-out" aria-hidden="true"></i>
+      <span class="rail__text">{{ 'nav_logout' | t }}</span>
+    </a>
+  </div>
+</nav>
