@@ -2,6 +2,8 @@ import {
   ConfigureLimitPayload,
   ExposureLimit,
   currentByPosition,
+  limitReference,
+  localDateTimeInput,
   validateLimit,
   warningThreshold,
 } from './exposure-limit.model';
@@ -12,6 +14,7 @@ function payload(o: Partial<ConfigureLimitPayload> = {}): ConfigureLimitPayload 
     limitIndex: 12000,
     warningRatio: 0.8,
     effectiveFrom: '2026-11-13T00:00:00Z',
+    reference: 'ICNIRP 2010',
     ...o,
   };
 }
@@ -87,5 +90,33 @@ describe('currentByPosition', () => {
     const current = currentByPosition([p1, p2]);
     expect(current).toHaveLength(2);
     expect(current.map(l => l.jobPositionId).sort()).toEqual([1, 2]);
+  });
+});
+
+describe('referencia del limite', () => {
+  it('es obligatoria y de hasta 250 caracteres, como pide el backend', () => {
+    expect(validateLimit(payload({ reference: '  ' }))).toBe('reference');
+    expect(validateLimit(payload({ reference: 'x'.repeat(251) }))).toBe('reference');
+    expect(validateLimit(payload({ reference: 'x'.repeat(250) }))).toBeNull();
+  });
+});
+
+describe('localDateTimeInput', () => {
+  it('da la hora local, no la UTC, para que el limite entre en vigor ahora', () => {
+    const now = new Date();
+    const back = new Date(localDateTimeInput(now));
+    expect(Math.abs(back.getTime() - now.getTime())).toBeLessThan(60_000);
+  });
+});
+
+describe('limitReference', () => {
+  it('es opcional: sin elegir nada se guarda «No especificada»', () => {
+    expect(limitReference('', '')).toBe('No especificada');
+    expect(limitReference('other', '   ')).toBe('No especificada');
+  });
+
+  it('usa la elegida de la lista o la escrita en «Otra»', () => {
+    expect(limitReference('ICNIRP 2010', '')).toBe('ICNIRP 2010');
+    expect(limitReference('other', ' RM 123-2025-MINSA ')).toBe('RM 123-2025-MINSA');
   });
 });

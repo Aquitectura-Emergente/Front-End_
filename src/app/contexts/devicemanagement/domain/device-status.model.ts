@@ -25,6 +25,12 @@ export interface DeviceStatusView {
   plantZoneId: number | null;
 }
 
+/** Dosímetro de una empresa y si ya está en una jornada (no se puede asignar a otra). */
+export interface DosimeterOption {
+  device: DeviceStatusView;
+  inSession: boolean;
+}
+
 /** Un dispositivo retirado ya no vuelve atrás; el resto puede ir a cualquier otro estado. */
 export function lifecycleTargets(current: LifecycleStatus | null): LifecycleStatus[] {
   const from = current ?? 'INSTALLED';

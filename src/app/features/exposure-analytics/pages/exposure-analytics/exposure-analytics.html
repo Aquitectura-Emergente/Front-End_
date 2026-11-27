@@ -123,7 +123,7 @@
       <div class="panel">
         <div class="panel__head">
           <h2>{{ 'ea_positions_title' | t }}</h2>
-          <span class="muted">{{ s.unit }}</span>
+          <span class="muted">{{ s.unit | unit }}</span>
         </div>
         @if (s.topPositions.length > 0) {
           <apx-chart
@@ -148,7 +148,7 @@
       <div class="panel">
         <div class="panel__head">
           <h2>{{ 'ea_workers_title' | t }}</h2>
-          <span class="muted">{{ s.unit }}</span>
+          <span class="muted">{{ s.unit | unit }}</span>
         </div>
         <table class="grid workers">
           <thead>
@@ -222,7 +222,7 @@
             <div><dt>{{ 'ea_rec_rotation' | t }}</dt><dd class="rec-rotation">{{ s.recommendations.rotation }}</dd></div>
             <div><dt>{{ 'ea_rec_reschedule' | t }}</dt><dd class="rec-reschedule">{{ s.recommendations.rescheduleTask }}</dd></div>
             <div><dt>{{ 'ea_rec_benefit' | t }}</dt>
-              <dd class="rec-benefit">{{ s.recommendations.estimatedBenefitIndex | number: '1.0-0' }} {{ s.unit }}</dd></div>
+              <dd class="rec-benefit">{{ s.recommendations.estimatedBenefitIndex | number: '1.0-0' }} {{ s.unit | unit }}</dd></div>
           </dl>
         </div>
       </div>

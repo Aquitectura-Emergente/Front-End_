@@ -1,4 +1,5 @@
 import { axisLabels, chartTokens, gridOptions } from '../../../../core/utils/chart-theme';
+import { UnitPipe } from '../../../../core/pipes/unit.pipe';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -80,7 +81,7 @@ const integer = (v: number | null | undefined) =>
  */
 @Component({
   selector: 'app-exposure-analytics',
-  imports: [TranslatePipe, DecimalPipe, RouterLink, NgApexchartsModule],
+  imports: [UnitPipe, TranslatePipe, DecimalPipe, RouterLink, NgApexchartsModule],
   templateUrl: './exposure-analytics.html',
   styleUrl: './exposure-analytics.scss',
 })

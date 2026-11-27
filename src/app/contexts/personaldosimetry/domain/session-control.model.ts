@@ -66,6 +66,30 @@ export interface StartDefaults {
   jobPositionId?: number;
 }
 
+/** Puesto y dosímetro habituales que el SSO fijó para el operario. */
+export interface WorkerDefaults {
+  jobPositionId?: number | null;
+  deviceId?: number | null;
+}
+
+/** Valores para prellenar «Iniciar jornada» y de dónde sale el dosímetro. */
+export interface StartSuggestion extends StartDefaults {
+  deviceFrom?: 'usual' | 'lastSession';
+}
+
+/**
+ * Lo habitual manda (lo fijó el SSO a propósito); lo que falte se toma de la
+ * última jornada del operario.
+ */
+export function suggestStart(usual: WorkerDefaults | null, last: StartDefaults): StartSuggestion {
+  const deviceId = usual?.deviceId ?? last.deviceId;
+  return {
+    deviceId: deviceId ?? undefined,
+    jobPositionId: usual?.jobPositionId ?? last.jobPositionId ?? undefined,
+    deviceFrom: deviceId == null ? undefined : usual?.deviceId != null ? 'usual' : 'lastSession',
+  };
+}
+
 export function defaultsFromLastSession(last: ExposureSession | null | undefined): StartDefaults {
   if (!last) return {};
   return { deviceId: last.deviceId, jobPositionId: last.jobPositionId ?? undefined };

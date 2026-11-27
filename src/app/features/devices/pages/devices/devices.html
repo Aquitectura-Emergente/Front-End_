@@ -8,6 +8,9 @@
     <a actions routerLink="/admin/edge-nodes" class="ems-btn">
       <i class="ph ph-broadcast" aria-hidden="true"></i>{{ 'nav_edgeNodes' | t }}
     </a>
+    <button actions type="button" class="ems-btn ems-btn--primary" (click)="openCreate()">
+      <i class="ph ph-plus" aria-hidden="true"></i>{{ 'dev_addDevice' | t }}
+    </button>
   </ems-page-header>
 
   <!-- Inventario por ciclo de vida: actúa como filtro rápido -->

@@ -43,20 +43,24 @@
         @for (action of actions(); track action.id) {
           <tr>
             <td>
-              <strong>{{ action.type }}</strong>
-              @if (action.justification) {
-                <span class="muted">{{ action.justification }}</span>
+              <strong>{{ typeLabel(action) }}</strong>
+              @if (reason(action); as why) {
+                <span class="muted">{{ why }}</span>
               }
+              @if (action.state === 'NOT_VIABLE' && action.outcome) {
+                <span class="muted muted--warn">{{ 'mit_notViableBecause' | t }} {{ outcomeText(action) }}</span>
+              }
+              <span class="muted">{{ action.createdAt | dt }}</span>
             </td>
             <td>
-              {{ action.origin }}
+              {{ originLabel(action) }}
               @if (action.priority === 'HIGH') {
                 <span class="pill pill--warn">{{ 'mit_highPriority' | t }}</span>
               }
             </td>
             <td>
               @for (id of workerIds(action); track id) {
-                <span class="pill pill--off">#{{ id }}</span>
+                <span class="pill pill--off">{{ personLabel(action, id) }}</span>
               }
               @if (needsTarget(action)) {
                 <span class="muted muted--warn">{{ 'mit_needsTarget' | t }}</span>
@@ -93,8 +97,15 @@
     <div class="modal" role="dialog" aria-modal="true">
       <h2>
         {{ (decisionMode() === 'approve' ? 'mit_approve' : 'mit_reject') | t }}
-        · #{{ decisionAction()?.id }}
+        · {{ peopleOf(decisionAction()) }}
       </h2>
+
+      @if (decisionMode() === 'approve' && isRescheduling(decisionAction())) {
+        <p class="banner banner--info">
+          <i class="ph ph-calendar-check" aria-hidden="true"></i>
+          <span>{{ 'mit_reschedulingHint' | t }}</span>
+        </p>
+      }
 
       @if (decisionMode() === 'approve' && needsTarget(decisionAction()!)) {
         <p class="banner banner--warn">

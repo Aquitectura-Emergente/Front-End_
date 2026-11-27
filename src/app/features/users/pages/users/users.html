@@ -40,6 +40,7 @@
       <button class="ems-tabs__tab" [class.is-active]="activeTab() === 'Client'" [attr.aria-selected]="activeTab() === 'Client'" type="button" role="tab" (click)="setTab('Client')">{{ 'users_clients' | t }}</button>
       <button class="ems-tabs__tab" [class.is-active]="activeTab() === 'Company'" [attr.aria-selected]="activeTab() === 'Company'" type="button" role="tab" (click)="setTab('Company')">{{ 'users_companies' | t }}</button>
       <button class="ems-tabs__tab" [class.is-active]="activeTab() === 'SsoResponsible'" [attr.aria-selected]="activeTab() === 'SsoResponsible'" type="button" role="tab" (click)="setTab('SsoResponsible')">{{ 'users_ssoOfficers' | t }}</button>
+      <button class="ems-tabs__tab" [class.is-active]="activeTab() === 'Worker'" [attr.aria-selected]="activeTab() === 'Worker'" type="button" role="tab" (click)="setTab('Worker')">{{ 'users_workers' | t }}</button>
     </div>
 
     <div class="ems-toolbar">
@@ -85,7 +86,7 @@
                   <span>
                     <span class="cell-primary">{{ user.name }}</span>
                     <span class="cell-sub">
-                      @if (user.role === 'SsoResponsible') { <i class="ph ph-buildings" aria-hidden="true"></i> {{ orgName(user) }} }
+                      @if (user.role === 'SsoResponsible' || user.role === 'Worker') { <i class="ph ph-buildings" aria-hidden="true"></i> {{ orgName(user) }} }
                       @else { Joined {{ formatJoinDate(user.joinDate) }} }
                     </span>
                   </span>
@@ -183,6 +184,14 @@
           <span class="account-type__text">
             <span class="account-type__label">{{ 'role_SsoResponsible' | t }}</span>
             <span class="account-type__desc">{{ 'users_addSsoDesc' | t }}</span>
+          </span>
+          <i class="ph ph-arrow-right account-type__go" aria-hidden="true"></i>
+        </button>
+        <button class="account-type" type="button" (click)="addUser('Worker')">
+          <i class="ph ph-identification-badge account-type__icon" aria-hidden="true"></i>
+          <span class="account-type__text">
+            <span class="account-type__label">{{ 'role_Worker' | t }}</span>
+            <span class="account-type__desc">{{ 'users_addWorkerDesc' | t }}</span>
           </span>
           <i class="ph ph-arrow-right account-type__go" aria-hidden="true"></i>
         </button>

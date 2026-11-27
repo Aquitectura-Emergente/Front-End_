@@ -4,6 +4,7 @@ import {
   canFinalize,
   commandErrorTitleKey,
   defaultsFromLastSession,
+  suggestStart,
   dosimeterProblem,
   effectiveLimits,
   positionsWithLimit,
@@ -115,5 +116,21 @@ describe('commandErrorTitleKey', () => {
     expect(commandErrorTitleKey(422)).toBe('sc_err_422');
     expect(commandErrorTitleKey(500)).toBe('sc_err_generic');
     expect(commandErrorTitleKey(0)).toBe('sc_err_generic');
+  });
+});
+
+describe('suggestStart', () => {
+  it('lo habitual manda y lo que falte sale de la ultima jornada', () => {
+    expect(suggestStart({ deviceId: 44, jobPositionId: null }, { deviceId: 30, jobPositionId: 31 }))
+      .toEqual({ deviceId: 44, jobPositionId: 31, deviceFrom: 'usual' });
+  });
+
+  it('sin habituales usa la ultima jornada', () => {
+    expect(suggestStart(null, { deviceId: 30, jobPositionId: 31 }))
+      .toEqual({ deviceId: 30, jobPositionId: 31, deviceFrom: 'lastSession' });
+  });
+
+  it('sin nada no sugiere dosimetro', () => {
+    expect(suggestStart({}, {})).toEqual({ deviceId: undefined, jobPositionId: undefined, deviceFrom: undefined });
   });
 });

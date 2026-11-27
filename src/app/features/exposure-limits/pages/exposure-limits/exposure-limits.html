@@ -56,16 +56,16 @@
             <tr>
               <td>
                 <strong>{{ positionName(limit.jobPositionId) }}</strong>
-                <span class="muted">v{{ limit.version }} · {{ limit.methodId }}</span>
+                <span class="muted">{{ 'limits_version' | t }} {{ limit.version }}</span>
               </td>
               <td>{{ zoneOf(limit.jobPositionId) }}</td>
-              <td class="num">{{ limit.limitIndex }} {{ limit.unit }}</td>
+              <td class="num">{{ limit.limitIndex | number: '1.0-2' }} {{ limit.unit | unit }}</td>
               <td class="num">
-                {{ warningThreshold(limit) }} {{ limit.unit }}
-                <span class="muted">{{ limit.warningRatio * 100 }}%</span>
+                {{ warningThreshold(limit) | number: '1.0-2' }} {{ limit.unit | unit }}
+                <span class="muted">{{ limit.warningRatio * 100 | number: '1.0-0' }} %</span>
               </td>
               <td>
-                {{ limit.effectiveFrom }}
+                {{ limit.effectiveFrom | dt }}
                 @if (historyCount(limit.jobPositionId) > 0) {
                   <span class="muted">
                     {{ historyCount(limit.jobPositionId) }} · {{ 'limits_previousVersions' | t }}
@@ -120,13 +120,13 @@
         <span>{{ 'plant_tab_positions' | t }}</span>
         <select [(ngModel)]="formPositionId" name="formPositionId">
           @for (position of positions(); track position.id) {
-            <option [value]="position.id">{{ position.name }} · {{ position.plantZoneName }}</option>
+            <option [value]="position.id">{{ position.name }} ({{ position.plantZoneName }})</option>
           }
         </select>
       </label>
 
       <label>
-        <span>{{ 'limits_limit' | t }} (uT*s)</span>
+        <span>{{ 'limits_limit' | t }} (µT·s)</span>
         <input type="number" min="0" step="any" [(ngModel)]="formLimitIndex"
                name="formLimitIndex" placeholder="12000" />
       </label>
@@ -141,6 +141,25 @@
         <span>{{ 'limits_effectiveFrom' | t }}</span>
         <input type="datetime-local" [(ngModel)]="formEffectiveFrom" name="formEffectiveFrom" />
       </label>
+
+      <label>
+        <span>{{ 'limits_reference' | t }}</span>
+        <select [(ngModel)]="formReferenceChoice" name="formReferenceChoice">
+          <option value="">{{ 'limits_referenceNone' | t }}</option>
+          @for (r of references; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+          <option value="other">{{ 'limits_referenceOther' | t }}</option>
+        </select>
+        <small class="muted">{{ 'limits_referenceHint' | t }}</small>
+      </label>
+
+      @if (formReferenceChoice === 'other') {
+        <label>
+          <span>{{ 'limits_referenceOtherLabel' | t }}</span>
+          <input type="text" maxlength="250" [(ngModel)]="formReferenceOther" name="formReferenceOther" />
+        </label>
+      }
 
       <div class="modal__actions">
         <button type="button" class="btn btn--ghost" (click)="closeForm()">

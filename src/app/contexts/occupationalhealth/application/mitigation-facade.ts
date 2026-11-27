@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { MutationResult } from '../../../core/http/api-response';
 import { MitigationActionApi } from '../infrastructure/mitigation-action-api';
 import { WorkerShiftApi } from '../infrastructure/worker-shift-api';
 import { SsoApi } from '../../iam/infrastructure/sso-api';
@@ -52,11 +53,11 @@ export class MitigationFacade {
     return this.actions.list(filters);
   }
 
-  approve(id: number, payload: ApproveMitigationPayload): Observable<MitigationAction | null> {
+  approve(id: number, payload: ApproveMitigationPayload): Observable<MutationResult<MitigationAction>> {
     return this.actions.approve(id, payload);
   }
 
-  reject(id: number, payload: RejectMitigationPayload): Observable<MitigationAction | null> {
+  reject(id: number, payload: RejectMitigationPayload): Observable<MutationResult<MitigationAction>> {
     return this.actions.reject(id, payload);
   }
 

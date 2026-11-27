@@ -41,9 +41,13 @@ export class SessionControlApi {
    * es un parámetro: el portal nunca confirma la entrega, solo finaliza cuando
    * venció el plazo de reconciliación.
    */
-  finalize(sessionId: string): Observable<CommandResult<ExposureSession>> {
+  /**
+   * `deliveryConfirmed`: el SSO confirma que el dosímetro ya entregó todas sus
+   * lecturas, lo que permite finalizar antes de que acabe la conciliación.
+   */
+  finalize(sessionId: string, deliveryConfirmed = false): Observable<CommandResult<ExposureSession>> {
     return command(
-      this.http.post<ApiResponse<ExposureSession>>(`${this.base}/${sessionId}/finalize`, { deliveryConfirmed: false })
+      this.http.post<ApiResponse<ExposureSession>>(`${this.base}/${sessionId}/finalize`, { deliveryConfirmed })
     );
   }
 }

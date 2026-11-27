@@ -1,3 +1,4 @@
+import { UnitPipe } from '../../../../core/pipes/unit.pipe';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -11,6 +12,10 @@ import {
 } from '../../../../contexts/personaldosimetry/domain/exposure-session.model';
 import { User } from '../../../../contexts/iam/domain/user.model';
 import { LanguageService } from '../../../../core/services/language.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { ConfirmService } from '../../../../core/services/confirm.service';
+import { SessionControlFacade } from '../../../../contexts/personaldosimetry/application/session-control-facade';
+import { translateDetail } from '../../../../core/http/backend-error';
 
 /**
  * Historial de exposición de un operario, y el detalle de cada sesión.
@@ -36,7 +41,7 @@ import { LanguageService } from '../../../../core/services/language.service';
  */
 @Component({
   selector: 'app-exposure-sessions',
-  imports: [TranslatePipe, DateTimePipe, FormsModule],
+  imports: [UnitPipe, TranslatePipe, DateTimePipe, FormsModule],
   templateUrl: './exposure-sessions.html',
   styleUrl: './exposure-sessions.scss',
 })
@@ -45,6 +50,12 @@ export class ExposureSessions implements OnInit {
   private sso = inject(SsoFacade);
   private route = inject(ActivatedRoute);
   protected lang = inject(LanguageService);
+  private control = inject(SessionControlFacade);
+  private toast = inject(ToastService);
+  private confirmService = inject(ConfirmService);
+
+  /** Jornada cuya finalización está en vuelo. */
+  finalizing = signal<string | null>(null);
 
   loading = signal(false);
   workers = signal<User[]>([]);
@@ -84,6 +95,33 @@ export class ExposureSessions implements OnInit {
     this.sessions.set([]);
     this.queried.set(false);
     if (Number(this.workerId())) this.load();
+  }
+
+  /** ¿Sigue abierta la ventana de conciliación (antes de su plazo)? */
+  inReconciliation(session: ExposureSession): boolean {
+    return !!session.reconciliationDeadline && new Date(session.reconciliationDeadline).getTime() > Date.now();
+  }
+
+  /**
+   * Finaliza una jornada en CLOSING. Antes del plazo de conciliación, el SSO
+   * confirma que el dosímetro ya entregó todas sus lecturas: lo que llegue
+   * después no se sumará. Después del plazo basta con confirmar.
+   */
+  finalize(session: ExposureSession): void {
+    const early = this.inReconciliation(session);
+    const message = early ? this.lang.t('exp_finalizeEarlyConfirm') : this.lang.t('exp_finalizeConfirm');
+    if (!this.confirmService.confirm(message)) return;
+    this.finalizing.set(session.id);
+    this.control.finalize(session.id, early).subscribe(result => {
+      this.finalizing.set(null);
+      if (!result.ok) {
+        const detail = result.error.message ? ': ' + translateDetail(key => this.lang.t(key), result.error.message) : '';
+        this.toast.error(this.lang.t('exp_finalizeFailed') + detail);
+        return;
+      }
+      this.toast.success(this.lang.t('sc_finalized'));
+      this.load();
+    });
   }
 
   private load(): void {

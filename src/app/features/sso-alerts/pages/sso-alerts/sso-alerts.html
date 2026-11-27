@@ -82,8 +82,20 @@
   <p class="muted">{{ 'dm_thr_hint' | t }}</p>
 
   <div class="form-card">
+    @if (dosimeters().length > 0) {
+      <label>
+        <span>{{ 'dm_thr_pick' | t }}</span>
+        <select class="field-dosimeter" [ngModel]="picked" name="pickedDosimeter"
+                (ngModelChange)="pickDosimeter($event)">
+          <option value="">—</option>
+          @for (d of dosimeters(); track d.device.id) {
+            <option [value]="d.device.deviceId">{{ d.device.deviceId }}</option>
+          }
+        </select>
+      </label>
+    }
     <label>
-      <span>{{ 'dm_thr_serial' | t }}</span>
+      <span>{{ (dosimeters().length > 0 ? 'dm_thr_orSerial' : 'dm_thr_serial') | t }}</span>
       <input type="text" [(ngModel)]="serial" name="serial" placeholder="EMSafe-DOS-01" />
     </label>
     <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="loadConfig()">

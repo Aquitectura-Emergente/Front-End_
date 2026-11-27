@@ -33,6 +33,11 @@ const LIMITS = [
     methodId: 'MAGNETIC_TIME_INDEX_V1', unit: 'uT*s', effectiveFrom: '2999-01-01T00:00:00Z' },
 ];
 
+const DOSIMETERS = [
+  { device: { id: 44, deviceId: 'AF-DEMO-DOS-01', deviceType: 'PERSONAL_DOSIMETER', organizationId: 8, connectivity: 'ONLINE' }, inSession: false },
+  { device: { id: 45, deviceId: 'AF-DEMO-DOS-02', deviceType: 'PERSONAL_DOSIMETER', organizationId: 8, connectivity: 'OFFLINE' }, inSession: true },
+];
+
 function lastSession(o: Partial<ExposureSession> = {}): ExposureSession {
   return {
     id: 'S-prev', organizationId: 8, workerId: 14, deviceId: 30, jobPositionId: 31, state: 'CLOSED',
@@ -57,8 +62,9 @@ describe('StartSessionDialog', () => {
     render();
   }
 
-  function chooseWorker(id: number, last: ExposureSession[] = [lastSession()]): void {
+  function chooseWorker(id: number, last: ExposureSession[] = [lastSession()], usual: object = {}): void {
     select('.field-worker', String(id));
+    http.expectOne(`${API}/v1/personal-dosimetry/workers/${id}/defaults`).flush({ data: usual });
     http.expectOne(`${API}/v1/personal-dosimetry/workers/${id}/sessions?page=0&size=1`).flush({
       data: { content: last, page: 0, size: 1, totalElements: last.length, totalPages: 1, last: true },
     });
@@ -89,6 +95,7 @@ describe('StartSessionDialog', () => {
     component = fixture.componentInstance;
     render();
     http.expectOne(`${API}/sso/workers`).flush({ data: WORKERS });
+    http.expectOne(`${API}/v1/device-management/organizations/8/dosimeters`).flush({ data: DOSIMETERS });
     http.expectOne(`${API}/v1/plant-config/job-positions`).flush({ data: POSITIONS });
     http.expectOne(`${API}/v1/personal-dosimetry/organizations/8/limits?page=0&size=50`).flush({
       data: { content: LIMITS, page: 0, size: 50, totalElements: 2, totalPages: 1, last: true },
@@ -100,7 +107,7 @@ describe('StartSessionDialog', () => {
 
   it('solo ofrece los puestos con un limite vigente', () => {
     const options = Array.from(el().querySelectorAll('.field-position option')).map(o => o.textContent!.trim());
-    expect(options).toEqual(['—', 'Prensa hidráulica · Planta AF demo']);
+    expect(options).toEqual(['—', 'Prensa hidráulica (Planta AF demo)']);
   });
 
   it('prellena el dosimetro y el puesto con la ultima jornada del operario', () => {
@@ -108,6 +115,14 @@ describe('StartSessionDialog', () => {
     expect(el().querySelector('.device__chosen')!.textContent).toContain('#30');
     expect(el().querySelector('.device__chosen')!.textContent).toContain('from the last shift');
     expect(component.jobPositionId()).toBe(31);
+  });
+
+  it('el puesto y el dosimetro habituales mandan sobre la ultima jornada', () => {
+    chooseWorker(14, [lastSession()], { deviceId: 44 });
+    expect(component.deviceId()).toBe(44);
+    expect(component.jobPositionId()).toBe(31);
+    expect(el().querySelector('.device__chosen')!.textContent).toContain('AF-DEMO-DOS-01 (#44)');
+    expect(el().querySelector('.device__chosen')!.textContent).toContain('usual dosimeter');
   });
 
   it('sin jornada previa no prellena nada', () => {
@@ -143,6 +158,18 @@ describe('StartSessionDialog', () => {
     expect(started!.id).toBe('S-new');
   });
 
+  it('elige el dosimetro de la lista de la empresa; los que estan en jornada no se pueden elegir', () => {
+    const options = Array.from(el().querySelectorAll<HTMLOptionElement>('.field-dosimeter option'));
+    expect(options.map(o => o.textContent!.trim())).toEqual([
+      'Choose a company dosimeter', 'AF-DEMO-DOS-01 · online', 'AF-DEMO-DOS-02 · in a shift',
+    ]);
+    expect(options[2].disabled).toBe(true);
+
+    select('.field-dosimeter', '44');
+    expect(component.deviceId()).toBe(44);
+    expect(el().querySelector('.device__chosen')!.textContent).toContain('chosen from the list');
+  });
+
   it('rechaza un serial que no es un dosimetro personal', () => {
     lookup('GP-SN-003').flush({ data: { id: 5, deviceId: 'GP-SN-003', deviceType: 'FIXED_SENSOR', organizationId: 8 } });
     render();
@@ -172,7 +199,7 @@ describe('StartSessionDialog', () => {
       return http.expectOne(SESSIONS);
     }
 
-    it('un 409 muestra el titulo traducido y el mensaje tal cual', () => {
+    it('un 409 conocido muestra el titulo y el motivo traducido', () => {
       submitPrefilled().flush(
         { success: false, message: 'Worker or dosimeter already has a conflicting assignment' },
         { status: 409, statusText: 'Conflict' },
@@ -181,10 +208,10 @@ describe('StartSessionDialog', () => {
       const alert = el().querySelector('.command-error')!;
       expect(alert.querySelector('strong')!.textContent!.trim()).toBe('Conflict with the current state');
       expect(alert.querySelector('.command-error__message')!.textContent!.trim())
-        .toBe('Worker or dosimeter already has a conflicting assignment');
+        .toBe('The operator or the dosimeter already has a shift in progress. Close it first.');
     });
 
-    it('un 422 muestra el titulo traducido y el mensaje tal cual', () => {
+    it('un 422 desconocido muestra el titulo traducido y el mensaje tal cual', () => {
       submitPrefilled().flush(
         { success: false, message: 'Worker has no dosimetry membership' },
         { status: 422, statusText: 'Unprocessable Entity' },

@@ -1,14 +1,18 @@
+import { UnitPipe } from '../../../../core/pipes/unit.pipe';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
+import { DateTimePipe } from '../../../../core/pipes/datetime.pipe';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { DosimetryFacade } from '../../../../contexts/personaldosimetry/application/dosimetry-facade';
 import { PlantConfigFacade } from '../../../../contexts/plantconfiguration/application/plant-config-facade';
 import { SsoFacade } from '../../../../contexts/iam/application/sso-facade';
-import { ExposureLimit } from '../../../../contexts/personaldosimetry/domain/exposure-limit.model';
+import { ExposureLimit, LIMIT_REFERENCES, limitReference, localDateTimeInput } from '../../../../contexts/personaldosimetry/domain/exposure-limit.model';
 import { JobPosition } from '../../../../contexts/plantconfiguration/domain/job-position.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ActivityService } from '../../../../core/services/activity.service';
 import { LanguageService } from '../../../../core/services/language.service';
+import { describeError } from '../../../../core/http/backend-error';
 
 /**
  * Límites de exposición ocupacional, uno por puesto de trabajo (RF18).
@@ -28,7 +32,7 @@ import { LanguageService } from '../../../../core/services/language.service';
  */
 @Component({
   selector: 'app-exposure-limits',
-  imports: [TranslatePipe, FormsModule],
+  imports: [UnitPipe, TranslatePipe, FormsModule, DecimalPipe, DateTimePipe],
   templateUrl: './exposure-limits.html',
   styleUrl: './exposure-limits.scss',
 })
@@ -61,6 +65,10 @@ export class ExposureLimits implements OnInit {
   formLimitIndex = '';
   formWarningRatio = '0.8';
   formEffectiveFrom = '';
+  /** '' = sin referencia, 'other' = escrita a mano; si no, una de la lista. */
+  formReferenceChoice = '';
+  formReferenceOther = '';
+  readonly references = LIMIT_REFERENCES;
 
   ngOnInit(): void {
     this.plant.positions().subscribe(positions => this.positions.set(positions));
@@ -106,7 +114,9 @@ export class ExposureLimits implements OnInit {
     this.formLimitIndex = '';
     this.formWarningRatio = '0.8';
     // Por defecto, vigente desde ahora: lo habitual al endurecer un límite.
-    this.formEffectiveFrom = new Date().toISOString().slice(0, 16);
+    this.formEffectiveFrom = localDateTimeInput();
+    this.formReferenceChoice = '';
+    this.formReferenceOther = '';
     this.showForm.set(true);
   }
 
@@ -120,6 +130,7 @@ export class ExposureLimits implements OnInit {
       limitIndex: Number(this.formLimitIndex),
       warningRatio: Number(this.formWarningRatio),
       effectiveFrom: new Date(this.formEffectiveFrom).toISOString(),
+      reference: limitReference(this.formReferenceChoice, this.formReferenceOther),
     };
 
     const error = this.dosimetry.validateLimit(payload);
@@ -131,9 +142,9 @@ export class ExposureLimits implements OnInit {
     const org = this.sso.organizationId();
     if (org === null) return;
 
-    this.dosimetry.configureLimit(org, payload).subscribe(saved => {
-      if (!saved) {
-        this.toast.error(this.lang.t('limits_failed'));
+    this.dosimetry.configureLimit(org, payload).subscribe(result => {
+      if (!result.ok) {
+        this.toast.error(describeError(key => this.lang.t(key), this.lang.t('limits_failed'), result.error));
         return;
       }
       this.activity.log('Exposure limit configured', this.positionName(payload.jobPositionId));

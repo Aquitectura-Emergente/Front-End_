@@ -1,3 +1,7 @@
+import { UnitPipe } from '../../../../core/pipes/unit.pipe';
+import { explainAssessment } from '../../../../contexts/aiforecasting/domain/assessment-explanation';
+import { PlantConfigFacade } from '../../../../contexts/plantconfiguration/application/plant-config-facade';
+import { JobPosition } from '../../../../contexts/plantconfiguration/domain/job-position.model';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Subscription, interval } from 'rxjs';
@@ -45,7 +49,7 @@ type CriticalityFilter = Criticality | '';
  */
 @Component({
   selector: 'app-risk-workers',
-  imports: [TranslatePipe, DecimalPipe, StartSessionDialog],
+  imports: [UnitPipe, TranslatePipe, DecimalPipe, StartSessionDialog],
   templateUrl: './risk-workers.html',
   styleUrl: './risk-workers.scss',
 })
@@ -53,6 +57,8 @@ export class RiskWorkers implements OnInit, OnDestroy {
   protected forecasting = inject(ForecastingFacade);
   protected control = inject(SessionControlFacade);
   protected lang = inject(LanguageService);
+  private plant = inject(PlantConfigFacade);
+  positions = signal<JobPosition[]>([]);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
 
@@ -109,8 +115,26 @@ export class RiskWorkers implements OnInit, OnDestroy {
   private sessionSub?: Subscription;
   private commandSub?: Subscription;
 
+  /** Explicación de la evaluación: la del LLM, o una legible armada con sus datos. */
+  explanation(a: Assessment): string {
+    if (a.redaction?.generatedBy === 'LLM') return a.redaction.text;
+    return explainAssessment(a, {
+      workerName: this.workerName(a.workerId),
+      positionName: this.positionName(a.recommendation?.sourcePositionId),
+      targetWorkerName: a.recommendation?.targetWorkerId ? this.workerName(a.recommendation.targetWorkerId) : null,
+      targetPositionName: this.positionName(a.recommendation?.targetPositionId),
+      t: key => this.lang.t(key),
+    });
+  }
+
+  private positionName(id: number | null | undefined): string | null {
+    if (id == null) return null;
+    return this.positions().find(p => p.id === id)?.name ?? null;
+  }
+
   ngOnInit(): void {
     this.namesSub = this.forecasting.workerNames().subscribe(names => this.names.set(names));
+    this.plant.positions().subscribe(p => this.positions.set(p));
     this.load();
     this.refreshSub = interval(RISK_REFRESH_MS).subscribe(() => this.load(true));
   }

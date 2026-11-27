@@ -1,3 +1,5 @@
+import { UnitPipe } from '../../../../core/pipes/unit.pipe';
+import { DecimalPipe } from '@angular/common';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -28,7 +30,7 @@ import { LanguageService } from '../../../../core/services/language.service';
  */
 @Component({
   selector: 'app-compliance-reports',
-  imports: [TranslatePipe, DateTimePipe, FormsModule],
+  imports: [UnitPipe, TranslatePipe, DateTimePipe, FormsModule, DecimalPipe],
   templateUrl: './compliance-reports.html',
   styleUrl: './compliance-reports.scss',
 })
@@ -138,4 +140,10 @@ export class ComplianceReports implements OnInit {
     return this.workers().find(w => w.id === id)?.name ?? `#${id}`;
   }
 
+
+  /** Primeros 8 caracteres del id de la jornada (el completo queda en el título). */
+  shortRef(id: string | null | undefined): string {
+    if (!id) return '—';
+    return id.length > 12 && id.charAt(8) === '-' ? id.slice(0, 8) : id;
+  }
 }

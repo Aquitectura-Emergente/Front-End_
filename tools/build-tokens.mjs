@@ -61,7 +61,10 @@ maps.push('');
 const content = lines.join('\n');
 const mapsContent = maps.join('\n');
 if (process.argv.includes('--check')) {
-  if (readFileSync(out, 'utf8') !== content || readFileSync(outMaps, 'utf8') !== mapsContent) {
+  // Sin distinguir fin de línea: con core.autocrlf, Git deja los archivos en CRLF en Windows.
+  const lf = (text) => text.replace(/\r\n/g, '\n');
+  const same = (file, expected) => lf(readFileSync(file, 'utf8')) === lf(expected);
+  if (!same(out, content) || !same(outMaps, mapsContent)) {
     console.error('src/styles/_tokens.scss no coincide con design-tokens/emsafe.tokens.json. Ejecuta: node tools/build-tokens.mjs');
     process.exit(1);
   }

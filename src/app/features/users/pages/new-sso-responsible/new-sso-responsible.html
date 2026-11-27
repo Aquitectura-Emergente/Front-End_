@@ -4,11 +4,11 @@
       <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
         <a routerLink="/admin/users">{{ 'nav_users' | t }}</a>
         <span aria-hidden="true">/</span>
-        <span>{{ (isEditMode() ? 'sso_editTitle' : 'sso_title') | t }}</span>
+        <span>{{ k(isEditMode() ? 'editTitle' : 'title') | t }}</span>
       </nav>
-      <h1 class="ems-page-head__title">{{ (isEditMode() ? 'sso_editTitle' : 'sso_title') | t }}</h1>
+      <h1 class="ems-page-head__title">{{ k(isEditMode() ? 'editTitle' : 'title') | t }}</h1>
       @if (!isEditMode()) {
-        <p class="ems-page-head__desc">{{ 'sso_sectionDesc' | t }}</p>
+        <p class="ems-page-head__desc">{{ k('sectionDesc') | t }}</p>
       }
     </div>
     <div class="ems-page-head__actions">
@@ -50,7 +50,7 @@
     <div class="ems-sheet__section">
       <div class="ems-sheet__aside">
         <span class="ems-sheet__index">02</span>
-        <span class="ems-sheet__title"><i class="ph ph-first-aid-kit" aria-hidden="true"></i> {{ 'sso_sectionTitle' | t }}</span>
+        <span class="ems-sheet__title"><i class="ph" [class.ph-first-aid-kit]="!isWorker" [class.ph-identification-badge]="isWorker" aria-hidden="true"></i> {{ k('sectionTitle') | t }}</span>
       </div>
       <div class="ems-sheet__fields">
         <div class="ems-form-grid">
@@ -58,20 +58,26 @@
             <label for="f-name">{{ 'form_fullName' | t }}<span class="ems-field__req">*</span></label>
             <input id="f-name" class="ems-input" [class.is-invalid]="isInvalid('fullName')" type="text" formControlName="fullName" />
             @if (isInvalid('fullName')) {
-              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Full name is required.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'val_nameRequired' | t }}</span>
             }
           </div>
           <div class="ems-field">
             <label for="f-email">{{ 'form_emailAddress' | t }}<span class="ems-field__req">*</span></label>
             <input id="f-email" class="ems-input" [class.is-invalid]="isInvalid('email')" type="email" formControlName="email" />
             @if (isInvalid('email')) {
-              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Valid email is required.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'val_emailRequired' | t }}</span>
             }
           </div>
           <div class="ems-field">
             <label for="f-phone">{{ 'form_phone' | t }}</label>
             <input id="f-phone" class="ems-input" type="tel" formControlName="phone" />
           </div>
+          @if (isWorker) {
+            <div class="ems-field">
+              <label for="f-department">{{ 'wk_department' | t }}</label>
+              <input id="f-department" class="ems-input" type="text" formControlName="department" />
+            </div>
+          }
         </div>
       </div>
     </div>
@@ -93,7 +99,7 @@
               </button>
             </div>
             @if (isInvalid('password')) {
-              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Password must be at least 8 characters.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'val_password8' | t }}</span>
             }
           </div>
           <div class="ems-field">
@@ -105,7 +111,7 @@
               </button>
             </div>
             @if (passwordMismatch) {
-              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Passwords do not match.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'val_passwordMatch' | t }}</span>
             }
           </div>
           </div>
@@ -133,7 +139,7 @@
         @if (!isEditMode()) {
           <div class="ems-banner">
             <i class="ph ph-info" aria-hidden="true"></i>
-            <div class="ems-banner__body">{{ 'sso_info' | t }}</div>
+            <div class="ems-banner__body">{{ k('info') | t }}</div>
           </div>
         }
       </div>
