@@ -225,7 +225,7 @@ describe('ExposureAnalytics', () => {
       start();
       expect(text('.rec-rotation')).toBe('0');
       expect(text('.rec-reschedule')).toBe('6');
-      expect(text('.rec-benefit')).toBe('61,234 uT*s');
+      expect(text('.rec-benefit')).toBe('61,234 µT·s');
     });
   });
 
