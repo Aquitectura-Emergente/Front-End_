@@ -1,35 +1,35 @@
 @if (order(); as o) {
-  <div class="wod-overlay" (click)="close.emit()">
-    <div class="wod-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+  <div class="ems-backdrop" (click)="close.emit()">
+    <div class="ems-modal ems-modal--lg wod-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="wod-title">
 
       <!-- Header -->
-      <div class="wod-header">
-        <div class="wod-title-wrap">
-          <div class="wod-icon">
+      <div class="ems-modal__head">
+        <div class="ems-modal-title">
+          <div class="ems-modal-title__icon ems-modal-title__icon--primary">
             <i [class]="'ph ' + typeIcon(o.type)" aria-hidden="true"></i>
           </div>
           <div>
-            <h3 class="wod-title">{{ 'wod_title' | t }} {{ o.orderId }}</h3>
-            <p class="wod-sub">{{ o.type }} &mdash; {{ o.client }}</p>
+            <h3 class="ems-modal__title" id="wod-title">{{ 'wod_title' | t }} {{ o.orderId }}</h3>
+            <p class="ems-modal-title__desc">{{ o.type }} &mdash; {{ o.client }}</p>
           </div>
         </div>
         <div class="wod-head-right">
-          <span class="status-badge" [class]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
-          <button class="wod-close" type="button" (click)="close.emit()" aria-label="Close">
+          <span [class]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+          <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="close.emit()" aria-label="Close">
             <i class="ph ph-x" aria-hidden="true"></i>
           </button>
         </div>
       </div>
 
-      <div class="wod-body">
+      <div class="ems-modal__body wod-body">
 
         <!-- Cancellation reason (cancelled only) -->
         @if (o.status === 'cancelled') {
-          <div class="wod-cancel-banner">
+          <div class="ems-banner ems-banner--neutral wod-cancel">
             <i class="ph ph-x-circle" aria-hidden="true"></i>
-            <div>
-              <span class="wod-cancel-label">{{ 'wo_cancelReason' | t }}</span>
-              <p class="wod-cancel-text">{{ o.cancellationReason || '—' }}</p>
+            <div class="ems-banner__body">
+              <span class="ems-banner__title">{{ 'wo_cancelReason' | t }}</span>
+              <p>{{ o.cancellationReason || '—' }}</p>
             </div>
           </div>
         }
@@ -50,7 +50,7 @@
           </div>
           @if (o.requiredTools && o.requiredTools.length > 0) {
             <div class="wod-tools">
-              @for (tool of o.requiredTools; track tool) { <span class="tool-chip">{{ tool }}</span> }
+              @for (tool of o.requiredTools; track tool) { <span class="ems-tag ems-tag--plain">{{ tool }}</span> }
             </div>
           }
         </div>
@@ -66,7 +66,7 @@
                     <span class="wod-device-name">{{ d.name }}</span>
                     <span class="wod-device-type">{{ d.type }}@if (o.type === 'Installation' && d.serialNumber) { &bull; {{ d.serialNumber }} }</span>
                   </div>
-                  <span class="device-status device-status--{{ d.status }}">{{ deviceStatusLabel(d.status) }}</span>
+                  <span class="ems-tag" [class.ems-tag--safe]="d.status === 'active'" [class.ems-tag--warning]="d.status === 'requires-maintenance'" [class.ems-tag--info]="d.status === 'in-maintenance'">{{ deviceStatusLabel(d.status) }}</span>
                 </div>
               }
             </div>
@@ -132,8 +132,8 @@
         }
       </div>
 
-      <div class="wod-footer">
-        <button class="btn btn--ghost" type="button" (click)="close.emit()">{{ 'btn_close' | t }}</button>
+      <div class="ems-modal__foot">
+        <button class="ems-btn" type="button" (click)="close.emit()">{{ 'btn_close' | t }}</button>
       </div>
     </div>
   </div>

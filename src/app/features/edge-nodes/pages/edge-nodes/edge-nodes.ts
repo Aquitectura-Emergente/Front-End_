@@ -1,6 +1,7 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LowerCasePipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { formatDateTime, timeAgo } from '../../../../core/utils/time';
 import { DeviceManagementFacade } from '../../../../contexts/devicemanagement/application/device-management-facade';
@@ -12,9 +13,8 @@ type SegmentFilter = 'all' | EdgeNodeView['segment'];
 /** Nodos Edge que reportan a Device Management, de planta y de hogar. Solo lectura. */
 @Component({
   selector: 'app-edge-nodes',
-  imports: [TranslatePipe, FormsModule, LowerCasePipe],
+  imports: [TranslatePipe, FormsModule, PageHeader, EmptyState],
   templateUrl: './edge-nodes.html',
-  styleUrl: './edge-nodes.scss',
 })
 export class EdgeNodes implements OnInit {
   private dm    = inject(DeviceManagementFacade);

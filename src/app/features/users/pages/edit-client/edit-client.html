@@ -1,73 +1,57 @@
-<section class="edit-client">
-  <div class="edit-client__header">
+<section class="ems-page account-form">
+  <header class="ems-page-head">
     <div>
-      <p class="breadcrumb">
+      <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
         <a routerLink="/admin/users">{{ 'nav_users' | t }}</a>
-        › {{ isNewClient() ? ('client_new_title' | t) : ('client_edit_title' | t) }}
-      </p>
-      <h2 class="edit-client__title">{{ isNewClient() ? ('client_new_title' | t) : ('client_edit_title' | t) }}</h2>
-      <p class="edit-client__subtitle">{{ 'client_edit_subtitle' | t }}</p>
+        <span aria-hidden="true">/</span>
+        <span>{{ isNewClient() ? ('client_new_title' | t) : ('client_edit_title' | t) }}</span>
+      </nav>
+      <h1 class="ems-page-head__title">{{ isNewClient() ? ('client_new_title' | t) : ('client_edit_title' | t) }}</h1>
+      <p class="ems-page-head__desc">{{ 'client_edit_subtitle' | t }}</p>
     </div>
-    <div class="header-actions">
-      <button class="btn btn--cancel" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
-      <button class="btn btn--submit" type="button" (click)="submit()">
-        <i class="ph ph-floppy-disk" aria-hidden="true"></i>
-        {{ 'btn_save' | t }}
+    <div class="ems-page-head__actions">
+      <button class="ems-btn ems-btn--ghost" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
+      <button class="ems-btn ems-btn--primary" type="button" (click)="submit()">
+        <i class="ph ph-floppy-disk" aria-hidden="true"></i>{{ 'btn_save' | t }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Tipo de cliente -->
+  <div class="client-type">
+    <span class="ems-sheet__index">01</span>
+    <span class="ems-filter__label">{{ 'client_type' | t }}</span>
+    <div class="ems-segmented" role="group" [attr.aria-label]="'client_type' | t">
+      <button type="button" [class.is-active]="clientType() === 'company'" [attr.aria-pressed]="clientType() === 'company'" (click)="setType('company')">
+        <i class="ph ph-buildings" aria-hidden="true"></i>{{ 'client_company' | t }}
+      </button>
+      <button type="button" [class.is-active]="clientType() === 'individual'" [attr.aria-pressed]="clientType() === 'individual'" (click)="setType('individual')">
+        <i class="ph ph-house-line" aria-hidden="true"></i>{{ 'client_individual' | t }}
       </button>
     </div>
   </div>
 
-  <!-- Client type tabs -->
-  <div class="type-card">
-    <div class="type-label">{{ 'client_type' | t }}</div>
-    <div class="type-tabs">
-      <button
-        class="type-tab"
-        [class.type-tab--active]="clientType() === 'company'"
-        type="button"
-        (click)="setType('company')"
-      >
-        <i class="ph ph-buildings" aria-hidden="true"></i>
-        {{ 'client_company' | t }}
-      </button>
-      <button
-        class="type-tab"
-        [class.type-tab--active]="clientType() === 'individual'"
-        type="button"
-        (click)="setType('individual')"
-      >
-        <i class="ph ph-user" aria-hidden="true"></i>
-        {{ 'client_individual' | t }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Company form -->
   @if (clientType() === 'company') {
-    <form [formGroup]="companyForm" class="form-sections">
-
-      <!-- Client Information -->
-      <div class="form-section">
-        <div class="form-section__header">
-          <i class="ph ph-info" aria-hidden="true"></i>
-          {{ 'client_info' | t }}
+    <form [formGroup]="companyForm" class="ems-sheet" novalidate>
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">02</span>
+          <span class="ems-sheet__title">{{ 'client_info' | t }}</span>
         </div>
-        <div class="form-section__body">
-          <div class="form-row--2col">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_companyName' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('companyName')" type="text" formControlName="companyName" placeholder="Acme Corporation" />
-              @if (isInvalid('companyName')) { <span class="error-msg">Required.</span> }
+        <div class="ems-sheet__fields">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="c-name">{{ 'client_companyName' | t }}<span class="ems-field__req">*</span></label>
+              <input id="c-name" class="ems-input" [class.is-invalid]="isInvalid('companyName')" type="text" formControlName="companyName" placeholder="Acme Corporation" />
+              @if (isInvalid('companyName')) { <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Required.</span> }
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_ruc' | t }}</label>
-              <input class="field-input" type="text" formControlName="taxId" placeholder="20XXXXXXXXX" />
+            <div class="ems-field">
+              <label for="c-ruc">{{ 'client_ruc' | t }}</label>
+              <input id="c-ruc" class="ems-input mono" type="text" formControlName="taxId" placeholder="20XXXXXXXXX" />
             </div>
-          </div>
-          <div class="field-group">
-            <label class="field-label">{{ 'client_industry' | t }}</label>
-            <div class="select-wrap">
-              <select class="field-select" formControlName="industry">
+            <div class="ems-field">
+              <label for="c-industry">{{ 'client_industry' | t }}</label>
+              <select id="c-industry" class="ems-select" formControlName="industry">
                 <option value="">{{ 'client_selectIndustry' | t }}</option>
                 <option value="energia">Energía y Servicios Públicos</option>
                 <option value="telecomunicaciones">Telecomunicaciones</option>
@@ -84,258 +68,240 @@
                 <option value="finanzas">Finanzas y Seguros</option>
                 <option value="otro">Otro</option>
               </select>
-              <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Location + Primary Contact -->
-      <div class="form-grid--2">
-        <div class="form-section">
-          <div class="form-section__header">
-            <i class="ph ph-map-pin" aria-hidden="true"></i>
-            {{ 'client_location' | t }}
-          </div>
-          <div class="form-section__body">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_address' | t }} <span class="required">*</span></label>
-              <div class="location-row">
-                <div class="addr-input-wrap" style="position:relative; flex:1">
-                  <input
-                    class="field-input"
-                    [class.field--error]="isInvalid('address')"
-                    type="text"
-                    formControlName="address"
-                    placeholder="Av. Javier Prado 1234, Lima"
-                    autocomplete="off"
-                    (input)="onAddressInput($any($event.target).value, 'company')"
-                    (blur)="hideSuggestions()"
-                  />
-                  @if (showSuggestions() && addressSuggestions().length > 0) {
-                    <ul class="address-suggestions">
-                      @for (s of addressSuggestions(); track s.display_name) {
-                        <li class="address-suggestion" (mousedown)="selectAddress(s, 'company')">
-                          <i class="ph ph-map-pin" aria-hidden="true"></i>
-                          {{ s.display_name }}
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-                <button class="btn-map-picker" type="button" (click)="openMapPicker('company')" title="Pick on map">
-                  <i class="ph ph-map-trifold" aria-hidden="true"></i>
-                </button>
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">03</span>
+          <span class="ems-sheet__title">{{ 'client_location' | t }}</span>
+          <span class="ems-sheet__hint">{{ 'wo_new_pickLocationHint' | t }}</span>
+        </div>
+        <div class="ems-sheet__fields">
+          <div class="ems-field">
+            <label for="c-addr">{{ 'client_address' | t }}<span class="ems-field__req">*</span></label>
+            <div class="ems-input-group">
+              <div class="ems-search">
+                <i class="ph ph-map-pin" aria-hidden="true"></i>
+                <input id="c-addr" class="ems-input" [class.is-invalid]="isInvalid('address')" type="text" formControlName="address"
+                       placeholder="Av. Javier Prado 1234, Lima" autocomplete="off"
+                       (input)="onAddressInput($any($event.target).value, 'company')" (blur)="hideSuggestions()" />
+                @if (showSuggestions() && addressSuggestions().length > 0) {
+                  <ul class="ems-popover ems-suggest">
+                    @for (s of addressSuggestions(); track s.display_name) {
+                      <li class="ems-suggest__item" (mousedown)="selectAddress(s, 'company')">
+                        <i class="ph ph-map-pin" aria-hidden="true"></i>{{ s.display_name }}
+                      </li>
+                    }
+                  </ul>
+                }
               </div>
-              @if (isInvalid('address')) { <span class="error-msg">Required.</span> }
+              <button class="ems-btn" type="button" (click)="openMapPicker('company')" [attr.aria-label]="'wo_new_pickLocation' | t" [attr.data-tooltip]="'wo_new_pickLocation' | t">
+                <i class="ph ph-map-trifold" aria-hidden="true"></i>
+              </button>
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_country' | t }}</label>
-              <input class="field-input" type="text" formControlName="country" placeholder="Perú" />
-            </div>
+            @if (isInvalid('address')) { <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Required.</span> }
+          </div>
+          <div class="ems-field half">
+            <label for="c-country">{{ 'client_country' | t }}</label>
+            <input id="c-country" class="ems-input" type="text" formControlName="country" placeholder="Perú" />
           </div>
         </div>
+      </div>
 
-        <div class="form-section">
-          <div class="form-section__header">
-            <i class="ph ph-address-book" aria-hidden="true"></i>
-            {{ 'client_primaryContact' | t }}
-          </div>
-          <div class="form-section__body">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactName' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('contactName')" type="text" formControlName="contactName" placeholder="Juan Pérez" />
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">04</span>
+          <span class="ems-sheet__title">{{ 'client_primaryContact' | t }}</span>
+        </div>
+        <div class="ems-sheet__fields">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="c-cname">{{ 'client_contactName' | t }}<span class="ems-field__req">*</span></label>
+              <input id="c-cname" class="ems-input" [class.is-invalid]="isInvalid('contactName')" type="text" formControlName="contactName" placeholder="Juan Pérez" />
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactEmail' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('contactEmail')" type="email" formControlName="contactEmail" placeholder="juan.perez@empresa.com" />
+            <div class="ems-field">
+              <label for="c-cmail">{{ 'client_contactEmail' | t }}<span class="ems-field__req">*</span></label>
+              <input id="c-cmail" class="ems-input" [class.is-invalid]="isInvalid('contactEmail')" type="email" formControlName="contactEmail" placeholder="juan.perez@empresa.com" />
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactPhone' | t }}</label>
-              <input class="field-input" type="tel" formControlName="contactPhone" placeholder="+51 999 000 000" />
+            <div class="ems-field">
+              <label for="c-cphone">{{ 'client_contactPhone' | t }}</label>
+              <input id="c-cphone" class="ems-input" type="tel" formControlName="contactPhone" placeholder="+51 999 000 000" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Status & Notes -->
-      <div class="form-section">
-        <div class="form-section__header">
-          <i class="ph ph-check-square" aria-hidden="true"></i>
-          {{ 'client_statusNotes' | t }}
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">05</span>
+          <span class="ems-sheet__title">{{ 'client_statusNotes' | t }}</span>
         </div>
-        <div class="form-section__body">
-          <div class="field-group">
-            <label class="checkbox-label">
-              <input type="checkbox" class="checkbox-input" formControlName="statusActive" />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">{{ 'form_statusActive' | t }}</span>
-            </label>
-          </div>
-          <div class="field-group">
-            <label class="field-label">{{ 'client_internalNotes' | t }}</label>
-            <textarea class="field-textarea" formControlName="notes" [placeholder]="'client_internalPlaceholder' | t" rows="4"></textarea>
+        <div class="ems-sheet__fields">
+          <label class="ems-check">
+            <input type="checkbox" formControlName="statusActive" />
+            <span>{{ 'form_statusActive' | t }}</span>
+          </label>
+          <div class="ems-field">
+            <label for="c-notes">{{ 'client_internalNotes' | t }}</label>
+            <textarea id="c-notes" class="ems-textarea" formControlName="notes" [placeholder]="'client_internalPlaceholder' | t" rows="4"></textarea>
           </div>
         </div>
       </div>
 
+      <footer class="ems-sheet__foot">
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--primary" type="button" (click)="submit()">
+          <i class="ph ph-floppy-disk" aria-hidden="true"></i>{{ 'btn_save' | t }}
+        </button>
+      </footer>
     </form>
   }
 
-  <!-- Individual form -->
   @if (clientType() === 'individual') {
-    <form [formGroup]="individualForm" class="form-sections">
-
-      <!-- Client Information -->
-      <div class="form-section">
-        <div class="form-section__header">
-          <i class="ph ph-info" aria-hidden="true"></i>
-          {{ 'client_info' | t }}
+    <form [formGroup]="individualForm" class="ems-sheet" novalidate>
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">02</span>
+          <span class="ems-sheet__title">{{ 'client_info' | t }}</span>
         </div>
-        <div class="form-section__body">
-          <div class="form-row--2col">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_fullName' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('fullName')" type="text" formControlName="fullName" placeholder="Juan Pérez García" />
-              @if (isInvalid('fullName')) { <span class="error-msg">Required.</span> }
+        <div class="ems-sheet__fields">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="i-name">{{ 'client_fullName' | t }}<span class="ems-field__req">*</span></label>
+              <input id="i-name" class="ems-input" [class.is-invalid]="isInvalid('fullName')" type="text" formControlName="fullName" placeholder="Juan Pérez García" />
+              @if (isInvalid('fullName')) { <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Required.</span> }
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_docId' | t }}</label>
-              <input class="field-input" type="text" formControlName="docId" placeholder="XXXXXXXXXX" />
+            <div class="ems-field">
+              <label for="i-doc">{{ 'client_docId' | t }}</label>
+              <input id="i-doc" class="ems-input mono" type="text" formControlName="docId" placeholder="XXXXXXXXXX" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Location + Primary Contact -->
-      <div class="form-grid--2">
-        <div class="form-section">
-          <div class="form-section__header">
-            <i class="ph ph-map-pin" aria-hidden="true"></i>
-            {{ 'client_location' | t }}
-          </div>
-          <div class="form-section__body">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_address' | t }} <span class="required">*</span></label>
-              <div class="location-row">
-                <div class="addr-input-wrap" style="position:relative; flex:1">
-                  <input
-                    class="field-input"
-                    [class.field--error]="isInvalid('address')"
-                    type="text"
-                    formControlName="address"
-                    placeholder="Av. Javier Prado 1234, Lima"
-                    autocomplete="off"
-                    (input)="onAddressInput($any($event.target).value, 'individual')"
-                    (blur)="hideSuggestions()"
-                  />
-                  @if (showSuggestions() && addressSuggestions().length > 0) {
-                    <ul class="address-suggestions">
-                      @for (s of addressSuggestions(); track s.display_name) {
-                        <li class="address-suggestion" (mousedown)="selectAddress(s, 'individual')">
-                          <i class="ph ph-map-pin" aria-hidden="true"></i>
-                          {{ s.display_name }}
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-                <button class="btn-map-picker" type="button" (click)="openMapPicker('individual')" title="Pick on map">
-                  <i class="ph ph-map-trifold" aria-hidden="true"></i>
-                </button>
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">03</span>
+          <span class="ems-sheet__title">{{ 'client_location' | t }}</span>
+          <span class="ems-sheet__hint">{{ 'wo_new_pickLocationHint' | t }}</span>
+        </div>
+        <div class="ems-sheet__fields">
+          <div class="ems-field">
+            <label for="i-addr">{{ 'client_address' | t }}<span class="ems-field__req">*</span></label>
+            <div class="ems-input-group">
+              <div class="ems-search">
+                <i class="ph ph-map-pin" aria-hidden="true"></i>
+                <input id="i-addr" class="ems-input" [class.is-invalid]="isInvalid('address')" type="text" formControlName="address"
+                       placeholder="Av. Javier Prado 1234, Lima" autocomplete="off"
+                       (input)="onAddressInput($any($event.target).value, 'individual')" (blur)="hideSuggestions()" />
+                @if (showSuggestions() && addressSuggestions().length > 0) {
+                  <ul class="ems-popover ems-suggest">
+                    @for (s of addressSuggestions(); track s.display_name) {
+                      <li class="ems-suggest__item" (mousedown)="selectAddress(s, 'individual')">
+                        <i class="ph ph-map-pin" aria-hidden="true"></i>{{ s.display_name }}
+                      </li>
+                    }
+                  </ul>
+                }
               </div>
-              @if (isInvalid('address')) { <span class="error-msg">Required.</span> }
+              <button class="ems-btn" type="button" (click)="openMapPicker('individual')" [attr.aria-label]="'wo_new_pickLocation' | t" [attr.data-tooltip]="'wo_new_pickLocation' | t">
+                <i class="ph ph-map-trifold" aria-hidden="true"></i>
+              </button>
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_country' | t }}</label>
-              <input class="field-input" type="text" formControlName="country" placeholder="Perú" />
-            </div>
+            @if (isInvalid('address')) { <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Required.</span> }
+          </div>
+          <div class="ems-field half">
+            <label for="i-country">{{ 'client_country' | t }}</label>
+            <input id="i-country" class="ems-input" type="text" formControlName="country" placeholder="Perú" />
           </div>
         </div>
+      </div>
 
-        <div class="form-section">
-          <div class="form-section__header">
-            <i class="ph ph-address-book" aria-hidden="true"></i>
-            {{ 'client_primaryContact' | t }}
-          </div>
-          <div class="form-section__body">
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactName' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('contactName')" type="text" formControlName="contactName" placeholder="Juan Pérez" />
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">04</span>
+          <span class="ems-sheet__title">{{ 'client_primaryContact' | t }}</span>
+        </div>
+        <div class="ems-sheet__fields">
+          <div class="ems-form-grid">
+            <div class="ems-field">
+              <label for="i-cname">{{ 'client_contactName' | t }}<span class="ems-field__req">*</span></label>
+              <input id="i-cname" class="ems-input" [class.is-invalid]="isInvalid('contactName')" type="text" formControlName="contactName" placeholder="Juan Pérez" />
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactEmail' | t }} <span class="required">*</span></label>
-              <input class="field-input" [class.field--error]="isInvalid('contactEmail')" type="email" formControlName="contactEmail" placeholder="juan@correo.com" />
+            <div class="ems-field">
+              <label for="i-cmail">{{ 'client_contactEmail' | t }}<span class="ems-field__req">*</span></label>
+              <input id="i-cmail" class="ems-input" [class.is-invalid]="isInvalid('contactEmail')" type="email" formControlName="contactEmail" placeholder="juan@correo.com" />
             </div>
-            <div class="field-group">
-              <label class="field-label">{{ 'client_contactPhone' | t }}</label>
-              <input class="field-input" type="tel" formControlName="contactPhone" placeholder="+51 999 000 000" />
+            <div class="ems-field">
+              <label for="i-cphone">{{ 'client_contactPhone' | t }}</label>
+              <input id="i-cphone" class="ems-input" type="tel" formControlName="contactPhone" placeholder="+51 999 000 000" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Status & Notes -->
-      <div class="form-section">
-        <div class="form-section__header">
-          <i class="ph ph-check-square" aria-hidden="true"></i>
-          {{ 'client_statusNotes' | t }}
+      <div class="ems-sheet__section">
+        <div class="ems-sheet__aside">
+          <span class="ems-sheet__index">05</span>
+          <span class="ems-sheet__title">{{ 'client_statusNotes' | t }}</span>
         </div>
-        <div class="form-section__body">
-          <div class="field-group">
-            <label class="checkbox-label">
-              <input type="checkbox" class="checkbox-input" formControlName="statusActive" />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">{{ 'form_statusActive' | t }}</span>
-            </label>
-          </div>
-          <div class="field-group">
-            <label class="field-label">{{ 'client_internalNotes' | t }}</label>
-            <textarea class="field-textarea" formControlName="notes" [placeholder]="'client_internalPlaceholder' | t" rows="4"></textarea>
+        <div class="ems-sheet__fields">
+          <label class="ems-check">
+            <input type="checkbox" formControlName="statusActive" />
+            <span>{{ 'form_statusActive' | t }}</span>
+          </label>
+          <div class="ems-field">
+            <label for="i-notes">{{ 'client_internalNotes' | t }}</label>
+            <textarea id="i-notes" class="ems-textarea" formControlName="notes" [placeholder]="'client_internalPlaceholder' | t" rows="4"></textarea>
           </div>
         </div>
       </div>
 
+      <footer class="ems-sheet__foot">
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--primary" type="button" (click)="submit()">
+          <i class="ph ph-floppy-disk" aria-hidden="true"></i>{{ 'btn_save' | t }}
+        </button>
+      </footer>
     </form>
   }
 </section>
 
-<!-- ── Map Picker Modal ──────────────────────────── -->
+<!-- Selector de ubicación en mapa -->
 @if (showMapPicker()) {
-  <div class="map-modal-overlay" (click)="closeMapPicker()">
-    <div class="map-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="map-modal__header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <i class="ph ph-map-trifold" style="font-size:20px;color:var(--color-primary)"></i>
-          <h3 style="margin:0;font-size:16px;font-weight:700">{{ 'wo_new_pickLocation' | t }}</h3>
+  <div class="ems-backdrop" (click)="closeMapPicker()">
+    <div class="ems-modal ems-modal--lg" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="client-map-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon ems-modal-title__icon--primary"><i class="ph ph-map-trifold" aria-hidden="true"></i></span>
+          <div>
+            <h3 class="ems-modal__title" id="client-map-title">{{ 'wo_new_pickLocation' | t }}</h3>
+            <p class="ems-modal-title__desc">{{ 'wo_new_pickLocationHint' | t }}</p>
+          </div>
         </div>
-        <button class="map-modal__close" type="button" (click)="closeMapPicker()">
-          <i class="ph ph-x"></i>
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeMapPicker()" aria-label="Close">
+          <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
-      <div style="padding:8px 20px;background:rgba(26,110,255,0.05);border-bottom:1px solid var(--border-color);font-size:13px;color:var(--color-text-secondary);display:flex;align-items:center;gap:7px">
-        <i class="ph ph-cursor-click" style="color:var(--color-primary)"></i>
-        <span>{{ 'wo_new_pickLocationHint' | t }}</span>
-      </div>
-      <div #mapPickerEl class="map-picker-map"></div>
-      <div class="map-modal__footer">
-        <div style="flex:1;font-size:13px;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;overflow:hidden">
+      </header>
+      <div #mapPickerEl class="ems-map-frame"></div>
+      <footer class="ems-modal__foot map-foot">
+        <div class="map-foot__addr">
           @if (mapPickerLoading()) {
-            <i class="ph ph-circle-notch ph-spin"></i><span>Loading...</span>
+            <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i><span>{{ 'ui_loading' | t }}</span>
           } @else if (mapPickedAddr()) {
-            <i class="ph ph-map-pin" style="color:var(--color-primary);flex-shrink:0"></i>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mapPickedAddr() }}</span>
+            <i class="ph ph-map-pin" aria-hidden="true"></i><span>{{ mapPickedAddr() }}</span>
           } @else {
-            <span style="color:var(--color-text-secondary);font-style:italic">{{ 'wo_new_noLocationSelected' | t }}</span>
+            <span class="ems-muted">{{ 'wo_new_noLocationSelected' | t }}</span>
           }
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button class="btn btn--cancel" type="button" (click)="closeMapPicker()">{{ 'btn_cancel' | t }}</button>
-          <button class="btn btn--submit" type="button" [disabled]="!mapPickedAddr() || mapPickerLoading()" (click)="confirmMapLocation()">
-            <i class="ph ph-check"></i>{{ 'wo_new_confirmLocation' | t }}
-          </button>
-        </div>
-      </div>
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="closeMapPicker()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--primary" type="button" [disabled]="!mapPickedAddr() || mapPickerLoading()" (click)="confirmMapLocation()">
+          <i class="ph ph-check" aria-hidden="true"></i>{{ 'wo_new_confirmLocation' | t }}
+        </button>
+      </footer>
     </div>
   </div>
 }

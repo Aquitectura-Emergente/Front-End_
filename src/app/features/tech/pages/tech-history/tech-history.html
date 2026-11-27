@@ -1,147 +1,97 @@
-<div class="hist-page">
-
-  <div class="page-header">
-    <div>
-      <h1>{{ 'hist_title' | t }}</h1>
-      <p>{{ 'hist_subtitle' | t }}</p>
-    </div>
-    <button class="btn-export" type="button" (click)="exportCsv()">
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_work' | t"
+    index="03"
+    [title]="'hist_title' | t"
+    [description]="'hist_subtitle' | t"
+  >
+    <button actions class="ems-btn" type="button" (click)="exportCsv()">
       <i class="ph ph-export" aria-hidden="true"></i>
       {{ 'btn_exportCsv' | t }}
     </button>
-  </div>
+  </ems-page-header>
 
-  <!-- Filters -->
-  <div class="filters-bar">
-    <div class="date-group">
-      <label>{{ 'hist_dateRange' | t }}</label>
-      <div class="date-inputs">
-        <div class="date-input-wrap">
-          <i class="ph ph-calendar-blank" aria-hidden="true"></i>
-          <input type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event); applyFilters()" [placeholder]="'hist_from' | t" />
-        </div>
-        <span class="date-sep">—</span>
-        <div class="date-input-wrap">
-          <i class="ph ph-calendar-blank" aria-hidden="true"></i>
-          <input type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event); applyFilters()" [placeholder]="'hist_to' | t" />
-        </div>
-        @if (dateFrom() || dateTo()) {
-          <button class="clear-btn" type="button" (click)="clearDates()">{{ 'hist_clearDates' | t }}</button>
-        }
-      </div>
-    </div>
-
-    <div class="select-group">
-      <label>{{ 'hist_type' | t }}</label>
-      <select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); applyFilters()">
-        <option value="all">{{ 'hist_allTypes' | t }}</option>
-        <option value="Installation">Installation</option>
-        <option value="Maintenance">Maintenance</option>
-        <option value="Collection">Collection</option>
-      </select>
-    </div>
-
-    <div class="select-group">
-      <label>{{ 'th_status' | t }}</label>
-      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); applyFilters()">
-        <option value="all">{{ 'filter_all' | t }}</option>
-        <option value="completed">{{ 'status_completed' | t }}</option>
-        <option value="cancelled">{{ 'status_cancelled' | t }}</option>
-      </select>
-    </div>
-
-  </div>
-
-  <!-- Table -->
-  <div class="table-card">
-    <table class="hist-table">
-      <thead>
-        <tr>
-          <th>{{ 'th_orderId' | t }}</th>
-          <th>{{ 'th_completionDate' | t }}</th>
-          <th>{{ 'th_clientSite' | t }}</th>
-          <th>{{ 'th_serviceType' | t }}</th>
-          <th>{{ 'th_leadTech' | t }}</th>
-          <th>{{ 'th_status' | t }}</th>
-          <th>{{ 'th_actions' | t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of filtered(); track item.id) {
-          <tr>
-            <td><span class="order-id">{{ item.orderId }}</span></td>
-            <td>
-              <span class="date-val">{{ item.completionDate }}</span>
-              <span class="time-val">{{ item.completionTime }}</span>
-            </td>
-            <td>
-              <span class="client-name">{{ item.client }}</span>
-              <span class="site-name">{{ item.site }}</span>
-            </td>
-            <td>
-              <span class="service-badge">
-                <i [class]="'ph ' + typeIcon(item.serviceType)" aria-hidden="true"></i>
-                {{ item.serviceType }}
-              </span>
-            </td>
-            <td>
-              <div class="tech-cell">
-                <span class="tech-avatar">{{ item.technicianInitials }}</span>
-                <span>{{ item.technician }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="status-badge" [class]="statusClass(item.status)">
-                {{ item.status === 'completed' ? ('status_completed' | t) : ('status_cancelled' | t) }}
-              </span>
-            </td>
-            <td>
-              <button class="action-btn" type="button" (click)="openDetail(item)" aria-label="View detail">
-                <i class="ph ph-eye" aria-hidden="true"></i>
-              </button>
-            </td>
-          </tr>
-        }
-        @empty {
-          <tr>
-            <td colspan="7" class="empty-row">
-              <i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>
-              <span>No history records found.</span>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-
-    <div class="table-footer">
-      <span class="showing">Showing {{ totalElements() === 0 ? 0 : currentPage() * pageSize + 1 }}-{{ min(currentPage() * pageSize + pageSize, totalElements()) }} of {{ totalElements() }}</span>
-      @if (totalPages() > 1) {
-        <div class="pagination">
-          <button class="page-btn" type="button" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
-            <i class="ph ph-caret-left"></i>
-          </button>
-          @for (page of getPagesArray(); track page) {
-            <button class="page-btn" type="button" [class.page-btn--active]="page === currentPage()" (click)="goToPage(page)">
-              {{ page + 1 }}
-            </button>
+  <section class="ems-panel">
+    <div class="ems-toolbar">
+      <div class="ems-filter">
+        <span class="ems-filter__label">{{ 'hist_dateRange' | t }}</span>
+        <div class="date-range">
+          <input class="ems-input" type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event); applyFilters()" [attr.aria-label]="'hist_from' | t" />
+          <span class="date-range__sep" aria-hidden="true">→</span>
+          <input class="ems-input" type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event); applyFilters()" [attr.aria-label]="'hist_to' | t" />
+          @if (dateFrom() || dateTo()) {
+            <button class="ems-btn ems-btn--ghost ems-btn--sm" type="button" (click)="clearDates()"><i class="ph ph-x" aria-hidden="true"></i>{{ 'hist_clearDates' | t }}</button>
           }
-          <button class="page-btn" type="button" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)">
-            <i class="ph ph-caret-right"></i>
-          </button>
         </div>
-      }
+      </div>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'hist_type' | t }}</span>
+        <select class="ems-select" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); applyFilters()">
+          <option value="all">{{ 'hist_allTypes' | t }}</option>
+          <option value="Installation">Installation</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Collection">Collection</option>
+        </select>
+      </label>
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'th_status' | t }}</span>
+        <select class="ems-select" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); applyFilters()">
+          <option value="all">{{ 'filter_all' | t }}</option>
+          <option value="completed">{{ 'status_completed' | t }}</option>
+          <option value="cancelled">{{ 'status_cancelled' | t }}</option>
+        </select>
+      </label>
     </div>
-  </div>
 
-</div>
+    <div class="ems-table-wrap">
+      <table class="ems-table">
+        <thead>
+          <tr>
+            <th>{{ 'th_orderId' | t }}</th>
+            <th>{{ 'th_completionDate' | t }}</th>
+            <th>{{ 'th_clientSite' | t }}</th>
+            <th>{{ 'th_serviceType' | t }}</th>
+            <th>{{ 'th_leadTech' | t }}</th>
+            <th>{{ 'th_status' | t }}</th>
+            <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filtered(); track item.id) {
+            <tr class="is-clickable" (click)="openDetail(item)">
+              <td class="mono cell-primary">{{ item.orderId }}</td>
+              <td class="mono">{{ item.completionDate }}<span class="cell-sub">{{ item.completionTime }}</span></td>
+              <td>{{ item.client }}<span class="cell-sub">{{ item.site }}</span></td>
+              <td><span class="ems-inline-icon"><i class="ph {{ typeIcon(item.serviceType) }}" aria-hidden="true"></i>{{ item.serviceType }}</span></td>
+              <td><span class="ems-person"><span class="ems-avatar">{{ item.technicianInitials }}</span>{{ item.technician }}</span></td>
+              <td>
+                <span class="ems-tag {{ statusClass(item.status) }}">
+                  {{ item.status === 'completed' ? ('status_completed' | t) : ('status_cancelled' | t) }}
+                </span>
+              </td>
+              <td class="cell-actions">
+                <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="$event.stopPropagation(); openDetail(item)" aria-label="View detail">
+                  <i class="ph ph-eye" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7"><ems-empty-state icon="ph-clock-counter-clockwise" [text]="'ui_noResults' | t" /></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-<!-- ── Detail Modal (shared full read-only detail, same as admin History) ───── -->
+    <ems-pager [page]="currentPage()" [totalPages]="totalPages()" [total]="totalElements()" [pageSize]="pageSize" (pageChange)="goToPage($event)" />
+  </section>
+</section>
+
 @if (showDetailModal()) {
   @if (detailLoading()) {
-    <div class="modal-overlay">
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
+    <div class="ems-backdrop">
+      <div class="ems-loading detail-loading">
+        <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>
+        <span>{{ 'ui_loading' | t }}</span>
       </div>
     </div>
   } @else if (detailOrder()) {

@@ -19,7 +19,6 @@ import { LayoutService } from '../../core/services/layout.service';
   selector: 'app-sso-layout',
   imports: [RouterOutlet, SsoSidebar, Topbar, ToastComponent],
   templateUrl: './sso-layout.html',
-  styleUrl: './sso-layout.scss',
 })
 export class SsoLayout {
   protected layout = inject(LayoutService);

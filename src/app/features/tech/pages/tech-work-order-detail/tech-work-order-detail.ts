@@ -325,7 +325,7 @@ export class TechWorkOrderDetail implements OnDestroy {
   }
 
   protected typeIcon(type: string): string {
-    return type === 'Installation' ? 'ph-monitor'
+    return type === 'Installation' ? 'ph-plugs-connected'
       : type === 'Maintenance'    ? 'ph-wrench'
       : 'ph-package';
   }

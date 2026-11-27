@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, debounceTime, of, startWith, switchMap } from 'rxjs';
@@ -10,15 +10,20 @@ import { WorkOrderFacade } from '../../../../contexts/fieldservice/application/w
 import { DeviceFacade } from '../../../../contexts/devicemanagement/application/device-facade';
 import { LanguageService } from '../../../../core/services/language.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { ThemeService } from '../../../../core/services/theme.service';
+import { axisLabels, chartTokens, gridOptions } from '../../../../core/utils/chart-theme';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NgApexchartsModule, TranslatePipe, DecimalPipe, RouterLink],
+  imports: [NgApexchartsModule, TranslatePipe, DecimalPipe, RouterLink, PageHeader, EmptyState],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
   protected lang = inject(LanguageService);
+  private theme = inject(ThemeService);
   private monitoring     = inject(MonitoringFacade);
   private workOrderFacade = inject(WorkOrderFacade);
   private deviceFacade   = inject(DeviceFacade);
@@ -39,71 +44,60 @@ export class Dashboard implements OnInit {
   // navigating back to the dashboard (the chart mounts with data present).
   protected chartsReady = signal(false);
 
-  // Service History chart — grouped bar (3 series)
-  serviceHistorySeries: { name: string; data: number[] }[] = [
-    { name: 'Installation', data: [] },
-    { name: 'Maintenance',  data: [] },
-    { name: 'Collection',   data: [] },
-  ];
-  serviceHistoryChart = { type: 'bar', height: 360, toolbar: { show: false }, background: 'transparent' } as const;
-  serviceHistoryXAxis: { categories: string[]; labels: object; axisBorder: object; axisTicks: object } = {
-    categories: [],
-    labels: { style: { colors: '#6b7280', fontSize: '11px' } },
-    axisBorder: { show: false },
-    axisTicks: { show: false },
-  };
-  serviceHistoryYAxis = { labels: { style: { colors: '#6b7280', fontSize: '12px' } } };
-  serviceHistoryPlotOptions = { bar: { borderRadius: 3, columnWidth: '65%', grouped: true } };
-  serviceHistoryColors = ['#1a6eff', '#d97706', '#16a34a'];
-  serviceHistoryGrid = { borderColor: '#f0f2f5', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } };
-  serviceHistoryDataLabels = { enabled: false };
-  serviceHistoryTooltip = { theme: 'light' };
-  serviceHistoryLegend = { position: 'top', horizontalAlign: 'right', fontSize: '12px' } as const;
+  // Colores y tipografía de los gráficos según el tema activo.
+  protected chart = computed(() => {
+    this.theme.darkMode();
+    return chartTokens();
+  });
+  protected grid = computed(() => gridOptions(this.chart()));
+  protected tooltip = computed(() => ({ theme: this.chart().dark ? 'dark' : 'light' }));
+  protected readonly noLabels = { enabled: false };
+  protected readonly legend = { show: false };
+  protected readonly skeletonBars = [40, 65, 30, 80, 55, 70, 45, 90, 60, 35, 75, 50];
 
-  // Radiation Trends chart — smooth area
+  // Actividad del sistema: la serie real del backend, sin desagregaciones estimadas.
+  serviceHistorySeries: { name: string; data: number[] }[] = [{ name: 'Activity', data: [] }];
+  serviceHistoryChart = { type: 'bar', height: 320, toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit' } as const;
+  private categories = signal<string[]>([]);
+  serviceHistoryXAxis = computed(() => ({
+    categories: this.categories(),
+    labels: axisLabels(this.chart()),
+    axisBorder: { show: true, color: this.chart().border },
+    axisTicks: { show: true, color: this.chart().border },
+  }));
+  serviceHistoryYAxis = computed(() => ({ labels: axisLabels(this.chart()), tickAmount: 4 }));
+  serviceHistoryPlotOptions = { bar: { borderRadius: 1, columnWidth: '55%' } };
+
+  // Tendencia del campo medio
   radiationTrendsSeries: { name: string; data: number[] }[] = [{ name: 'µT', data: [] }];
   radiationTrendsChart = {
     type: 'area',
-    height: 260,
+    height: 150,
     toolbar: { show: false },
     background: 'transparent',
     zoom: { enabled: false },
     selection: { enabled: false },
     animations: { enabled: false },
+    sparkline: { enabled: false },
   } as const;
   radiationTrendsXAxis = { labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false } };
-  radiationTrendsYAxis = {
-    labels: {
-      style: { colors: '#6b7280', fontSize: '11px', fontFamily: "'IBM Plex Mono', monospace" },
-      formatter: (v: number) => v.toFixed(0),
-    },
-    tickAmount: 4,
-  };
-  radiationTrendsStroke = { curve: 'smooth' as const, width: 2 };
-  radiationTrendsFill = {
-    type: 'gradient',
-    gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05, stops: [0, 100] },
-  };
-  radiationTrendsColors = ['#16a34a'];
-  radiationTrendsGrid = { borderColor: '#f0f2f5', yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } };
-  radiationTrendsDataLabels = { enabled: false };
-  radiationTrendsTooltip = {
-    theme: 'light',
+  radiationTrendsYAxis = computed(() => ({
+    labels: { ...axisLabels(this.chart()), formatter: (v: number) => v.toFixed(0) },
+    tickAmount: 3,
+  }));
+  radiationTrendsStroke = { curve: 'straight' as const, width: 1.5 };
+  radiationTrendsFill = { type: 'solid', opacity: 0.08 };
+  radiationTooltip = computed(() => ({
+    theme: this.chart().dark ? 'dark' : 'light',
     y: { formatter: (v: number) => `${v.toFixed(1)} µT` },
-  };
+  }));
   radiationTrendsMarkers = { size: 0 };
 
   ngOnInit(): void {
     this.refresh$.pipe(switchMap(() => this.monitoring.chartData()), takeUntilDestroyed(this.destroyRef)).subscribe(c => {
       if (!c) return;
-      // Split single series into 3 proportionally: 45% install, 35% maint, 20% collect
-      const base = c.systemActivity.series;
-      this.serviceHistorySeries = [
-        { name: 'Installation', data: base.map(v => Math.round(v * 0.45)) },
-        { name: 'Maintenance',  data: base.map(v => Math.round(v * 0.35)) },
-        { name: 'Collection',   data: base.map(v => Math.round(v * 0.20)) },
-      ];
-      this.serviceHistoryXAxis = { ...this.serviceHistoryXAxis, categories: c.systemActivity.categories };
+      this.serviceHistorySeries = [{ name: this.lang.t('dash_serviceHistory'), data: c.systemActivity.series }];
+      this.categories.set(c.systemActivity.categories);
       this.radiationTrendsSeries = [{ name: 'Avg radiation (µT)', data: c.radiationTrends.series }];
       this.chartsReady.set(true);
     });

@@ -19,7 +19,7 @@ type ClientType = 'company' | 'individual';
   selector: 'app-edit-client',
   imports: [ReactiveFormsModule, TranslatePipe, RouterLink],
   templateUrl: './edit-client.html',
-  styleUrl: './edit-client.scss',
+  styleUrl: '../account-form.scss',
 })
 export class EditClient implements OnInit, OnDestroy {
   private fb      = inject(FormBuilder);

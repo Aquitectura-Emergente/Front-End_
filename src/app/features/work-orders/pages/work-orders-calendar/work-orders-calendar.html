@@ -1,41 +1,48 @@
-<section class="cal">
-  <header class="cal__header">
-    <div>
-      <h2 class="cal__title">{{ 'cal_title' | t }}</h2>
-      <p class="cal__subtitle">{{ 'cal_subtitle' | t }}</p>
-    </div>
-    <a class="btn btn--primary" routerLink="/admin/work-orders/new">
+<section class="ems-page cal">
+  <ems-page-header
+    [eyebrow]="'shell_group_operations' | t"
+    index="02"
+    [title]="'cal_title' | t"
+    [description]="'cal_subtitle' | t"
+  >
+    <a actions class="ems-btn ems-btn--primary" routerLink="/admin/work-orders/new">
       <i class="ph ph-plus" aria-hidden="true"></i>{{ 'cal_newOrder' | t }}
     </a>
-  </header>
+  </ems-page-header>
 
-  <div class="toolbar">
-    <div class="nav">
-      <button class="btn btn--ghost btn--icon" type="button" (click)="shiftWeek(-1)" aria-label="Previous week">
-        <i class="ph ph-caret-left"></i>
+  <section class="ems-panel">
+  <div class="ems-toolbar">
+    <div class="cal__nav">
+      <button class="ems-btn ems-btn--icon ems-btn--sm" type="button" (click)="shiftWeek(-1)" aria-label="Previous week">
+        <i class="ph ph-caret-left" aria-hidden="true"></i>
       </button>
-      <button class="btn btn--ghost" type="button" (click)="goToday()">{{ 'cal_today' | t }}</button>
-      <button class="btn btn--ghost btn--icon" type="button" (click)="shiftWeek(1)" aria-label="Next week">
-        <i class="ph ph-caret-right"></i>
+      <button class="ems-btn ems-btn--sm" type="button" (click)="goToday()">{{ 'cal_today' | t }}</button>
+      <button class="ems-btn ems-btn--icon ems-btn--sm" type="button" (click)="shiftWeek(1)" aria-label="Next week">
+        <i class="ph ph-caret-right" aria-hidden="true"></i>
       </button>
-      <strong class="range">{{ rangeLabel() }}</strong>
+      <strong class="cal__range">{{ rangeLabel() }}</strong>
     </div>
-    <div class="filters">
-      <select class="select" [ngModel]="type()" (ngModelChange)="type.set($event)">
+    <span class="ems-toolbar__spacer"></span>
+    <label class="ems-filter">
+      <span class="ems-filter__label">{{ 'th_type' | t }}</span>
+      <select class="ems-select" [ngModel]="type()" (ngModelChange)="type.set($event)">
         <option value="all">{{ 'filter_all' | t }}</option>
         @for (t of types; track t) {
           <option [value]="t">{{ 'cal_type_' + t | t }}</option>
         }
       </select>
-      <label class="check">
-        <input type="checkbox" [ngModel]="hideCancelled()" (ngModelChange)="hideCancelled.set($event)" />
-        {{ 'cal_hideCancelled' | t }}
-      </label>
-    </div>
+    </label>
+    <label class="ems-check">
+      <input type="checkbox" [ngModel]="hideCancelled()" (ngModelChange)="hideCancelled.set($event)" />
+      {{ 'cal_hideCancelled' | t }}
+    </label>
   </div>
 
   @if (conflicts() > 0) {
-    <p class="warn"><i class="ph ph-warning" aria-hidden="true"></i> {{ 'cal_conflicts' | t }}: {{ conflicts() }}</p>
+    <div class="ems-banner ems-banner--warning cal__warn" role="status">
+      <i class="ph ph-warning" aria-hidden="true"></i>
+      <div class="ems-banner__body">{{ 'cal_conflicts' | t }}: <strong class="mono">{{ conflicts() }}</strong></div>
+    </div>
   }
 
   <div class="grid-wrap">
@@ -50,7 +57,7 @@
       </thead>
       <tbody>
         @if (loading()) {
-          <tr><td colspan="8" class="muted"><i class="ph ph-circle-notch ph-spin"></i></td></tr>
+          <tr><td colspan="8"><div class="ems-loading"><i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>{{ 'ui_loading' | t }}</div></td></tr>
         } @else {
           @for (r of rows(); track r.technician) {
             <tr>
@@ -58,9 +65,9 @@
                 @if (r.technician === unassigned) {
                   <span class="muted">{{ 'cal_unassigned' | t }}</span>
                 } @else {
-                  <span class="avatar">{{ r.initials }}</span>{{ r.technician }}
+                  <span class="ems-person"><span class="ems-avatar">{{ r.initials }}</span>{{ r.technician }}</span>
                 }
-                <small class="muted"> · {{ r.total }}</small>
+                <span class="ems-count">{{ r.total }}</span>
               </td>
               @for (d of days(); track key(d)) {
                 @let cell = r.days[key(d)];
@@ -80,18 +87,20 @@
               }
             </tr>
           } @empty {
-            <tr><td colspan="8" class="muted">{{ 'cal_empty' | t }}</td></tr>
+            <tr><td colspan="8"><ems-empty-state icon="ph-calendar-blank" [compact]="true" [text]="'cal_empty' | t" /></td></tr>
           }
         }
       </tbody>
     </table>
   </div>
 
-  <div class="legend">
+  <footer class="legend">
     @for (t of types; track t) {
       <span class="legend__item"><span class="swatch swatch--{{ t | lowercase }}"></span>{{ 'cal_type_' + t | t }}</span>
     }
-  </div>
+    <span class="legend__item legend__item--status"><span class="swatch swatch--cancelled"></span>{{ 'status_cancelled' | t }}</span>
+  </footer>
+  </section>
 </section>
 
 @if (selected(); as o) {

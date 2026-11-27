@@ -7,7 +7,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:emsafe-admin": "node dist/emsafe-admin/server/server.mjs"
+    "serve:ssr:emsafe-admin": "node dist/emsafe-admin/server/server.mjs",
+    "tokens": "node tools/build-tokens.mjs",
+    "tokens:check": "node tools/build-tokens.mjs --check"
   },
   "private": true,
   "packageManager": "npm@10.8.2",
@@ -20,6 +22,9 @@
     "@angular/platform-server": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@angular/ssr": "^21.2.10",
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
     "@phosphor-icons/web": "^2.1.2",
     "@stomp/stompjs": "^7.3.0",
     "@types/leaflet": "^1.9.21",

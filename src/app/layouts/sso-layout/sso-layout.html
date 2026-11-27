@@ -1,20 +1,18 @@
-<div class="sso-layout" [class.sidebar-open]="layout.sidebarOpen()">
-  <aside class="sidebar-wrap">
+<div class="shell" [class.is-nav-open]="layout.sidebarOpen()" [class.is-rail-collapsed]="layout.railCollapsed()">
+  <aside class="shell__nav">
     <app-sso-sidebar />
   </aside>
 
-  <div class="sidebar-overlay" (click)="layout.close()" aria-hidden="true"></div>
+  <div class="shell__scrim" (click)="layout.close()" aria-hidden="true"></div>
 
-  <div class="main-content" role="main">
-    <header class="topbar-wrap">
+  <div class="shell__main">
+    <header class="shell__top">
       <app-topbar />
     </header>
 
-    <div class="page-content">
-      <div class="page-inner">
-        <router-outlet />
-      </div>
-    </div>
+    <main class="shell__content portal" id="main">
+      <router-outlet />
+    </main>
   </div>
 </div>
 <app-toast></app-toast>

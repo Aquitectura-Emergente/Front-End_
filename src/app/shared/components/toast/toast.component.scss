@@ -1,50 +1,51 @@
+@use 'styles/mixins' as ems;
+
 .toast-container {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  right: var(--ems-space-7);
+  bottom: var(--ems-space-7);
+  z-index: 2000;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  z-index: 9999;
-  pointer-events: none;
+  gap: var(--ems-space-3);
+  width: min(380px, calc(100vw - 32px));
+  @include ems.down(sm) { right: var(--ems-space-5); bottom: var(--ems-space-5); }
 }
 
 .toast {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.25rem;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-  min-width: 280px;
-  max-width: 400px;
-  pointer-events: all;
-  animation: slideIn 0.25s ease;
-  font-size: 0.875rem;
-  font-weight: 500;
+  @include ems.tone(info);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--ems-space-4);
+  padding: var(--ems-space-4) var(--ems-space-4) var(--ems-space-4) var(--ems-space-5);
+  background: var(--ems-chrome);
+  color: var(--ems-chrome-text);
+  border: var(--ems-border-hairline) solid var(--ems-chrome-border);
+  border-left: var(--ems-border-rail) solid var(--tone-signal);
+  border-radius: var(--ems-radius-sm);
+  box-shadow: var(--ems-elevation-3);
+  @include ems.type(body-sm);
+  animation: toast-in var(--ems-duration-slow) var(--ems-ease-enter);
 
-  i { font-size: 1.125rem; flex-shrink: 0; }
-
-  span { flex: 1; }
-
+  &__icon { font-size: 18px; color: var(--tone-signal); margin-top: 1px; }
+  &__msg { min-width: 0; overflow-wrap: anywhere; }
   &__close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: inherit;
-    opacity: 0.6;
-    &:hover { opacity: 1; }
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--ems-radius-xs);
+    color: var(--ems-chrome-text-muted);
+    &:hover { background: var(--ems-chrome-raised); color: var(--ems-chrome-text); }
   }
 
-  &--success { border-left: 4px solid #16a34a; i { color: #16a34a; } }
-  &--error   { border-left: 4px solid #dc2626; i { color: #dc2626; } }
-  &--warning { border-left: 4px solid #d97706; i { color: #d97706; } }
-  &--info    { border-left: 4px solid #1a6eff; i { color: #1a6eff; } }
+  &--success { @include ems.tone(safe); }
+  &--warning { @include ems.tone(warning); }
+  &--error { @include ems.tone(danger); }
+  &--info { @include ems.tone(info); }
 }
 
-@keyframes slideIn {
-  from { transform: translateX(110%); opacity: 0; }
-  to   { transform: translateX(0);   opacity: 1; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
 }

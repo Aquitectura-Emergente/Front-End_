@@ -1,0 +1,65 @@
+// Marco de aplicación común a los portales: rail + barra superior + contenido.
+@use 'mixins' as ems;
+
+.shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--ems-bg);
+
+  &__nav {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    z-index: 40;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__top {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  &__content {
+    flex: 1;
+    padding: var(--ems-space-8) var(--ems-space-9) var(--ems-space-11);
+    min-width: 0;
+    @include ems.down(xl) { padding: var(--ems-space-7) var(--ems-space-7) var(--ems-space-10); }
+    @include ems.down(sm) { padding: var(--ems-space-6) var(--ems-space-5) var(--ems-space-9); }
+  }
+
+  &__scrim { display: none; }
+
+  // Tablet y móvil: el rail pasa a drawer.
+  @include ems.down(lg) {
+    grid-template-columns: minmax(0, 1fr);
+
+    &__nav {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-100%);
+      transition: transform var(--ems-duration-slow) var(--ems-ease-standard);
+    }
+    &.is-nav-open &__nav { transform: none; box-shadow: var(--ems-elevation-3); }
+
+    &__scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      background: var(--ems-scrim);
+      opacity: 0;
+      pointer-events: none;
+      display: block;
+      transition: opacity var(--ems-duration-base) var(--ems-ease-standard);
+    }
+    &.is-nav-open &__scrim { opacity: 1; pointer-events: auto; }
+  }
+}

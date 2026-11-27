@@ -1,3 +1,5 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -30,7 +32,7 @@ type ServiceKey  = 'Installation' | 'Maintenance' | 'Collection';
 
 @Component({
   selector: 'app-tech-schedule',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, PageHeader, EmptyState],
   templateUrl: './tech-schedule.html',
   styleUrl: './tech-schedule.scss',
 })
@@ -195,9 +197,9 @@ export class TechSchedule {
   }
 
   protected typeIcon(type: string): string {
-    return type === 'Installation' ? 'ph-wrench'
-      : type === 'Maintenance'    ? 'ph-broadcast'
-      : 'ph-database';
+    return type === 'Installation' ? 'ph-plugs-connected'
+      : type === 'Maintenance'    ? 'ph-wrench'
+      : 'ph-package';
   }
 
   readonly statusKeys: StatusKey[]  = ['pending', 'in-progress', 'completed'];

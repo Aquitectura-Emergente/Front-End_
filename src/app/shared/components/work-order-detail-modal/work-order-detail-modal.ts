@@ -18,10 +18,10 @@ export class WorkOrderDetailModal {
   close = output<void>();
 
   protected statusClass(status: string): string {
-    return status === 'completed'  ? 'badge--completed'
-      : status === 'in-progress' ? 'badge--inprogress'
-      : status === 'cancelled'   ? 'badge--cancelled'
-      : 'badge--pending';
+    return status === 'completed'  ? 'ems-tag ems-tag--safe'
+      : status === 'in-progress' ? 'ems-tag ems-tag--info'
+      : status === 'cancelled'   ? 'ems-tag'
+      : 'ems-tag ems-tag--warning';
   }
 
   protected statusLabel(status: string): string {
@@ -32,7 +32,7 @@ export class WorkOrderDetailModal {
   }
 
   protected typeIcon(type: string): string {
-    return type === 'Installation' ? 'ph-monitor'
+    return type === 'Installation' ? 'ph-plugs-connected'
       : type === 'Maintenance'    ? 'ph-wrench'
       : 'ph-package';
   }

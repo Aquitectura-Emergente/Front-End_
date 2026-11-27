@@ -1,3 +1,6 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -12,7 +15,7 @@ type RoleFilter = 'all' | 'Admin' | 'Technician' | 'Client' | 'Company' | 'SsoRe
 
 @Component({
   selector: 'app-users',
-  imports: [TranslatePipe, DecimalPipe],
+  imports: [TranslatePipe, DecimalPipe, PageHeader, EmptyState, Pager],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
@@ -94,6 +97,17 @@ export class Users implements OnInit {
       this._allUsers.set(users.filter(isManagedByPanel));
       this.loading.set(false);
     });
+  }
+
+  /** Icono por rol para la columna de rol. */
+  protected roleIcon(role: string): string {
+    switch (role) {
+      case 'Admin': return 'ph-shield-check';
+      case 'Technician': return 'ph-hard-hat';
+      case 'SsoResponsible': return 'ph-first-aid-kit';
+      case 'Worker': return 'ph-identification-badge';
+      default: return 'ph-house-line';
+    }
   }
 
   roleKey(role: string): string {
