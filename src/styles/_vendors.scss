@@ -1,0 +1,115 @@
+// Ajustes de ApexCharts y Leaflet al sistema visual.
+@use 'mixins' as ems;
+
+.apexcharts-canvas {
+  font-family: var(--ems-font-body) !important;
+  .apexcharts-text,
+  .apexcharts-xaxis-label,
+  .apexcharts-yaxis-label { font-family: var(--ems-font-mono) !important; fill: var(--ems-text-tertiary); }
+  .apexcharts-legend-text { font-family: var(--ems-font-body) !important; color: var(--ems-text-secondary) !important; }
+  .apexcharts-gridline { stroke: var(--ems-grid); }
+}
+.apexcharts-tooltip {
+  border: var(--ems-border-hairline) solid var(--ems-border) !important;
+  border-radius: var(--ems-radius-sm) !important;
+  background: var(--ems-surface-overlay) !important;
+  color: var(--ems-text) !important;
+  box-shadow: var(--ems-elevation-2) !important;
+  .apexcharts-tooltip-title {
+    background: var(--ems-bg) !important;
+    border-bottom: var(--ems-border-hairline) solid var(--ems-border) !important;
+    font-family: var(--ems-font-mono) !important;
+    font-size: 11px !important;
+  }
+}
+.apexcharts-xaxistooltip,
+.apexcharts-yaxistooltip {
+  background: var(--ems-chrome) !important;
+  color: var(--ems-chrome-text) !important;
+  border: 0 !important;
+  font-family: var(--ems-font-mono) !important;
+  &::before, &::after { display: none !important; }
+}
+.apexcharts-menu {
+  background: var(--ems-surface-overlay) !important;
+  border: var(--ems-border-hairline) solid var(--ems-border) !important;
+  border-radius: var(--ems-radius-sm) !important;
+}
+.apexcharts-menu-item:hover { background: var(--ems-surface-hover) !important; }
+
+.leaflet-container {
+  font-family: var(--ems-font-body);
+  background: var(--ems-bg-sunken);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--ems-surface-overlay);
+  color: var(--ems-text);
+  border-radius: var(--ems-radius-sm);
+  box-shadow: var(--ems-elevation-2);
+}
+.leaflet-popup-content { margin: var(--ems-space-4) var(--ems-space-5); @include ems.type(body-sm); }
+.leaflet-bar a {
+  background: var(--ems-surface);
+  color: var(--ems-text);
+  border-color: var(--ems-border) !important;
+  &:hover { background: var(--ems-surface-hover); }
+}
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--ems-surface) 85%, transparent) !important;
+  color: var(--ems-text-tertiary) !important;
+  font-size: 10px;
+}
+
+// Marcadores y popups del mapa de radiación (nivel por color + texto en el popup)
+.ems-map-marker {
+  --m: var(--ems-safe-signal);
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--m);
+  border: 3px solid var(--ems-surface);
+  box-shadow: 0 0 0 1px var(--m), var(--ems-elevation-2);
+  &--caution { --m: var(--ems-warning-signal); }
+  &--danger {
+    --m: var(--ems-danger-signal);
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid var(--m);
+      animation: ems-ping 1.8s var(--ems-ease-standard) infinite;
+    }
+  }
+  position: relative;
+}
+
+.ems-map-popup {
+  min-width: 260px;
+  font-family: var(--ems-font-body);
+  &__title { @include ems.type(h4); color: var(--ems-text); }
+  &__sub { @include ems.type(caption); color: var(--ems-text-tertiary); margin-bottom: var(--ems-space-4); }
+  &__peak {
+    @include ems.tone(safe);
+    display: inline-block;
+    margin-bottom: var(--ems-space-4);
+    padding: 2px 8px;
+    border: 1px solid var(--tone-border);
+    border-radius: var(--ems-radius-xs);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    @include ems.type(mono-sm);
+    &--caution { @include ems.tone(warning); }
+    &--danger { @include ems.tone(danger); }
+  }
+  &__label { @include ems.type(eyebrow); font-size: 11px; color: var(--ems-text-tertiary); margin-bottom: var(--ems-space-2); }
+  &__table {
+    width: 100%;
+    th { text-align: left; @include ems.type(caption); color: var(--ems-text-tertiary); padding: 4px 0; border-bottom: 1px solid var(--ems-border); }
+    td { padding: 5px 0; border-bottom: 1px solid var(--ems-border-subtle); @include ems.type(caption); color: var(--ems-text-secondary); }
+  }
+  &__val { font-family: var(--ems-font-mono); font-weight: 600; text-align: right;
+    &--safe { color: var(--ems-safe); } &--caution { color: var(--ems-warning); } &--danger { color: var(--ems-danger); } }
+}

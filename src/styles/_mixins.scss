@@ -1,0 +1,103 @@
+// Mixins del sistema EMSafe Calibre. Uso en componentes: @use 'styles/mixins' as ems;
+@use 'sass:map';
+@use 'sass:math';
+@use 'tokens-maps' as t;
+
+@function rem($px) {
+  @return math.div($px, 16px) * 1rem;
+}
+
+// Estilo tipográfico desde la escala de tokens (tamaños en rem para respetar la preferencia de tamaño).
+@mixin type($name) {
+  $s: map.get(t.$ems-type, $name);
+  font-family: var(--ems-font-#{map.get($s, font)});
+  font-size: rem(map.get($s, size));
+  line-height: math.div(map.get($s, line), map.get($s, size));
+  font-weight: map.get($s, weight);
+  letter-spacing: map.get($s, tracking);
+  @if map.get($s, font) == mono {
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+  @if $name == eyebrow {
+    text-transform: uppercase;
+  }
+}
+
+@mixin up($bp) {
+  @media (min-width: map.get(t.$ems-breakpoints, $bp)) {
+    @content;
+  }
+}
+
+@mixin down($bp) {
+  @media (max-width: (map.get(t.$ems-breakpoints, $bp) - 0.02px)) {
+    @content;
+  }
+}
+
+@mixin focus-ring($offset: 2px) {
+  outline: 2px solid var(--ems-focus);
+  outline-offset: $offset;
+}
+
+@mixin transition($props...) {
+  transition-property: $props;
+  transition-duration: var(--ems-duration-fast);
+  transition-timing-function: var(--ems-ease-standard);
+}
+
+@mixin truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+// Regla graduada: firma visual de EMSafe (escala de instrumento bajo encabezados y secciones).
+@mixin scale-rule($color: var(--ems-border-strong)) {
+  background-image:
+    linear-gradient(to right, $color 1px, transparent 1px),
+    linear-gradient(to right, $color 1px, transparent 1px);
+  background-size: 40px 7px, 8px 3px;
+  background-repeat: repeat-x;
+  background-position: left bottom, left bottom;
+}
+
+// Superficie plana con filete: contenedor base (no todo es tarjeta).
+@mixin panel {
+  background: var(--ems-surface);
+  border: var(--ems-border-hairline) solid var(--ems-border);
+  border-radius: var(--ems-radius-md);
+}
+
+// Tonos semánticos: texto, fondo, borde y señal.
+@mixin tone($name) {
+  --tone-fg: var(--ems-#{$name});
+  --tone-bg: var(--ems-#{$name}-subtle);
+  @if $name == primary or $name == accent or $name == live {
+    --tone-border: var(--ems-#{$name});
+  } @else {
+    --tone-border: var(--ems-#{$name}-border);
+  }
+  @if $name == primary or $name == accent {
+    --tone-signal: var(--ems-#{$name});
+  } @else {
+    --tone-signal: var(--ems-#{$name}-signal);
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
