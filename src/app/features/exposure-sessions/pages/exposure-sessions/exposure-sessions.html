@@ -56,7 +56,7 @@
             <td>
               <!-- La unidad se rotula tal como llega: es un indice operacional
                    en uT*s, no una dosis certificada. No se convierte. -->
-              <strong>{{ session.accumulatedIndex }} {{ session.unit }}</strong>
+              <strong>{{ session.accumulatedIndex }} {{ session.unit | unit }}</strong>
               <span class="muted">
                 {{ session.percentage }}% · {{ 'exp_of' | t }} {{ session.limitIndex }}
               </span>
@@ -82,6 +82,13 @@
               }
             </td>
             <td class="actions">
+              @if (session.state === 'CLOSING') {
+                <button type="button" class="btn btn--ghost" [disabled]="finalizing() === session.id"
+                        [title]="(inReconciliation(session) ? 'exp_finalizeEarlyHint' : 'exp_finalizeHint') | t"
+                        (click)="finalize(session)">
+                  {{ 'sc_finalize' | t }}
+                </button>
+              }
               <button type="button" class="btn btn--ghost" (click)="select(session)">
                 {{ (isSelected(session) ? 'exp_hideReadings' : 'exp_showReadings') | t }}
               </button>
@@ -134,7 +141,7 @@
                   <td class="muted">{{ reading.sequence }}</td>
                   <td>{{ reading.capturedFrom }}</td>
                   <td>{{ reading.capturedTo }}</td>
-                  <td><strong>{{ reading.fieldMicrotesla }} {{ reading.unit }}</strong></td>
+                  <td><strong>{{ reading.fieldMicrotesla }} {{ reading.unit | unit }}</strong></td>
                   <td>
                     <span class="pill" [class.pill--warn]="reading.status === 'LATE'"
                           [class.pill--off]="reading.status === 'ACCEPTED'">
