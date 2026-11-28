@@ -48,6 +48,11 @@ describe('needsTarget', () => {
   // Una excedencia dice que hay que mover al operario pero no a donde: ese dato
   // lo pone la persona al aprobar. Si el formulario no lo pide, el backend
   // rechaza la aprobacion por incompleta.
+  it('una reprogramacion nunca pide destino: el operario no cambia de puesto', () => {
+    expect(needsTarget(action({ type: 'RESCHEDULING', affectedWorkers: [worker({ toPositionId: null, toZoneId: null })] })))
+      .toBe(false);
+  });
+
   it('pide destino cuando falta el puesto', () => {
     expect(needsTarget(action({ affectedWorkers: [worker({ toPositionId: null })] }))).toBe(true);
   });

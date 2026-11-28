@@ -29,10 +29,46 @@ export interface ConfigureLimitPayload {
   warningRatio: number;
   /** ISO-8601 con zona. El backend lo recibe como `Instant`. */
   effectiveFrom: string;
+  /** Norma o criterio del límite (obligatorio en el backend, hasta 250 caracteres). */
+  reference: string;
+}
+
+/**
+ * Referencias habituales de un límite de exposición a campo magnético. Se
+ * guardan tal cual en la versión del límite, así que van sin traducir.
+ */
+export const LIMIT_REFERENCES: readonly string[] = [
+  'ICNIRP 2010',
+  'ICNIRP 1998',
+  'IEEE C95.6',
+  'Directiva 2013/35/UE',
+  'Criterio interno de la empresa',
+];
+
+/** Lo que se guarda cuando el SSO no indica referencia (el backend la exige). */
+export const UNSPECIFIED_LIMIT_REFERENCE = 'No especificada';
+
+/**
+ * Referencia que se envía: la elegida de la lista, la escrita en «Otra» o, si
+ * no hay ninguna, «No especificada». Para el SSO es opcional.
+ */
+export function limitReference(choice: string, other: string): string {
+  const value = choice === 'other' ? other.trim() : choice.trim();
+  return value || UNSPECIFIED_LIMIT_REFERENCE;
+}
+
+/**
+ * Valor para un `<input type="datetime-local">` con la hora local del navegador.
+ * `toISOString()` daría la hora UTC, que el campo leería como local: en Lima
+ * dejaría el límite vigente 5 horas en el futuro.
+ */
+export function localDateTimeInput(date: Date = new Date()): string {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 /** Motivo por el que un límite no es válido, o null si lo es. */
-export type LimitValidationError = 'limitIndex' | 'warningRatio' | 'jobPosition' | null;
+export type LimitValidationError = 'limitIndex' | 'warningRatio' | 'jobPosition' | 'reference' | null;
 
 /**
  * Valida antes de enviar, replicando las anotaciones del backend:
@@ -46,6 +82,8 @@ export function validateLimit(payload: ConfigureLimitPayload): LimitValidationEr
   if (!payload.jobPositionId) return 'jobPosition';
   if (!(payload.limitIndex > 0)) return 'limitIndex';
   if (!(payload.warningRatio > 0 && payload.warningRatio < 1)) return 'warningRatio';
+  const reference = (payload.reference ?? '').trim();
+  if (!reference || reference.length > 250) return 'reference';
   return null;
 }
 

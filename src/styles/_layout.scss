@@ -1,0 +1,94 @@
+// Estructura de página: encabezado editorial con regla graduada, grillas y pilas.
+@use 'mixins' as ems;
+
+.ems-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ems-space-8);
+  width: 100%;
+  max-width: var(--ems-size-content-max);
+  margin: 0 auto;
+  min-width: 0;
+
+  &--narrow { max-width: var(--ems-size-form-max); }
+}
+
+.ems-page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--ems-space-5) var(--ems-space-7);
+  padding-bottom: var(--ems-space-6);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 8px;
+    border-bottom: var(--ems-border-hairline) solid var(--ems-border-strong);
+    @include ems.scale-rule(var(--ems-border-strong));
+    opacity: 0.8;
+  }
+
+  &__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--ems-space-3);
+    margin-bottom: var(--ems-space-3);
+    @include ems.type(eyebrow);
+    color: var(--ems-text-tertiary);
+    a:hover { color: var(--ems-text); }
+  }
+  &__index { font-family: var(--ems-font-mono); color: var(--ems-accent); letter-spacing: 0; }
+  &__title {
+    @include ems.type(h1);
+    color: var(--ems-text);
+  }
+  &__desc {
+    margin-top: var(--ems-space-3);
+    max-width: 72ch;
+    @include ems.type(body);
+    color: var(--ems-text-secondary);
+  }
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ems-space-3);
+  }
+
+  @include ems.down(md) {
+    grid-template-columns: 1fr;
+    &__actions { justify-content: flex-start; }
+    &__title { @include ems.type(h2); }
+  }
+}
+
+.ems-grid {
+  display: grid;
+  gap: var(--ems-space-7);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  > * { grid-column: span 12; min-width: 0; }
+
+  @include ems.up(lg) {
+    > .span-3 { grid-column: span 3; }
+    > .span-4 { grid-column: span 4; }
+    > .span-5 { grid-column: span 5; }
+    > .span-6 { grid-column: span 6; }
+    > .span-7 { grid-column: span 7; }
+    > .span-8 { grid-column: span 8; }
+    > .span-9 { grid-column: span 9; }
+  }
+  @include ems.up(md) {
+    > .md-span-6 { grid-column: span 6; }
+  }
+}
+
+.ems-stack { display: flex; flex-direction: column; gap: var(--ems-space-5); min-width: 0; }
+.ems-row { display: flex; align-items: center; gap: var(--ems-space-3); flex-wrap: wrap; }
+.ems-spacer { flex: 1; }
+.ems-muted { color: var(--ems-text-tertiary); }

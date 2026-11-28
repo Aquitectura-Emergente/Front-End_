@@ -11,7 +11,6 @@ import { LayoutService } from '../../core/services/layout.service';
   selector: 'app-tech-layout',
   imports: [RouterOutlet, TechSidebar, Topbar, ToastComponent],
   templateUrl: './tech-layout.html',
-  styleUrl: './tech-layout.scss',
 })
 export class TechLayout {
   protected layout = inject(LayoutService);

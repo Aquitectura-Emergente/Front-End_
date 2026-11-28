@@ -1,3 +1,6 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,7 +13,7 @@ import { TechWorkOrder } from '../../../../contexts/fieldservice/domain/tech-wor
 
 @Component({
   selector: 'app-tech-work-orders',
-  imports: [RouterLink, FormsModule, TranslatePipe],
+  imports: [RouterLink, FormsModule, TranslatePipe, PageHeader, EmptyState, Pager],
   templateUrl: './tech-work-orders.html',
   styleUrl: './tech-work-orders.scss',
 })
@@ -96,7 +99,7 @@ export class TechWorkOrders {
   }
 
   protected typeIcon(type: string): string {
-    return type === 'Installation' ? 'ph-monitor'
+    return type === 'Installation' ? 'ph-plugs-connected'
       : type === 'Maintenance'    ? 'ph-wrench'
       : 'ph-package';
   }

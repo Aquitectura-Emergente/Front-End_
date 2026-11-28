@@ -1,3 +1,6 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { WorkOrderFacade } from '../../../../contexts/fieldservice/application/work-order-facade';
@@ -7,7 +10,7 @@ import { WorkOrderDetailModal } from '../../../../shared/components/work-order-d
 
 @Component({
   selector: 'app-history',
-  imports: [TranslatePipe, WorkOrderDetailModal],
+  imports: [TranslatePipe, WorkOrderDetailModal, PageHeader, EmptyState, Pager],
   templateUrl: './history.html',
   styleUrl: './history.scss',
 })

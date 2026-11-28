@@ -1,18 +1,21 @@
+import { Pager } from '../../../../shared/ui/pager/pager';
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
-import { User, isCompanyClient, isManagedByPanel } from '../../../../contexts/iam/domain/user.model';
+import { User, isCompanyClient } from '../../../../contexts/iam/domain/user.model';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { LanguageService } from '../../../../core/services/language.service';
 
-type RoleFilter = 'all' | 'Admin' | 'Technician' | 'Client' | 'Company' | 'SsoResponsible';
+type RoleFilter = 'all' | 'Admin' | 'Technician' | 'Client' | 'Company' | 'SsoResponsible' | 'Worker';
 
 @Component({
   selector: 'app-users',
-  imports: [TranslatePipe, DecimalPipe],
+  imports: [TranslatePipe, DecimalPipe, PageHeader, EmptyState, Pager],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
@@ -91,16 +94,27 @@ export class Users implements OnInit {
 
   ngOnInit(): void {
     this.userFacade.all().subscribe(users => {
-      this._allUsers.set(users.filter(isManagedByPanel));
+      this._allUsers.set(users);
       this.loading.set(false);
     });
+  }
+
+  /** Icono por rol para la columna de rol. */
+  protected roleIcon(role: string): string {
+    switch (role) {
+      case 'Admin': return 'ph-shield-check';
+      case 'Technician': return 'ph-hard-hat';
+      case 'SsoResponsible': return 'ph-first-aid-kit';
+      case 'Worker': return 'ph-identification-badge';
+      default: return 'ph-house-line';
+    }
   }
 
   roleKey(role: string): string {
     return 'role_' + role;
   }
 
-  /** Empresa a la que pertenece una cuenta SSO. */
+  /** Empresa a la que pertenece una cuenta industrial (SSO u operario). */
   orgName(user: User): string {
     if (user.organizationId == null) return '';
     return this._allUsers().find(u => u.id === user.organizationId)?.name ?? `#${user.organizationId}`;
@@ -120,13 +134,15 @@ export class Users implements OnInit {
   }
 
   // Los clientes se registran desde la app móvil y un admin los activa, así que
-  // aquí solo se crean admins, técnicos y responsables SSO de una empresa.
-  addUser(type: 'Admin' | 'Technician' | 'SsoResponsible'): void {
+  // aquí se crean admins, técnicos y las cuentas industriales de una empresa
+  // (responsable SSO y operario).
+  addUser(type: 'Admin' | 'Technician' | 'SsoResponsible' | 'Worker'): void {
     this.showAddModal.set(false);
     const routes: Record<string, string> = {
       Admin:          '/admin/users/new-admin',
       Technician:     '/admin/users/new-technician',
       SsoResponsible: '/admin/users/new-sso-responsible',
+      Worker:         '/admin/users/new-worker',
     };
     this.router.navigate([routes[type]]);
   }
@@ -138,6 +154,7 @@ export class Users implements OnInit {
       Technician: `/admin/users/edit-technician/${user.id}`,
       Client:     `/admin/users/edit-client/${user.id}`,
       SsoResponsible: `/admin/users/edit-sso-responsible/${user.id}`,
+      Worker:     `/admin/users/edit-worker/${user.id}`,
     };
     this.router.navigate([routes[user.role]]);
   }

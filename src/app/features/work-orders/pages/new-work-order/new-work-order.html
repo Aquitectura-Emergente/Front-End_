@@ -1,74 +1,73 @@
-<section class="new-wo">
-  <!-- Breadcrumb + Header -->
-  <div class="new-wo__head">
-    <p class="breadcrumb">
-      <a routerLink="/admin/work-orders">{{ 'nav_workOrders' | t }}</a>
-      <span> › </span>
-      <span>{{ isEditMode() ? ('wo_new_editBreadcrumb' | t) : ('wo_createNew' | t) }}</span>
-    </p>
-    <h2 class="new-wo__title">{{ isEditMode() ? ('wo_new_editTitle' | t) : ('wo_new_title' | t) }}</h2>
-    <p class="new-wo__subtitle">{{ 'wo_new_subtitle' | t }}</p>
-  </div>
-
-  <!-- Form Card -->
-  <div class="form-card">
-    <!-- Card header -->
-    <div class="form-card__header">
-      <div class="section-icon">
-        <i class="ph ph-arrows-clockwise" aria-hidden="true"></i>
-      </div>
-      <span class="section-title">{{ 'wo_new_sectionTitle' | t }}</span>
+<section class="ems-page ems-page--narrow-wide">
+  <header class="ems-page-head">
+    <div>
+      <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
+        <a routerLink="/admin/work-orders">{{ 'nav_workOrders' | t }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ isEditMode() ? ('wo_new_editBreadcrumb' | t) : ('wo_createNew' | t) }}</span>
+      </nav>
+      <h1 class="ems-page-head__title">{{ isEditMode() ? ('wo_new_editTitle' | t) : ('wo_new_title' | t) }}</h1>
+      <p class="ems-page-head__desc">{{ 'wo_new_subtitle' | t }}</p>
     </div>
+  </header>
 
-    <!-- Form body -->
-    <form [formGroup]="form" (ngSubmit)="submit()" class="form-body" novalidate>
-
-      <!-- Row 1: Type + Client -->
-      <div class="form-row form-row--2col">
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_type' | t }} <span class="required">*</span></label>
-          <div class="select-wrap" [class.field--error]="isInvalid('type')">
-            <select formControlName="type" class="field-select">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="ems-sheet" novalidate>
+    <!-- 01 Servicio -->
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">01</span>
+        <span class="ems-sheet__title">{{ 'wo_new_sectionTitle' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-form-grid">
+          <div class="ems-field">
+            <label for="wo-type">{{ 'wo_new_type' | t }}<span class="ems-field__req">*</span></label>
+            <select id="wo-type" formControlName="type" class="ems-select" [class.is-invalid]="isInvalid('type')">
               <option value="">{{ 'wo_new_selectType' | t }}</option>
               <option value="Installation">{{ 'wo_installation' | t }}</option>
               <option value="Maintenance">{{ 'wo_maintenance' | t }}</option>
               <option value="Collection">{{ 'wo_collection' | t }}</option>
             </select>
-            <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
+            @if (isInvalid('type')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_type' | t }} is required</span>
+            }
           </div>
-          @if (isInvalid('type')) {
-            <span class="error-msg">{{ 'wo_new_type' | t }} is required</span>
-          }
-        </div>
 
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_clientName' | t }} <span class="required">*</span></label>
-          <div class="select-wrap" [class.field--error]="isInvalid('clientId')">
-            <select formControlName="clientId" class="field-select"
+          <div class="ems-field">
+            <label for="wo-client">{{ 'wo_new_clientName' | t }}<span class="ems-field__req">*</span></label>
+            <select id="wo-client" formControlName="clientId" class="ems-select" [class.is-invalid]="isInvalid('clientId')"
                     (change)="onClientChange($any($event.target).value)">
               <option [value]="null">{{ 'wo_new_searchClient' | t }}</option>
               @for (client of clients(); track client.id) {
                 <option [value]="client.id">{{ client.name }}</option>
               }
             </select>
-            <i class="ph ph-user select-caret" aria-hidden="true"></i>
+            @if (isInvalid('clientId')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_clientName' | t }} is required</span>
+            }
           </div>
-          @if (isInvalid('clientId')) {
-            <span class="error-msg">{{ 'wo_new_clientName' | t }} is required</span>
-          }
         </div>
       </div>
+    </div>
 
-      <!-- Row 2: Location (full width) with autocomplete + map picker -->
-      <div class="form-row">
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_location' | t }} <span class="required">*</span></label>
-          <div class="location-row">
-            <div class="input-icon-wrap location-input-wrap" [class.field--error]="isInvalid('location')">
-              <i class="ph ph-map-pin input-icon" aria-hidden="true"></i>
+    <!-- 02 Ubicación -->
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">02</span>
+        <span class="ems-sheet__title">{{ 'wo_new_location' | t }}</span>
+        <span class="ems-sheet__hint">{{ 'wo_new_pickLocationHint' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-field">
+          <label for="wo-location">{{ 'wo_new_location' | t }}<span class="ems-field__req">*</span></label>
+          <div class="ems-input-group">
+            <div class="ems-search">
+              <i class="ph ph-map-pin" aria-hidden="true"></i>
               <input
+                id="wo-location"
                 type="text"
-                class="field-input field-input--with-icon"
+                class="ems-input"
+                [class.is-invalid]="isInvalid('location')"
                 [value]="f.location.value ?? ''"
                 (input)="onAddressInput($any($event.target).value)"
                 (blur)="hideSuggestions()"
@@ -76,9 +75,9 @@
                 autocomplete="off"
               />
               @if (showSuggestions() && addressSuggestions().length > 0) {
-                <ul class="address-suggestions">
+                <ul class="ems-popover ems-suggest">
                   @for (s of addressSuggestions(); track s.display_name) {
-                    <li class="address-suggestion" (mousedown)="selectAddress(s)">
+                    <li class="ems-suggest__item" (mousedown)="selectAddress(s)">
                       <i class="ph ph-map-pin" aria-hidden="true"></i>
                       {{ s.display_name }}
                     </li>
@@ -86,164 +85,134 @@
                 </ul>
               }
             </div>
-            <button
-              class="btn-map-picker"
-              type="button"
-              (click)="openMapPicker()"
-              title="Pick location on map"
-            >
+            <button class="ems-btn" type="button" (click)="openMapPicker()" [attr.aria-label]="'wo_new_pickLocation' | t" [attr.data-tooltip]="'wo_new_pickLocation' | t">
               <i class="ph ph-map-trifold" aria-hidden="true"></i>
             </button>
           </div>
           @if (isInvalid('location')) {
-            <span class="error-msg">{{ 'wo_new_location' | t }} is required</span>
+            <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_location' | t }} is required</span>
           }
         </div>
       </div>
+    </div>
 
-      <!-- Row 3: Date + Time -->
-      <div class="form-row form-row--2col">
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_scheduledDate' | t }} <span class="required">*</span></label>
-          <input
-            type="date"
-            class="field-input"
-            formControlName="scheduledDate"
-            [class.field--error]="isInvalid('scheduledDate')"
-          />
-          @if (isInvalid('scheduledDate')) {
-            <span class="error-msg">{{ 'wo_new_scheduledDate' | t }} is required</span>
-          }
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_scheduledTime' | t }} <span class="required">*</span></label>
-          <input
-            type="time"
-            class="field-input"
-            formControlName="scheduledTime"
-            [class.field--error]="isInvalid('scheduledTime')"
-          />
-          @if (isInvalid('scheduledTime')) {
-            <span class="error-msg">{{ 'wo_new_scheduledTime' | t }} is required</span>
-          }
-        </div>
+    <!-- 03 Programación y asignación -->
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">03</span>
+        <span class="ems-sheet__title">{{ 'wo_new_scheduledDate' | t }} · {{ 'wo_new_assignedTech' | t }}</span>
       </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-form-grid">
+          <div class="ems-field">
+            <label for="wo-date">{{ 'wo_new_scheduledDate' | t }}<span class="ems-field__req">*</span></label>
+            <input id="wo-date" type="date" class="ems-input" formControlName="scheduledDate" [class.is-invalid]="isInvalid('scheduledDate')" />
+            @if (isInvalid('scheduledDate')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_scheduledDate' | t }} is required</span>
+            }
+          </div>
 
-      <!-- Row 4: Technician + Priority -->
-      <div class="form-row form-row--2col">
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_assignedTech' | t }} <span class="required">*</span></label>
-          <div class="select-wrap select-wrap--icon" [class.field--error]="isInvalid('technicianId')">
-            <select formControlName="technicianId" class="field-select">
+          <div class="ems-field">
+            <label for="wo-time">{{ 'wo_new_scheduledTime' | t }}<span class="ems-field__req">*</span></label>
+            <input id="wo-time" type="time" class="ems-input" formControlName="scheduledTime" [class.is-invalid]="isInvalid('scheduledTime')" />
+            @if (isInvalid('scheduledTime')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_scheduledTime' | t }} is required</span>
+            }
+          </div>
+
+          <div class="ems-field">
+            <label for="wo-tech">{{ 'wo_new_assignedTech' | t }}<span class="ems-field__req">*</span></label>
+            <select id="wo-tech" formControlName="technicianId" class="ems-select" [class.is-invalid]="isInvalid('technicianId')">
               <option [value]="null">{{ 'wo_new_selectTech' | t }}</option>
               @for (tech of technicians(); track tech.id) {
                 <option [value]="tech.id">{{ tech.name }}</option>
               }
             </select>
-            <i class="ph ph-user-gear select-icon-right" aria-hidden="true"></i>
+            @if (isInvalid('technicianId')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ 'wo_new_assignedTech' | t }} is required</span>
+            }
           </div>
-          @if (isInvalid('technicianId')) {
-            <span class="error-msg">{{ 'wo_new_assignedTech' | t }} is required</span>
-          }
-        </div>
 
-        <div class="field-group">
-          <label class="field-label">Priority <span class="required">*</span></label>
-          <div class="select-wrap" [class.field--error]="isInvalid('priority')">
-            <select formControlName="priority" class="field-select">
+          <div class="ems-field">
+            <label for="wo-priority">Priority<span class="ems-field__req">*</span></label>
+            <select id="wo-priority" formControlName="priority" class="ems-select" [class.is-invalid]="isInvalid('priority')">
               <option value="">{{ 'wo_new_selectType' | t }}</option>
               <option value="Standard">Standard</option>
               <option value="High">High</option>
               <option value="Urgent">Urgent</option>
             </select>
-            <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
+            @if (isInvalid('priority')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Priority is required</span>
+            }
           </div>
-          @if (isInvalid('priority')) {
-            <span class="error-msg">Priority is required</span>
-          }
         </div>
       </div>
+    </div>
 
-      <!-- Row 5: Notes (full width, optional) -->
-      <div class="form-row">
-        <div class="field-group">
-          <label class="field-label">{{ 'wo_new_notes' | t }}</label>
-          <textarea
-            class="field-input field-textarea"
-            formControlName="notes"
-            [placeholder]="'wo_new_notesPlaceholder' | t"
-            rows="3"
-          ></textarea>
+    <!-- 04 Notas -->
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">04</span>
+        <span class="ems-sheet__title">{{ 'wo_new_notes' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-field">
+          <label for="wo-notes" class="sr-only">{{ 'wo_new_notes' | t }}</label>
+          <textarea id="wo-notes" class="ems-textarea" formControlName="notes" [placeholder]="'wo_new_notesPlaceholder' | t" rows="3"></textarea>
         </div>
       </div>
+    </div>
 
-      <!-- Divider -->
-      <div class="form-divider"></div>
-
-      <!-- Actions -->
-      <div class="form-actions">
-        <button type="button" class="btn btn--cancel" (click)="cancel()">
-          {{ 'btn_cancel' | t }}
-        </button>
-        <button type="submit" class="btn btn--submit" [disabled]="submitting">
-          <i class="ph ph-check-circle" aria-hidden="true"></i>
-          {{ 'btn_submit' | t }}
-        </button>
-      </div>
-
-    </form>
-  </div>
+    <footer class="ems-sheet__foot">
+      <button type="button" class="ems-btn ems-btn--ghost" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
+      <button type="submit" class="ems-btn ems-btn--primary" [disabled]="submitting">
+        @if (submitting) {
+          <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>
+        } @else {
+          <i class="ph ph-check" aria-hidden="true"></i>
+        }
+        {{ 'btn_submit' | t }}
+      </button>
+    </footer>
+  </form>
 </section>
 
-<!-- ── Map Picker Modal ──────────────────────────── -->
+<!-- Selector de ubicación en mapa -->
 @if (showMapPicker()) {
-  <div class="map-modal-overlay" (click)="closeMapPicker()">
-    <div class="map-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="map-modal__header">
-        <div class="map-modal__title-wrap">
-          <i class="ph ph-map-trifold" aria-hidden="true"></i>
-          <h3 class="map-modal__title">{{ 'wo_new_pickLocation' | t }}</h3>
+  <div class="ems-backdrop" (click)="closeMapPicker()">
+    <div class="ems-modal ems-modal--lg" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="map-picker-title">
+      <header class="ems-modal__head">
+        <div class="ems-modal-title">
+          <span class="ems-modal-title__icon ems-modal-title__icon--primary"><i class="ph ph-map-trifold" aria-hidden="true"></i></span>
+          <div>
+            <h3 class="ems-modal__title" id="map-picker-title">{{ 'wo_new_pickLocation' | t }}</h3>
+            <p class="ems-modal-title__desc">{{ 'wo_new_pickLocationHint' | t }}</p>
+          </div>
         </div>
-        <button class="map-modal__close" type="button" (click)="closeMapPicker()" aria-label="Close">
+        <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="closeMapPicker()" aria-label="Close">
           <i class="ph ph-x" aria-hidden="true"></i>
         </button>
-      </div>
+      </header>
 
-      <div class="map-picker-hint">
-        <i class="ph ph-cursor-click" aria-hidden="true"></i>
-        <span>{{ 'wo_new_pickLocationHint' | t }}</span>
-      </div>
+      <div #mapPickerEl class="ems-map-frame"></div>
 
-      <div #mapPickerEl class="map-picker-map"></div>
-
-      <div class="map-modal__footer">
-        <div class="map-addr-preview">
+      <footer class="ems-modal__foot map-foot">
+        <div class="map-foot__addr">
           @if (mapPickerLoading()) {
             <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>
-            <span>Loading address...</span>
+            <span>{{ 'ui_loading' | t }}</span>
           } @else if (mapPickedAddr()) {
             <i class="ph ph-map-pin" aria-hidden="true"></i>
             <span>{{ mapPickedAddr() }}</span>
           } @else {
-            <span class="map-addr-placeholder">{{ 'wo_new_noLocationSelected' | t }}</span>
+            <span class="ems-muted">{{ 'wo_new_noLocationSelected' | t }}</span>
           }
         </div>
-        <div class="map-modal__actions">
-          <button class="btn btn--cancel" type="button" (click)="closeMapPicker()">
-            {{ 'btn_cancel' | t }}
-          </button>
-          <button
-            class="btn btn--submit"
-            type="button"
-            [disabled]="!mapPickedAddr() || mapPickerLoading()"
-            (click)="confirmMapLocation()"
-          >
-            <i class="ph ph-check" aria-hidden="true"></i>
-            {{ 'wo_new_confirmLocation' | t }}
-          </button>
-        </div>
-      </div>
+        <button class="ems-btn ems-btn--ghost" type="button" (click)="closeMapPicker()">{{ 'btn_cancel' | t }}</button>
+        <button class="ems-btn ems-btn--primary" type="button" [disabled]="!mapPickedAddr() || mapPickerLoading()" (click)="confirmMapLocation()">
+          <i class="ph ph-check" aria-hidden="true"></i>{{ 'wo_new_confirmLocation' | t }}
+        </button>
+      </footer>
     </div>
   </div>
 }

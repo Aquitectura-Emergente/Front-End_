@@ -1,0 +1,30 @@
+@use 'styles/mixins' as ems;
+
+.account-form { max-width: 1080px; }
+.half { max-width: calc(50% - var(--ems-space-4)); @include ems.down(sm) { max-width: none; } }
+.ems-sheet__title i.ph { color: var(--ems-text-tertiary); margin-right: 4px; }
+
+.client-type {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ems-space-5);
+  padding: var(--ems-space-5) var(--ems-space-6);
+  border: var(--ems-border-hairline) solid var(--ems-border);
+  border-radius: var(--ems-radius-md);
+  background: var(--ems-surface);
+}
+
+.map-foot {
+  align-items: center;
+  &__addr {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ems-space-3);
+    min-width: 0;
+    @include ems.type(body-sm);
+    color: var(--ems-text-secondary);
+    span { @include ems.truncate; }
+  }
+}

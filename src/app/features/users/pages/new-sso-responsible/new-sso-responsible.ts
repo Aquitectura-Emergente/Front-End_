@@ -7,6 +7,12 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { UserFacade } from '../../../../contexts/iam/application/user-facade';
 import { User, isCompanyClient } from '../../../../contexts/iam/domain/user.model';
+import { MutationResult } from '../../../../core/http/api-response';
+import { describeError } from '../../../../core/http/backend-error';
+import { Observable } from 'rxjs';
+
+/** Cuentas industriales que el admin crea para una empresa. */
+type IndustrialRole = 'SSO_RESPONSIBLE' | 'WORKER';
 
 function passwordsMatch(group: AbstractControl) {
   const pw = group.get('password')?.value;
@@ -15,14 +21,16 @@ function passwordsMatch(group: AbstractControl) {
 }
 
 /**
- * Alta y edición del responsable de SSO de un cliente empresa. La empresa se
- * fija al crear la cuenta; el backend no permite cambiarla después.
+ * Alta y edición de una cuenta industrial de un cliente empresa: su responsable
+ * de SSO o un operario (según `data.role` de la ruta). La empresa se fija al
+ * crear la cuenta; el backend no permite cambiarla después. Al guardarla, el
+ * backend le da su acceso a la dosimetría personal.
  */
 @Component({
   selector: 'app-new-sso-responsible',
   imports: [ReactiveFormsModule, TranslatePipe, RouterLink, CommonModule],
   templateUrl: './new-sso-responsible.html',
-  styleUrl: '../new-technician/new-technician.scss',
+  styleUrl: '../account-form.scss',
 })
 export class NewSsoResponsible implements OnInit {
   private fb     = inject(FormBuilder);
@@ -33,6 +41,8 @@ export class NewSsoResponsible implements OnInit {
   private lang   = inject(LanguageService);
 
   private userId: string | null = null;
+  readonly role: IndustrialRole = this.route.snapshot.data['role'] === 'WORKER' ? 'WORKER' : 'SSO_RESPONSIBLE';
+  readonly isWorker = this.role === 'WORKER';
   isEditMode = signal(false);
   companies  = signal<User[]>([]);
   editingOrgId = signal<number | null>(null);
@@ -46,6 +56,7 @@ export class NewSsoResponsible implements OnInit {
     fullName:        ['', Validators.required],
     email:           ['', [Validators.required, Validators.email]],
     phone:           [''],
+    department:      [''],
     password:        ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', Validators.required],
     isActive:        [true],
@@ -78,10 +89,16 @@ export class NewSsoResponsible implements OnInit {
         fullName: user.name,
         email:    user.email,
         phone:    user.phone ?? '',
+        department: user.department ?? '',
         isActive: user.status === 'active',
         notes:    user.notes ?? '',
       });
     });
+  }
+
+  /** Clave de texto según el tipo de cuenta (`sso_*` o `wk_*`). */
+  k(key: 'title' | 'editTitle' | 'sectionDesc' | 'sectionTitle' | 'info'): string {
+    return (this.isWorker ? 'wk_' : 'sso_') + key;
   }
 
   isInvalid(field: string): boolean {
@@ -100,32 +117,36 @@ export class NewSsoResponsible implements OnInit {
     const name = v.fullName ?? '';
     this.saving.set(true);
 
-    const request = this.userId
-      ? this.users.update(this.userId, {
+    const request: Observable<MutationResult<User>> = this.userId
+      ? this.users.change(this.userId, {
           name,
           email:  v.email ?? '',
           phone:  v.phone ?? '',
+          ...(this.isWorker ? { department: v.department ?? '' } : {}),
           status: v.isActive ? 'active' : 'inactive',
           notes:  v.notes ?? '',
         })
-      : this.users.create({
+      : this.users.save({
           name,
           initials:       this.users.initialsOf(name),
           email:          v.email ?? '',
           password:       v.password ?? '',
-          role:           'SSO_RESPONSIBLE',
+          role:           this.role,
           organizationId: v.organizationId ?? undefined,
           phone:          v.phone || undefined,
+          department:     this.isWorker ? v.department || undefined : undefined,
           notes:          v.notes || undefined,
         });
 
-    request.subscribe(saved => {
+    const prefix = this.isWorker ? 'wk_' : 'sso_';
+    request.subscribe(result => {
       this.saving.set(false);
-      if (!saved) {
-        this.toast.error(this.lang.t('sso_saveFailed'));
+      if (!result.ok) {
+        const title = this.lang.t(this.isWorker ? 'wk_saveFailed' : 'sso_saveFailedShort');
+        this.toast.error(describeError(key => this.lang.t(key), title, result.error));
         return;
       }
-      this.toast.success(this.lang.t(this.userId ? 'sso_updated' : 'sso_created'));
+      this.toast.success(this.lang.t(prefix + (this.userId ? 'updated' : 'created')));
       this.cancel();
     });
   }

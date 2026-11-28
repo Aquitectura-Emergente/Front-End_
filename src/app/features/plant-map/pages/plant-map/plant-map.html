@@ -1,6 +1,7 @@
 <section class="page">
   <header class="page__header">
     <div>
+      <span class="eyebrow"><b>01</b>{{ 'shell_group_overview' | t }}</span>
       <h1>{{ 'plantmap_title' | t }}</h1>
       <p class="subtitle">{{ 'plantmap_subtitle' | t }}</p>
     </div>
@@ -54,10 +55,10 @@
                     <span class="person__body">
                       <strong>{{ person.name }}</strong>
                       @if (positionOf(person)) {
-                        <span class="muted">{{ 'map_position' | t }} {{ positionOf(person) }}</span>
+                        <span class="muted">{{ positionOf(person) }}</span>
                       }
-                      @if (sessionOf(person)) {
-                        <span class="muted">{{ 'map_session' | t }} {{ sessionOf(person) }}</span>
+                      @if (sinceOf(person); as since) {
+                        <span class="muted">{{ 'map_since' | t }} {{ since | dt }}</span>
                       }
                     </span>
                     <span class="person__actions">
@@ -71,7 +72,7 @@
                         <button type="button" class="btn btn--danger btn--sm"
                                 [disabled]="busy() === person.workerId"
                                 (click)="closeShift(person)">
-                          {{ 'shift_close' | t }}
+                          {{ 'map_closeSession' | t }}
                         </button>
                       }
                     </span>
@@ -106,7 +107,7 @@
                 <button type="button" class="btn btn--primary btn--sm"
                         [disabled]="busy() === person.workerId"
                         (click)="openStart(person)">
-                  {{ 'shift_open' | t }}
+                  {{ 'sc_start_title' | t }}
                 </button>
               </span>
             </li>
@@ -147,52 +148,9 @@
     </div>
   }
 
-  <!-- ── Apertura de turno ─────────────────────────────────────────────── -->
-  @if (startFor()) {
-    <div class="modal-backdrop" (click)="closeStart()"></div>
-    <div class="modal" role="dialog" aria-modal="true">
-      <h2>{{ 'shift_open' | t }} · {{ startFor()!.name }}</h2>
-
-      <label>
-        <span>{{ 'plant_positions_zone' | t }} <strong>*</strong></span>
-        <select [ngModel]="startZoneId()" name="startZoneId"
-                (ngModelChange)="startZoneId.set($event); onStartZoneChange()">
-          <option value="">—</option>
-          @for (zone of zones(); track zone.id) {
-            <option [value]="zone.id">{{ zone.name }}</option>
-          }
-        </select>
-      </label>
-
-      <label>
-        <span>{{ 'plant_tab_positions' | t }} <strong>*</strong></span>
-        <select [ngModel]="startPositionId()" name="startPositionId"
-                (ngModelChange)="startPositionId.set($event)"
-                [disabled]="!startZoneId()">
-          <option value="">—</option>
-          @for (position of positionsOfStart(); track position.id) {
-            <option [value]="position.id">{{ position.name }}</option>
-          }
-        </select>
-      </label>
-
-      <label>
-        <span>{{ 'shift_sessionId' | t }}</span>
-        <input type="text" [ngModel]="startSessionId()" name="startSessionId"
-               (ngModelChange)="startSessionId.set($event)"
-               [placeholder]="'shift_sessionIdHint' | t" />
-      </label>
-
-      <div class="modal__actions">
-        <button type="button" class="btn btn--ghost" (click)="closeStart()">
-          {{ 'plant_action_cancel' | t }}
-        </button>
-        <button type="button" class="btn btn--primary"
-                [disabled]="!canStart() || busy() !== null"
-                (click)="submitStart()">
-          {{ 'shift_open' | t }}
-        </button>
-      </div>
-    </div>
+  <!-- ── Iniciar jornada (abre también el turno) ──────────────────────── -->
+  @if (startFor(); as person) {
+    <app-start-session-dialog [initialWorkerId]="person.workerId"
+                              (started)="onStarted()" (cancelled)="closeStart()" />
   }
 </section>

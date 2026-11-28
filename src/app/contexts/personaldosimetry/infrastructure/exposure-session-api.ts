@@ -4,13 +4,16 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
+  MutationResult,
   PageResponse,
   emptyPage,
   queryString,
   unwrap,
+  toResult,
   unwrapOrNull,
 } from '../../../core/http/api-response';
 import { ExposureSession, PersonalReading } from '../domain/exposure-session.model';
+import { WorkerDefaults } from '../domain/session-control.model';
 
 /**
  * Acceso HTTP a las sesiones de exposición.
@@ -40,6 +43,21 @@ export class ExposureSessionApi {
         `${this.base}/v1/personal-dosimetry/workers/${workerId}/sessions${qs}`
       ),
       emptyPage<ExposureSession>(size)
+    );
+  }
+
+  /** Puesto y dosímetro habituales del operario; null si no se pudieron leer. */
+  workerDefaults(workerId: number): Observable<WorkerDefaults | null> {
+    return unwrapOrNull(
+      this.http.get<ApiResponse<WorkerDefaults>>(`${this.base}/v1/personal-dosimetry/workers/${workerId}/defaults`)
+    );
+  }
+
+  /** El SSO fija el puesto y el dosímetro habituales (null los quita). */
+  changeWorkerDefaults(workerId: number, defaults: WorkerDefaults): Observable<MutationResult<WorkerDefaults>> {
+    return toResult(
+      this.http.put<ApiResponse<WorkerDefaults>>(
+        `${this.base}/v1/personal-dosimetry/workers/${workerId}/defaults`, defaults)
     );
   }
 

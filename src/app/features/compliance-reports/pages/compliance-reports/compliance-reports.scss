@@ -1,106 +1,25 @@
-@use '../../../../shared/styles/portal-tables' as portal;
+@use 'styles/mixins' as ems;
 
-@include portal.portal-page;
+:host { display: block; }
 
-// Formulario en línea: generar un reporte son cuatro campos y un botón, así que
-// no merece un modal.
-.form-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
 
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    min-width: 9rem;
-
-    span {
-      font-size: 0.82rem;
-      color: var(--color-text-secondary);
-    }
-  }
-
-  input,
-  select {
-    padding: 0.5rem 0.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    background: var(--color-background);
-    color: var(--color-text-primary);
-    font: inherit;
-    font-size: 0.9rem;
-  }
-}
-
-// Mismo estilo que en exposure-limits: encabeza el historial sin competir con
-// el h1 de la cabecera.
-.section-title {
-  margin: 0.5rem 0 0;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-}
-
+// Reporte generado: documento con encabezado y ficha de hechos
 .report {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+  gap: var(--ems-space-5);
+  padding: var(--ems-space-6);
+  background: var(--ems-surface);
+  border: var(--ems-border-hairline) solid var(--ems-border);
+  border-top: var(--ems-border-rail) solid var(--ems-primary);
+  border-radius: var(--ems-radius-md);
 }
-
 .report__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--ems-space-5);
   flex-wrap: wrap;
-
-  h2 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--color-text-primary);
-  }
+  h2 { @include ems.type(h3); }
 }
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 0.75rem 1rem;
-  margin: 0;
-
-  div { min-width: 0; }
-
-  dt {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--color-text-secondary);
-  }
-
-  dd {
-    margin: 0.15rem 0 0;
-    color: var(--color-text-primary);
-    font-size: 0.95rem;
-  }
-
-  // El digest es largo: ocupa toda la fila y se parte sin desbordar.
-  &__wide {
-    grid-column: 1 / -1;
-
-    code {
-      font-size: 0.78rem;
-      word-break: break-all;
-      color: var(--color-text-secondary);
-    }
-  }
-}
-
-.muted--warn { color: var(--color-warning); }
+.muted--warn { color: var(--ems-warning); }

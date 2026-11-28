@@ -1,3 +1,5 @@
-@use '../../../../shared/styles/portal-tables' as portal;
+:host { display: block; }
 
-@include portal.portal-page;
+// El campo de contraseña deja sitio al botón de mostrar/ocultar.
+.ems-password { display: block; }
+.ems-password input { width: 100%; padding-right: 44px; }

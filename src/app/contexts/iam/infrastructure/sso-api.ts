@@ -2,11 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse, unwrap, unwrapOrNull } from '../../../core/http/api-response';
-import { User } from '../domain/user.model';
+import { ApiResponse, MutationResult, toResult, unwrap, unwrapOrNull } from '../../../core/http/api-response';
+import { User, WorkerPayload } from '../domain/user.model';
 
 /**
- * Consultas del responsable de SSO sobre sus operarios.
+ * Operarios del responsable de SSO: consultarlos, darlos de alta y editarlos.
  *
  * Ruta aparte (`/api/sso/**`) y no `/api/users`, porque son dos cosas distintas:
  * `/api/users` es la administración global de cuentas y está restringida a
@@ -27,5 +27,15 @@ export class SsoApi {
 
   worker(id: number): Observable<User | null> {
     return unwrapOrNull(this.http.get<ApiResponse<User>>(`${this.base}/sso/workers/${id}`));
+  }
+
+  /** Alta de un operario en la organización del responsable. */
+  createWorker(payload: WorkerPayload): Observable<MutationResult<User>> {
+    return toResult(this.http.post<ApiResponse<User>>(`${this.base}/sso/workers`, payload));
+  }
+
+  /** Datos, estado o clave de un operario suyo. */
+  updateWorker(id: number, payload: WorkerPayload): Observable<MutationResult<User>> {
+    return toResult(this.http.put<ApiResponse<User>>(`${this.base}/sso/workers/${id}`, payload));
   }
 }

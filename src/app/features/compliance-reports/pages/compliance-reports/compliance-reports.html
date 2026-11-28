@@ -1,6 +1,7 @@
 <section class="page">
   <header class="page__header">
     <div>
+      <span class="eyebrow"><b>09</b>{{ 'shell_group_compliance' | t }}</span>
       <h1>{{ 'rep_title' | t }}</h1>
       <p class="subtitle">{{ 'rep_subtitle' | t }}</p>
     </div>
@@ -144,11 +145,11 @@
             @for (entry of r.entries; track entry.id) {
               <tr>
                 <td>{{ entry.entryDate ?? '—' }}</td>
-                <td>{{ entry.sessionId ?? '—' }}</td>
+                <td class="mono" [title]="entry.sessionId ?? ''">{{ shortRef(entry.sessionId) }}</td>
                 <td class="num">
                   @if (entry.finalDose) {
-                    {{ entry.finalDose.value }} {{ entry.finalDose.unit }}
-                    <span class="muted">/ {{ entry.finalDose.limit }}</span>
+                    {{ entry.finalDose.value | number: '1.0-0' }} {{ entry.finalDose.unit | unit }}
+                    <span class="muted">/ {{ entry.finalDose.limit | number: '1.0-0' }}</span>
                   } @else { — }
                 </td>
                 <td class="num">

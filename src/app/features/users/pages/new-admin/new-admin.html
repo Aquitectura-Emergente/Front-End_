@@ -1,157 +1,121 @@
-<section class="new-user">
-  <div class="new-user__header">
+<section class="ems-page account-form">
+  <header class="ems-page-head">
     <div>
-      <p class="breadcrumb">
+      <nav class="ems-page-head__eyebrow" aria-label="Breadcrumb">
         <a routerLink="/admin/users">{{ 'nav_users' | t }}</a>
-        › {{ isEditMode() ? ('admin_editTitle' | t) : ('admin_title' | t) }}
-      </p>
-      <h2 class="new-user__title">{{ isEditMode() ? ('admin_editTitle' | t) : ('admin_title' | t) }}</h2>
-    </div>
-    <a routerLink="/admin/users" class="btn btn--back">
-      {{ 'btn_backToList' | t }}
-    </a>
-  </div>
-
-  <form class="form-card" [formGroup]="form" (ngSubmit)="submit()">
-    @if (!isEditMode()) {
-      <div class="form-card__header">
-        <div class="section-icon">
-          <i class="ph ph-user-gear" aria-hidden="true"></i>
-        </div>
-        <div>
-          <div class="section-title">{{ 'admin_sectionTitle' | t }}</div>
-          <div class="section-desc">{{ 'admin_sectionDesc' | t }}</div>
-        </div>
-      </div>
-    }
-
-    <div class="form-body">
-      <!-- Full Name + Email -->
-      <div class="form-row--2col">
-        <div class="field-group">
-          <label class="field-label">{{ 'form_fullName' | t }} <span class="required">*</span></label>
-          <input
-            class="field-input"
-            [class.field--error]="isInvalid('fullName')"
-            type="text"
-            formControlName="fullName"
-            placeholder="e.g. Alexander Pierce"
-          />
-          @if (isInvalid('fullName')) {
-            <span class="error-msg">Full name is required.</span>
-          }
-        </div>
-        <div class="field-group">
-          <label class="field-label">{{ 'form_emailAddress' | t }} <span class="required">*</span></label>
-          <input
-            class="field-input"
-            [class.field--error]="isInvalid('email')"
-            type="email"
-            formControlName="email"
-            placeholder="alex@emsafe.com"
-          />
-          @if (isInvalid('email')) {
-            <span class="error-msg">Valid email is required.</span>
-          }
-        </div>
-      </div>
-
-      <!-- Phone -->
-      <div class="field-group">
-        <label class="field-label">{{ 'form_phone' | t }}</label>
-        <input
-          class="field-input field-input--half"
-          type="tel"
-          formControlName="phone"
-          placeholder="+1 (555) 000-0000"
-        />
-      </div>
-
-      <!-- Password + Confirm (creation only — admins change their own password from their profile) -->
+        <span aria-hidden="true">/</span>
+        <span>{{ isEditMode() ? ('admin_editTitle' | t) : ('admin_title' | t) }}</span>
+      </nav>
+      <h1 class="ems-page-head__title">{{ isEditMode() ? ('admin_editTitle' | t) : ('admin_title' | t) }}</h1>
       @if (!isEditMode()) {
-        <div class="form-row--2col">
-          <div class="field-group">
-            <label class="field-label">{{ 'form_password' | t }} <span class="required">*</span></label>
+        <p class="ems-page-head__desc">{{ 'admin_sectionDesc' | t }}</p>
+      }
+    </div>
+    <div class="ems-page-head__actions">
+      <a routerLink="/admin/users" class="ems-btn ems-btn--ghost">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>{{ 'btn_backToList' | t }}
+      </a>
+    </div>
+  </header>
 
-            <div class="password-wrap">
-              <input
-                class="field-input"
-                [class.field--error]="isInvalid('password')"
-                [type]="showPassword ? 'text' : 'password'"
-                formControlName="password"
-                placeholder="••••••••"
-              />
-              <i
-                class="ph"
-                [ngClass]="showPassword ? 'ph-eye-slash' : 'ph-eye'"
-                (click)="showPassword = !showPassword"
-              ></i>
+  <form class="ems-sheet" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">01</span>
+        <span class="ems-sheet__title"><i class="ph ph-shield-check" aria-hidden="true"></i> {{ 'admin_sectionTitle' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-form-grid">
+          <div class="ems-field">
+            <label for="f-name">{{ 'form_fullName' | t }}<span class="ems-field__req">*</span></label>
+            <input id="f-name" class="ems-input" [class.is-invalid]="isInvalid('fullName')" type="text" formControlName="fullName" placeholder="e.g. Alexander Pierce" />
+            @if (isInvalid('fullName')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Full name is required.</span>
+            }
+          </div>
+          <div class="ems-field">
+            <label for="f-email">{{ 'form_emailAddress' | t }}<span class="ems-field__req">*</span></label>
+            <input id="f-email" class="ems-input" [class.is-invalid]="isInvalid('email')" type="email" formControlName="email" placeholder="alex@emsafe.com" />
+            @if (isInvalid('email')) {
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Valid email is required.</span>
+            }
+          </div>
+          <div class="ems-field">
+            <label for="f-phone">{{ 'form_phone' | t }}</label>
+            <input id="f-phone" class="ems-input" type="tel" formControlName="phone" placeholder="+1 (555) 000-0000" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">02</span>
+        <span class="ems-sheet__title">{{ 'form_password' | t }} · {{ 'th_status' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        @if (!isEditMode()) {
+          <div class="ems-form-grid">
+          <div class="ems-field">
+            <label for="f-password">{{ 'form_password' | t }}<span class="ems-field__req">*</span></label>
+            <div class="ems-password">
+              <input id="f-password" class="ems-input" [class.is-invalid]="isInvalid('password')" [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="••••••••" />
+              <button type="button" class="ems-password__toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i class="ph" [ngClass]="showPassword ? 'ph-eye-slash' : 'ph-eye'" aria-hidden="true"></i>
+              </button>
             </div>
-
             @if (isInvalid('password')) {
-              <span class="error-msg">Password must be at least 8 characters.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Password must be at least 8 characters.</span>
             }
           </div>
-          <div class="field-group">
-            <label class="field-label">{{ 'form_confirmPassword' | t }} <span class="required">*</span></label>
-
-            <div class="password-wrap">
-              <input
-                class="field-input"
-                [class.field--error]="isInvalid('confirmPassword') || passwordMismatch"
-                [type]="showConfirmPassword ? 'text' : 'password'"
-                formControlName="confirmPassword"
-                placeholder="••••••••"
-              />
-              <i
-                class="ph"
-                [ngClass]="showConfirmPassword ? 'ph-eye-slash' : 'ph-eye'"
-                (click)="showConfirmPassword = !showConfirmPassword"
-              ></i>
+          <div class="ems-field">
+            <label for="f-confirmPassword">{{ 'form_confirmPassword' | t }}<span class="ems-field__req">*</span></label>
+            <div class="ems-password">
+              <input id="f-confirmPassword" class="ems-input" [class.is-invalid]="isInvalid('confirmPassword') || passwordMismatch" [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="••••••••" />
+              <button type="button" class="ems-password__toggle" (click)="showConfirmPassword = !showConfirmPassword" [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+                <i class="ph" [ngClass]="showConfirmPassword ? 'ph-eye-slash' : 'ph-eye'" aria-hidden="true"></i>
+              </button>
             </div>
-
             @if (passwordMismatch) {
-              <span class="error-msg">Passwords do not match.</span>
+              <span class="ems-field__error"><i class="ph ph-warning-circle" aria-hidden="true"></i>Passwords do not match.</span>
             }
           </div>
+          </div>
+        }
+        <div class="ems-field">
+          <label class="ems-check">
+            <input type="checkbox" formControlName="isActive" />
+            <span>{{ 'form_statusActive' | t }}</span>
+          </label>
+          <span class="ems-field__hint">{{ 'form_statusHint' | t }}</span>
         </div>
-      }
-
-      <!-- Status checkbox -->
-      <div class="field-group">
-        <label class="checkbox-label">
-          <input type="checkbox" class="checkbox-input" formControlName="isActive" />
-          <span class="checkbox-custom"></span>
-          <span class="checkbox-text">{{ 'form_statusActive' | t }}</span>
-        </label>
-        <span class="field-hint">{{ 'form_statusHint' | t }}</span>
-      </div>
-
-      <!-- Notes -->
-      <div class="field-group">
-        <label class="field-label">{{ 'form_additionalNotes' | t }}</label>
-        <textarea
-          class="field-textarea"
-          formControlName="notes"
-          [placeholder]="'form_notesPlaceholder' | t"
-          rows="4"
-        ></textarea>
-      </div>
-
-      <!-- Info banner (creation only) -->
-      @if (!isEditMode()) {
-        <div class="info-banner">
-          <i class="ph ph-info" aria-hidden="true"></i>
-          <span>{{ 'form_activationMsg' | t }}</span>
-        </div>
-      }
-
-      <div class="form-divider"></div>
-
-      <div class="form-actions">
-        <button class="btn btn--cancel" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
-        <button class="btn btn--submit" type="submit">{{ isEditMode() ? ('btn_update' | t) : ('btn_create' | t) }}</button>
       </div>
     </div>
+
+    <div class="ems-sheet__section">
+      <div class="ems-sheet__aside">
+        <span class="ems-sheet__index">03</span>
+        <span class="ems-sheet__title">{{ 'form_additionalNotes' | t }}</span>
+      </div>
+      <div class="ems-sheet__fields">
+        <div class="ems-field">
+          <label for="f-notes" class="sr-only">{{ 'form_additionalNotes' | t }}</label>
+          <textarea id="f-notes" class="ems-textarea" formControlName="notes" [placeholder]="'form_notesPlaceholder' | t" rows="3"></textarea>
+        </div>
+        @if (!isEditMode()) {
+          <div class="ems-banner">
+            <i class="ph ph-info" aria-hidden="true"></i>
+            <div class="ems-banner__body">{{ 'form_activationMsg' | t }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <footer class="ems-sheet__foot">
+      <button class="ems-btn ems-btn--ghost" type="button" (click)="cancel()">{{ 'btn_cancel' | t }}</button>
+      <button class="ems-btn ems-btn--primary" type="submit">
+        <i class="ph ph-check" aria-hidden="true"></i>{{ isEditMode() ? ('btn_update' | t) : ('btn_create' | t) }}
+      </button>
+    </footer>
   </form>
 </section>

@@ -2,7 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SsoApi } from '../infrastructure/sso-api';
 import { AuthService } from './auth.service';
-import { User } from '../domain/user.model';
+import { User, WorkerPayload } from '../domain/user.model';
+import { MutationResult } from '../../../core/http/api-response';
 
 /**
  * Punto de entrada del portal de SSO sobre sus propios operarios.
@@ -23,6 +24,14 @@ export class SsoFacade {
 
   worker(id: number): Observable<User | null> {
     return this.api.worker(id);
+  }
+
+  createWorker(payload: WorkerPayload): Observable<MutationResult<User>> {
+    return this.api.createWorker(payload);
+  }
+
+  updateWorker(id: number, payload: WorkerPayload): Observable<MutationResult<User>> {
+    return this.api.updateWorker(id, payload);
   }
 
   /**

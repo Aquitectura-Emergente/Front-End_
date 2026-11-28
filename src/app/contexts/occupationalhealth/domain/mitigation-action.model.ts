@@ -164,8 +164,13 @@ export function isPending(action: MitigationAction): boolean {
  * Cuando falta el destino, el formulario de aprobación tiene que pedir zona y
  * puesto; si no, el backend rechaza la aprobación por incompleta.
  */
+/** Medidas que cambian al operario de puesto. Reprogramar la tarea no lo mueve. */
+export function movesWorker(action: Pick<MitigationAction, 'type'>): boolean {
+  return action.type !== 'RESCHEDULING';
+}
+
 export function needsTarget(action: MitigationAction): boolean {
-  if (!isPending(action)) return false;
+  if (!isPending(action) || !movesWorker(action)) return false;
   return action.affectedWorkers.some(w => !w.toPositionId || !w.toZoneId);
 }
 

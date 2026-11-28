@@ -12,7 +12,7 @@ import {
   unwrap,
   unwrapOrNull,
 } from '../../../core/http/api-response';
-import { DeviceStatusView, LifecycleStatus } from '../domain/device-status.model';
+import { DeviceStatusView, DosimeterOption, LifecycleStatus } from '../domain/device-status.model';
 import { AlertThresholdPayload, DeviceConfigView, OperationalConfigPayload } from '../domain/device-config.model';
 import { AuditEntryView } from '../domain/device-audit.model';
 import { ReadingRouting, TelemetryReadingView } from '../domain/telemetry-reading.model';
@@ -29,6 +29,12 @@ export class DeviceManagementApi {
 
   private device(deviceId: string): string {
     return `${this.base}/devices/${encodeURIComponent(deviceId)}`;
+  }
+
+  /** Dosímetros en servicio de una empresa (administrador o su responsable de SSO). */
+  dosimeters(organizationId: number): Observable<DosimeterOption[]> {
+    return unwrap(
+      this.http.get<ApiResponse<DosimeterOption[]>>(`${this.base}/organizations/${organizationId}/dosimeters`), []);
   }
 
   status(deviceId: string): Observable<DeviceStatusView | null> {

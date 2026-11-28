@@ -1,3 +1,5 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -14,7 +16,7 @@ type ClientFilter = string; // empty = all
 
 @Component({
   selector: 'app-alarms',
-  imports: [TranslatePipe, DateTimePipe, FormsModule],
+  imports: [TranslatePipe, DateTimePipe, FormsModule, PageHeader, EmptyState],
   templateUrl: './alarms.html',
   styleUrl: './alarms.scss',
 })

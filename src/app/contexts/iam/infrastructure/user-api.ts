@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse, unwrap, unwrapOrNull } from '../../../core/http/api-response';
+import { ApiResponse, unwrap, unwrapOrNull, MutationResult, toResult } from '../../../core/http/api-response';
 import { User, CreateUserPayload, UpdateUserPayload, UserProfile } from '../domain/user.model';
 
 /** Acceso HTTP a los endpoints de usuarios del contexto iam. */
@@ -26,6 +26,16 @@ export class UserApi {
 
   update(id: number | string, payload: UpdateUserPayload): Observable<User | null> {
     return unwrapOrNull(this.http.put<ApiResponse<User>>(`${this.base}/users/${id}`, payload));
+  }
+
+  /** Como `create`, pero conserva el motivo del backend si falla. */
+  save(payload: CreateUserPayload): Observable<MutationResult<User>> {
+    return toResult(this.http.post<ApiResponse<User>>(`${this.base}/users`, payload));
+  }
+
+  /** Como `update`, pero conserva el motivo del backend si falla. */
+  change(id: number | string, payload: UpdateUserPayload): Observable<MutationResult<User>> {
+    return toResult(this.http.put<ApiResponse<User>>(`${this.base}/users/${id}`, payload));
   }
 
   remove(id: number | string): Observable<void> {

@@ -1,148 +1,98 @@
-<section class="map-radiation">
-  <div class="map-radiation__header">
-    <div>
-      <h2 class="map-radiation__title">{{ 'map_title' | t }}</h2>
-      <p class="map-radiation__subtitle">{{ 'map_subtitle' | t }}</p>
-    </div>
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_monitoring' | t"
+    index="07"
+    [title]="'map_title' | t"
+    [description]="'map_subtitle' | t"
+  />
+
+  <div class="map-layout">
+    <!-- Mapa con leyenda superpuesta -->
+    <section class="ems-panel map-panel">
+      <header class="ems-panel__head">
+        <div class="legend" [attr.aria-label]="'map_legend' | t">
+          <span class="legend__item"><span class="legend__dot legend__dot--safe"></span>{{ 'map_safe' | t }}</span>
+          <span class="legend__item"><span class="legend__dot legend__dot--caution"></span>{{ 'map_caution' | t }}</span>
+          <span class="legend__item"><span class="legend__dot legend__dot--danger"></span>{{ 'map_danger' | t }}</span>
+        </div>
+        <span class="ems-panel__meta"><i class="ph ph-cursor-click" aria-hidden="true"></i> {{ 'map_clickHint' | t }}</span>
+      </header>
+      <div #mapContainer class="map-container" ngSkipHydration></div>
+    </section>
+
+    <!-- Distribución por nivel (clientes según su lectura máxima) -->
+    <aside class="levels" [attr.aria-label]="'map_legend' | t">
+      <div class="level level--safe">
+        <span class="level__head"><i class="ph ph-check-circle" aria-hidden="true"></i>{{ 'map_safe' | t }}</span>
+        <span class="level__value">{{ safeCount() }}</span>
+        <span class="level__range">&lt; 100 µT</span>
+      </div>
+      <div class="level level--caution">
+        <span class="level__head"><i class="ph ph-warning" aria-hidden="true"></i>{{ 'map_caution' | t }}</span>
+        <span class="level__value">{{ cautionCount() }}</span>
+        <span class="level__range">100 – 200 µT</span>
+      </div>
+      <div class="level level--danger">
+        <span class="level__head"><i class="ph ph-warning-octagon" aria-hidden="true"></i>{{ 'map_danger' | t }}</span>
+        <span class="level__value">{{ dangerCount() }}</span>
+        <span class="level__range">&ge; 200 µT</span>
+      </div>
+      <div class="level__scale" aria-hidden="true">
+        <span class="level__band level__band--safe"></span>
+        <span class="level__band level__band--caution"></span>
+        <span class="level__band level__band--danger"></span>
+      </div>
+      <p class="level__note">{{ 'shell_notMetrology' | t }}</p>
+    </aside>
   </div>
 
-  <!-- Stats row — count of clients by max-reading level -->
-  <div class="stats-row">
-    <div class="stat-card stat-card--safe">
-      <div class="stat-card__icon">
-        <i class="ph ph-check-circle" aria-hidden="true"></i>
-      </div>
-      <div class="stat-card__body">
-        <div class="stat-card__value">{{ safeCount() }}</div>
-        <div class="stat-card__label">{{ 'map_safe' | t }}</div>
-        <div class="stat-card__range">&lt; 100 µT</div>
-      </div>
-    </div>
+  <section class="ems-panel">
+    <header class="ems-panel__head">
+      <h2 class="ems-panel__title"><span class="ems-panel__index">01</span>{{ 'map_value' | t }}</h2>
+    </header>
 
-    <div class="stat-card stat-card--caution">
-      <div class="stat-card__icon">
-        <i class="ph ph-warning" aria-hidden="true"></i>
-      </div>
-      <div class="stat-card__body">
-        <div class="stat-card__value">{{ cautionCount() }}</div>
-        <div class="stat-card__label">{{ 'map_caution' | t }}</div>
-        <div class="stat-card__range">100 – 200 µT</div>
-      </div>
-    </div>
-
-    <div class="stat-card stat-card--danger">
-      <div class="stat-card__icon">
-        <i class="ph ph-warning-circle" aria-hidden="true"></i>
-      </div>
-      <div class="stat-card__body">
-        <div class="stat-card__value">{{ dangerCount() }}</div>
-        <div class="stat-card__label">{{ 'map_danger' | t }}</div>
-        <div class="stat-card__range">&ge; 200 µT</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Map -->
-  <div class="map-card">
-    <div class="map-card__header">
-      <h4 class="map-card__title">{{ 'map_legend' | t }}</h4>
-      <div class="legend-items">
-        <div class="legend-item">
-          <span class="legend-dot legend-dot--safe"></span>
-          <span class="legend-label">{{ 'map_safe' | t }}</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-dot--caution"></span>
-          <span class="legend-label">{{ 'map_caution' | t }}</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-dot--danger"></span>
-          <span class="legend-label">{{ 'map_danger' | t }}</span>
-        </div>
-      </div>
-      <span class="map-hint">{{ 'map_clickHint' | t }}</span>
-    </div>
-    <div #mapContainer class="map-container" ngSkipHydration></div>
-  </div>
-
-  <!-- Devices table — all linked devices across all clients -->
-  <div class="table-wrap">
     @if (loading()) {
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
-      </div>
+      <div class="ems-progress ems-progress--indeterminate ems-list-progress"><div class="ems-progress__fill"></div></div>
     }
 
-    <table class="table" aria-label="Radiation readings table">
-      <thead>
-        <tr>
-          <th>{{ 'map_client' | t }}</th>
-          <th>{{ 'dev_name' | t }}</th>
-          <th>{{ 'map_zone' | t }}</th>
-          <th>{{ 'map_value' | t }}</th>
-          <th>{{ 'th_status' | t }}</th>
-          <th>{{ 'map_date' | t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of pagedRows(); track row.deviceId) {
+    <div class="ems-table-wrap">
+      <table class="ems-table" aria-label="Radiation readings table" [attr.aria-busy]="loading()">
+        <thead>
           <tr>
-            <td class="text-sec">{{ row.clientName }}</td>
-            <td>
-              <span class="mono device-name">{{ row.deviceName }}</span>
-            </td>
-            <td class="text-sec">{{ row.deviceLocation }}</td>
-            <td>
-              <span class="mono radiation-value radiation-value--{{ row.level }}">
-                {{ formatValue(row.latestValue) }} <span class="unit">µT</span>
-              </span>
-            </td>
-            <td>
-              <span class="status-badge status-badge--{{ row.level }}">
-                <span class="dot"></span>
-                {{ getStatusLabelKey(row.level) | t }}
-              </span>
-            </td>
-            <td class="text-sec">{{ formatDate(row.readingDate) }}</td>
+            <th>{{ 'map_client' | t }}</th>
+            <th>{{ 'dev_name' | t }}</th>
+            <th>{{ 'map_zone' | t }}</th>
+            <th class="num">{{ 'map_value' | t }}</th>
+            <th>{{ 'th_status' | t }}</th>
+            <th>{{ 'map_date' | t }}</th>
           </tr>
-        } @empty {
-          @if (!loading()) {
+        </thead>
+        <tbody>
+          @for (row of pagedRows(); track row.deviceId) {
             <tr>
-              <td colspan="6" class="empty-row">
-                <div class="empty-state">
-                  <i class="ph ph-wave-sine" aria-hidden="true"></i>
-                  <span>{{ 'map_noData' | t }}</span>
-                </div>
+              <td>{{ row.clientName }}</td>
+              <td class="mono cell-primary">{{ row.deviceName }}</td>
+              <td>{{ row.deviceLocation }}</td>
+              <td class="num reading reading--{{ row.level }}">{{ formatValue(row.latestValue) }} <span class="ems-muted">µT</span></td>
+              <td>
+                <span class="ems-tag"
+                      [class.ems-tag--safe]="row.level === 'safe'"
+                      [class.ems-tag--warning]="row.level === 'caution'"
+                      [class.ems-tag--danger]="row.level === 'danger'">
+                  {{ getStatusLabelKey(row.level) | t }}
+                </span>
               </td>
+              <td class="mono ems-muted">{{ formatDate(row.readingDate) }}</td>
             </tr>
-          }
-        }
-      </tbody>
-    </table>
-
-    <!-- Pagination -->
-    @if (allDeviceReadings().length > 0) {
-      <div class="pagination">
-        <span class="pagination__info">
-          Showing {{ mapCurrentPage() * mapPageSize + 1 }}-{{ mapMin(mapCurrentPage() * mapPageSize + mapPageSize, allDeviceReadings().length) }} of {{ allDeviceReadings().length }}
-        </span>
-        @if (mapTotalPages() > 1) {
-          <div class="pagination__pages">
-            <button class="page-btn" type="button" [disabled]="mapCurrentPage() === 0" (click)="mapGoToPage(mapCurrentPage() - 1)">
-              <i class="ph ph-caret-left"></i>
-            </button>
-            @for (page of mapPagesArray(); track page) {
-              <button class="page-btn" type="button" [class.active]="page === mapCurrentPage()" (click)="mapGoToPage(page)">
-                {{ page + 1 }}
-              </button>
+          } @empty {
+            @if (!loading()) {
+              <tr><td colspan="6"><ems-empty-state icon="ph-wave-sine" [text]="'map_noData' | t" /></td></tr>
             }
-            <button class="page-btn" type="button" [disabled]="mapCurrentPage() === mapTotalPages() - 1" (click)="mapGoToPage(mapCurrentPage() + 1)">
-              <i class="ph ph-caret-right"></i>
-            </button>
-          </div>
-        }
-      </div>
-    }
-  </div>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ems-pager [page]="mapCurrentPage()" [totalPages]="mapTotalPages()" [total]="allDeviceReadings().length" [pageSize]="mapPageSize" (pageChange)="mapGoToPage($event)" />
+  </section>
 </section>

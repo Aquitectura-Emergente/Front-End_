@@ -1,3 +1,4 @@
+import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -8,11 +9,11 @@ import { Device } from '../../../../contexts/devicemanagement/domain/device.mode
 
 /**
  * Ficha de solo lectura del cliente: sus datos, sus dispositivos y, si es una
- * empresa, sus responsables de SSO.
+ * empresa, sus responsables de SSO y sus operarios.
  */
 @Component({
   selector: 'app-view-client',
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink, EmptyState],
   templateUrl: './view-client.html',
   styleUrl: './view-client.scss',
 })
@@ -24,6 +25,7 @@ export class ViewClient implements OnInit {
   client  = signal<User | null>(null);
   devices = signal<Device[]>([]);
   ssoOfficers = signal<User[]>([]);
+  workers = signal<User[]>([]);
   loading = signal(true);
 
   ngOnInit(): void {
@@ -33,9 +35,10 @@ export class ViewClient implements OnInit {
       this.client.set(u);
       this.loading.set(false);
       if (u && isCompanyClient(u)) {
-        this.userFacade.all().subscribe(list =>
-          this.ssoOfficers.set(list.filter(x => x.role === 'SsoResponsible' && x.organizationId === u.id))
-        );
+        this.userFacade.all().subscribe(list => {
+          this.ssoOfficers.set(list.filter(x => x.role === 'SsoResponsible' && x.organizationId === u.id));
+          this.workers.set(list.filter(x => x.role === 'Worker' && x.organizationId === u.id));
+        });
       }
     });
     this.deviceFacade.ofClient(id).subscribe(d => this.devices.set(d));

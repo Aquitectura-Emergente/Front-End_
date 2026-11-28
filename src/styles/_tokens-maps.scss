@@ -1,0 +1,27 @@
+// Archivo generado por tools/build-tokens.mjs (tokens v1.0.0). No editar a mano.
+
+$ems-breakpoints: (
+  sm: 600px,
+  md: 900px,
+  lg: 1200px,
+  xl: 1440px,
+);
+
+$ems-type: (
+  display: (font: heading, size: 44px, line: 48px, weight: 600, tracking: -0.4px),
+  h1: (font: heading, size: 32px, line: 38px, weight: 600, tracking: -0.2px),
+  h2: (font: heading, size: 24px, line: 30px, weight: 600, tracking: 0px),
+  h3: (font: heading, size: 20px, line: 26px, weight: 600, tracking: 0px),
+  h4: (font: heading, size: 17px, line: 22px, weight: 600, tracking: 0.1px),
+  eyebrow: (font: heading, size: 12px, line: 16px, weight: 600, tracking: 1.4px),
+  label: (font: body, size: 13px, line: 18px, weight: 500, tracking: 0px),
+  body-lg: (font: body, size: 16px, line: 24px, weight: 400, tracking: 0px),
+  body: (font: body, size: 14px, line: 21px, weight: 400, tracking: 0px),
+  body-sm: (font: body, size: 13px, line: 19px, weight: 400, tracking: 0px),
+  caption: (font: body, size: 12px, line: 16px, weight: 400, tracking: 0.1px),
+  metric-xl: (font: mono, size: 44px, line: 48px, weight: 500, tracking: -1.2px),
+  metric-lg: (font: mono, size: 30px, line: 34px, weight: 500, tracking: -0.6px),
+  metric-md: (font: mono, size: 20px, line: 26px, weight: 500, tracking: -0.2px),
+  mono: (font: mono, size: 13px, line: 18px, weight: 400, tracking: 0px),
+  mono-sm: (font: mono, size: 11px, line: 14px, weight: 500, tracking: 0.5px),
+);

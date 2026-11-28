@@ -1,220 +1,140 @@
-<section class="history">
-  <div class="history__header">
-    <div>
-      <h2 class="history__title">{{ 'hist_title' | t }}</h2>
-      <p class="history__subtitle">{{ 'hist_subtitle' | t }}</p>
-    </div>
-    <button class="btn btn--ghost" type="button" (click)="exportCsv()">
+<section class="ems-page">
+  <ems-page-header
+    [eyebrow]="'shell_group_operations' | t"
+    index="03"
+    [title]="'hist_title' | t"
+    [description]="'hist_subtitle' | t"
+  >
+    <button actions class="ems-btn" type="button" (click)="exportCsv()">
       <i class="ph ph-download-simple" aria-hidden="true"></i>
       <span>{{ 'btn_exportCsv' | t }}</span>
     </button>
-  </div>
+  </ems-page-header>
 
-  <!-- Filters -->
-  <div class="filters">
-
-    <!-- Date range -->
-    <div class="filter-group">
-      <label class="filter-label">{{ 'hist_dateRange' | t }}</label>
-      <div class="date-range-wrap">
-        <div class="date-input-wrap">
-          <i class="ph ph-calendar-blank date-icon" aria-hidden="true"></i>
-          <input
-            class="date-input"
-            type="date"
-            [value]="dateFrom()"
-            (change)="dateFrom.set($any($event.target).value); applyFilters()"
-            [attr.aria-label]="'hist_from' | t"
-          />
+  <section class="ems-panel">
+    <div class="ems-toolbar">
+      <div class="ems-filter">
+        <span class="ems-filter__label">{{ 'hist_dateRange' | t }}</span>
+        <div class="date-range">
+          <input class="ems-input" type="date" [value]="dateFrom()" (change)="dateFrom.set($any($event.target).value); applyFilters()" [attr.aria-label]="'hist_from' | t" />
+          <span class="date-range__sep" aria-hidden="true">→</span>
+          <input class="ems-input" type="date" [value]="dateTo()" (change)="dateTo.set($any($event.target).value); applyFilters()" [attr.aria-label]="'hist_to' | t" />
+          @if (dateFrom() || dateTo()) {
+            <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="clearDates()" [attr.aria-label]="'hist_clearDates' | t" [attr.data-tooltip]="'hist_clearDates' | t">
+              <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+          }
         </div>
-        <span class="date-sep">–</span>
-        <div class="date-input-wrap">
-          <i class="ph ph-calendar-blank date-icon" aria-hidden="true"></i>
-          <input
-            class="date-input"
-            type="date"
-            [value]="dateTo()"
-            (change)="dateTo.set($any($event.target).value); applyFilters()"
-            [attr.aria-label]="'hist_to' | t"
-          />
-        </div>
-        @if (dateFrom() || dateTo()) {
-          <button class="clear-btn" type="button" (click)="clearDates()" [title]="'hist_clearDates' | t">
-            <i class="ph ph-x" aria-hidden="true"></i>
-          </button>
-        }
       </div>
-    </div>
 
-    <!-- Type -->
-    <div class="filter-group">
-      <label class="filter-label">{{ 'hist_type' | t }}</label>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          (change)="selectedType.set($any($event.target).value); applyFilters()"
-          aria-label="Filter by type"
-        >
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'hist_type' | t }}</span>
+        <select class="ems-select" (change)="selectedType.set($any($event.target).value); applyFilters()" aria-label="Filter by type">
           <option value="all">{{ 'hist_allTypes' | t }}</option>
           <option value="Installation">{{ 'wo_installation' | t }}</option>
           <option value="Maintenance">{{ 'wo_maintenance' | t }}</option>
           <option value="Collection">{{ 'wo_collection' | t }}</option>
         </select>
-        <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
-      </div>
-    </div>
+      </label>
 
-    <!-- Status -->
-    <div class="filter-group">
-      <label class="filter-label">{{ 'th_status' | t }}</label>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          (change)="selectedStatus.set($any($event.target).value); applyFilters()"
-          aria-label="Filter by status"
-        >
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'th_status' | t }}</span>
+        <select class="ems-select" (change)="selectedStatus.set($any($event.target).value); applyFilters()" aria-label="Filter by status">
           <option value="all">{{ 'filter_all' | t }}</option>
           <option value="completed">{{ 'status_completed' | t }}</option>
           <option value="cancelled">{{ 'status_cancelled' | t }}</option>
         </select>
-        <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
-      </div>
-    </div>
+      </label>
 
-    <!-- Technician -->
-    <div class="filter-group">
-      <label class="filter-label">{{ 'hist_technician' | t }}</label>
-      <div class="select-wrap">
-        <select
-          class="field-select"
-          (change)="selectedTechnician.set($any($event.target).value); applyFilters()"
-          aria-label="Filter by technician"
-        >
+      <label class="ems-filter">
+        <span class="ems-filter__label">{{ 'hist_technician' | t }}</span>
+        <select class="ems-select" (change)="selectedTechnician.set($any($event.target).value); applyFilters()" aria-label="Filter by technician">
           <option value="all">{{ 'hist_allPersonnel' | t }}</option>
           @for (tech of technicians(); track tech) {
             <option [value]="tech">{{ tech }}</option>
           }
         </select>
-        <i class="ph ph-caret-down select-caret" aria-hidden="true"></i>
-      </div>
+      </label>
     </div>
-  </div>
 
-  <!-- Active range label -->
-  @if (dateRangeLabel()) {
-    <div class="range-pill">
-      <i class="ph ph-funnel-simple" aria-hidden="true"></i>
-      <span>{{ dateRangeLabel() }}</span>
-      <button class="range-pill__close" type="button" (click)="clearDates()">
-        <i class="ph ph-x" aria-hidden="true"></i>
-      </button>
-    </div>
-  }
-
-  <!-- Table -->
-  <div class="table-wrap">
-    @if (loading()) {
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
+    @if (dateRangeLabel()) {
+      <div class="active-filter">
+        <span class="ems-tag ems-tag--primary">
+          <i class="ph ph-funnel-simple" aria-hidden="true"></i>{{ dateRangeLabel() }}
+        </span>
+        <button class="ems-btn ems-btn--ghost ems-btn--sm" type="button" (click)="clearDates()">
+          <i class="ph ph-x" aria-hidden="true"></i>{{ 'hist_clearDates' | t }}
+        </button>
       </div>
     }
-    <table class="table" aria-label="Work orders history table">
-      <thead>
-        <tr>
-          <th>{{ 'th_orderId' | t }}</th>
-          <th>{{ 'th_completionDate' | t }}</th>
-          <th>{{ 'th_clientSite' | t }}</th>
-          <th>{{ 'th_serviceType' | t }}</th>
-          <th>{{ 'th_leadTech' | t }}</th>
-          <th>{{ 'th_status' | t }}</th>
-          <th class="table__actions">{{ 'th_actions' | t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
-          <tr>
-            <td><span class="order-id">{{ item.orderId }}</span></td>
-            <td>
-              <div class="date-cell">
-                <span>{{ item.completionDate }}</span>
-                <small>{{ item.completionTime }}</small>
-              </div>
-            </td>
-            <td>
-              <div class="client-cell">
-                <span>{{ item.client }}</span>
-                <small>{{ item.site }}</small>
-              </div>
-            </td>
-            <td>
-              <span class="type-badge type-badge--{{ item.serviceType.toLowerCase() }}">
-                @if (item.serviceType === 'Installation') {
-                  <i class="ph ph-monitor"></i>
-                  {{ 'wo_installation' | t }}
-                } @else if (item.serviceType === 'Maintenance') {
-                  <i class="ph ph-wrench"></i>
-                  {{ 'wo_maintenance' | t }}
-                } @else {
-                  <i class="ph ph-package"></i>
-                  {{ 'wo_collection' | t }}
-                }
-              </span>
-            </td>
-            <td>
-              <div class="tech-cell">
-                <div class="tech-avatar">{{ item.technicianInitials }}</div>
-                <span>{{ item.technician }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="status status--{{ item.status }}">
-                @if (item.status === 'completed') { {{ 'status_completed' | t }} }
-                @else { {{ 'status_cancelled' | t }} }
-              </span>
-            </td>
-            <td class="table__actions">
-              <button class="btn btn--icon" type="button" (click)="openDetail(item)" [title]="'hist_view' | t">
-                <i class="ph ph-eye" aria-hidden="true"></i>
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7" class="empty-row">No history records found.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
 
-    <div class="pagination">
-      <span class="pagination__info">Showing {{ currentPage() * pageSize + 1 }}-{{ min(currentPage() * pageSize + pageSize, totalElements()) }} of {{ totalElements() }}</span>
-      @if (totalPages() > 1) {
-        <div class="pagination__pages">
-          <button class="page-btn" type="button" aria-label="Previous" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
-            <i class="ph ph-caret-left"></i>
-          </button>
-          @for (page of getPagesArray(); track page) {
-            <button class="page-btn" type="button" [class.active]="page === currentPage()" (click)="goToPage(page)">
-              {{ page + 1 }}
-            </button>
+    @if (loading()) {
+      <div class="ems-progress ems-progress--indeterminate ems-list-progress"><div class="ems-progress__fill"></div></div>
+    }
+
+    <div class="ems-table-wrap">
+      <table class="ems-table" aria-label="Work orders history table" [attr.aria-busy]="loading()">
+        <thead>
+          <tr>
+            <th>{{ 'th_orderId' | t }}</th>
+            <th>{{ 'th_completionDate' | t }}</th>
+            <th>{{ 'th_clientSite' | t }}</th>
+            <th>{{ 'th_serviceType' | t }}</th>
+            <th>{{ 'th_leadTech' | t }}</th>
+            <th>{{ 'th_status' | t }}</th>
+            <th class="cell-actions"><span class="sr-only">{{ 'th_actions' | t }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr class="is-clickable" (click)="openDetail(item)">
+              <td class="mono cell-primary">{{ item.orderId }}</td>
+              <td class="mono">{{ item.completionDate }}<span class="cell-sub">{{ item.completionTime }}</span></td>
+              <td>{{ item.client }}<span class="cell-sub">{{ item.site }}</span></td>
+              <td>
+                <span class="ems-inline-icon">
+                  @if (item.serviceType === 'Installation') {
+                    <i class="ph ph-plugs-connected" aria-hidden="true"></i>{{ 'wo_installation' | t }}
+                  } @else if (item.serviceType === 'Maintenance') {
+                    <i class="ph ph-wrench" aria-hidden="true"></i>{{ 'wo_maintenance' | t }}
+                  } @else {
+                    <i class="ph ph-package" aria-hidden="true"></i>{{ 'wo_collection' | t }}
+                  }
+                </span>
+              </td>
+              <td><span class="ems-person"><span class="ems-avatar">{{ item.technicianInitials }}</span>{{ item.technician }}</span></td>
+              <td>
+                <span class="ems-tag" [class.ems-tag--safe]="item.status === 'completed'">
+                  @if (item.status === 'completed') { {{ 'status_completed' | t }} }
+                  @else { {{ 'status_cancelled' | t }} }
+                </span>
+              </td>
+              <td class="cell-actions">
+                <button class="ems-btn ems-btn--ghost ems-btn--icon ems-btn--sm" type="button" (click)="$event.stopPropagation(); openDetail(item)" [attr.aria-label]="'hist_view' | t" [attr.data-tooltip]="'hist_view' | t">
+                  <i class="ph ph-eye" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!loading()) {
+              <tr><td colspan="7"><ems-empty-state icon="ph-clock-counter-clockwise" [text]="'ui_noResults' | t" /></td></tr>
+            }
           }
-          <button class="page-btn" type="button" aria-label="Next" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)">
-            <i class="ph ph-caret-right"></i>
-          </button>
-        </div>
-      }
+        </tbody>
+      </table>
     </div>
-  </div>
+
+    <ems-pager [page]="currentPage()" [totalPages]="totalPages()" [total]="totalElements()" [pageSize]="pageSize" (pageChange)="goToPage($event)" />
+  </section>
 </section>
 
-<!-- ── Detail Modal (shared full read-only detail) ─────────────── -->
+<!-- Detalle (solo lectura) -->
 @if (showDetailModal()) {
   @if (detailLoading()) {
-    <div class="modal-overlay">
-      <div class="loading-state">
-        <i class="ph ph-circle-notch ph-spin"></i>
-        <span>Loading...</span>
+    <div class="ems-backdrop">
+      <div class="ems-loading detail-loading">
+        <i class="ph ph-circle-notch ph-spin" aria-hidden="true"></i>
+        <span>{{ 'ui_loading' | t }}</span>
       </div>
     </div>
   } @else if (detailOrder()) {

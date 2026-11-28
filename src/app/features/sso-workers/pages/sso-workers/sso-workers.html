@@ -1,9 +1,13 @@
 <section class="page">
   <header class="page__header">
     <div>
+      <span class="eyebrow"><b>05</b>{{ 'shell_group_exposure' | t }}</span>
       <h1>{{ 'workers_title' | t }}</h1>
       <p class="subtitle">{{ 'workers_subtitle' | t }}</p>
     </div>
+    <button type="button" class="btn btn--primary" (click)="openNew()">
+      <i class="ph ph-plus" aria-hidden="true"></i> {{ 'wk_new' | t }}
+    </button>
   </header>
 
   @if (loading()) {
@@ -23,6 +27,7 @@
           <th>{{ 'th_email' | t }}</th>
           <th>{{ 'th_status' | t }}</th>
           <th>{{ 'workers_shift' | t }}</th>
+          <th><span class="sr-only">{{ 'th_actions' | t }}</span></th>
         </tr>
       </thead>
       <tbody>
@@ -30,7 +35,7 @@
           <tr>
             <td>
               <strong>{{ worker.name }}</strong>
-              <span class="muted">{{ worker.initials }}</span>
+              <span class="muted">{{ worker.department || worker.initials }}</span>
             </td>
             <td>{{ worker.email }}</td>
             <td>
@@ -40,14 +45,102 @@
             </td>
             <td>
               @if (isOnShift(worker.id)) {
-                <span class="pill">{{ 'map_position' | t }} {{ zoneOf(worker.id) }}</span>
+                <span class="pill">{{ zoneNameOf(worker.id) }}</span>
               } @else {
                 <span class="muted">{{ 'map_offShift' | t }}</span>
               }
+            </td>
+            <td class="actions">
+              <button type="button" class="btn btn--ghost" (click)="openEdit(worker)">
+                <i class="ph ph-pencil-simple" aria-hidden="true"></i> {{ 'wk_edit' | t }}
+              </button>
+              <button type="button" class="btn" [class.btn--danger]="worker.status === 'active'" [class.btn--success]="worker.status !== 'active'" (click)="toggleActive(worker)">
+                {{ (worker.status === 'active' ? 'wk_deactivate' : 'wk_activate') | t }}
+              </button>
             </td>
           </tr>
         }
       </tbody>
     </table>
+  }
+
+  @if (editing()) {
+    <div class="modal-backdrop" (click)="closeForm()"></div>
+    <form class="modal" role="dialog" aria-modal="true" aria-labelledby="worker-form-title" (ngSubmit)="save()" novalidate>
+      <h2 id="worker-form-title">{{ (isNew() ? 'wk_title' : 'wk_editTitle') | t }}</h2>
+
+      <p class="banner banner--info">
+        <i class="ph ph-info" aria-hidden="true"></i>
+        <span>{{ (isNew() ? 'wk_info' : 'wk_formHint') | t }}</span>
+      </p>
+
+      <label>
+        <span>{{ 'form_fullName' | t }} *</span>
+        <input type="text" [(ngModel)]="form.name" name="name" autocomplete="name" />
+      </label>
+
+      <label>
+        <span>{{ 'form_emailAddress' | t }} *</span>
+        <input type="email" [(ngModel)]="form.email" name="email" autocomplete="email" />
+      </label>
+
+      <label>
+        <span>{{ 'wk_phone' | t }}</span>
+        <input type="tel" [(ngModel)]="form.phone" name="phone" autocomplete="tel" />
+      </label>
+
+      <label>
+        <span>{{ 'wk_department' | t }}</span>
+        <input type="text" [(ngModel)]="form.department" name="department" />
+      </label>
+
+      <label>
+        <span>{{ 'wk_usualPosition' | t }}</span>
+        <select [(ngModel)]="form.positionId" name="positionId">
+          <option value="">{{ 'wk_none' | t }}</option>
+          @for (p of positions(); track p.id) {
+            <option [value]="'' + p.id">{{ p.name }} ({{ p.plantZoneName }})</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ 'wk_usualDosimeter' | t }}</span>
+        <select [(ngModel)]="form.deviceId" name="deviceId">
+          <option value="">{{ 'wk_none' | t }}</option>
+          @for (d of dosimeters(); track d.device.id) {
+            <option [value]="'' + d.device.id">{{ d.device.deviceId }}</option>
+          }
+        </select>
+        <small class="muted">{{ 'wk_usualHint' | t }}</small>
+      </label>
+
+      <label>
+        <span>{{ (isNew() ? 'form_password' : 'wk_newPassword') | t }}{{ isNew() ? ' *' : '' }}</span>
+        <span class="ems-password">
+          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password" name="password" autocomplete="new-password" />
+          <button type="button" class="ems-password__toggle" (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="(showPassword() ? 'wk_hidePassword' : 'wk_showPassword') | t"
+                  [attr.aria-pressed]="showPassword()">
+            <i class="ph" [class.ph-eye]="!showPassword()" [class.ph-eye-slash]="showPassword()" aria-hidden="true"></i>
+          </button>
+        </span>
+        @if (!isNew()) { <small class="muted">{{ 'wk_newPasswordHint' | t }}</small> }
+      </label>
+
+      @if (formError()) {
+        <p class="banner banner--warn" role="alert">
+          <i class="ph ph-warning" aria-hidden="true"></i>
+          <span>{{ formError() }}</span>
+        </p>
+      }
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeForm()">{{ 'plant_action_cancel' | t }}</button>
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          <i class="ph ph-check" aria-hidden="true"></i> {{ (isNew() ? 'btn_create' : 'btn_update') | t }}
+        </button>
+      </div>
+    </form>
   }
 </section>

@@ -1,0 +1,11 @@
+// Tipografías locales (empaquetadas en el build; sin dependencia de red en runtime).
+@use '@fontsource/barlow-semi-condensed/latin-500.css' as barlowsemicondensed_500;
+@use '@fontsource/barlow-semi-condensed/latin-600.css' as barlowsemicondensed_600;
+@use '@fontsource/barlow-semi-condensed/latin-700.css' as barlowsemicondensed_700;
+@use '@fontsource/ibm-plex-sans/latin-400.css' as ibmplexsans_400;
+@use '@fontsource/ibm-plex-sans/latin-400-italic.css' as ibmplexsans_400_italic;
+@use '@fontsource/ibm-plex-sans/latin-500.css' as ibmplexsans_500;
+@use '@fontsource/ibm-plex-sans/latin-600.css' as ibmplexsans_600;
+@use '@fontsource/ibm-plex-mono/latin-400.css' as ibmplexmono_400;
+@use '@fontsource/ibm-plex-mono/latin-500.css' as ibmplexmono_500;
+@use '@fontsource/ibm-plex-mono/latin-600.css' as ibmplexmono_600;

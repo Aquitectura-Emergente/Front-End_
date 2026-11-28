@@ -31,8 +31,8 @@ export interface CreateUserPayload {
   initials?: string;
   email: string;
   password: string;
-  role: 'ADMIN' | 'TECHNICIAN' | 'CLIENT' | 'SSO_RESPONSIBLE';
-  /** Obligatorio para SSO_RESPONSIBLE: id del cliente empresa. */
+  role: 'ADMIN' | 'TECHNICIAN' | 'CLIENT' | 'SSO_RESPONSIBLE' | 'WORKER';
+  /** Obligatorio para SSO_RESPONSIBLE y WORKER: id del cliente empresa. */
   organizationId?: number;
   phone?: string;
   location?: string;
@@ -85,9 +85,18 @@ export type UserStatus = User['status'];
 
 export type UserRole = 'Admin' | 'Technician' | 'Client' | 'Worker' | 'SsoResponsible';
 
-/** Los operarios los gestiona el responsable de SSO de su empresa, no este panel. */
-export function isManagedByPanel(user: Pick<User, 'role'>): boolean {
-  return user.role !== 'Worker';
+/**
+ * Datos de un operario que gestiona el responsable de SSO de su empresa
+ * (`/api/sso/workers`); la organización la pone el backend.
+ */
+export interface WorkerPayload {
+  name?: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+  department?: string;
+  status?: 'active' | 'inactive';
+  notes?: string;
 }
 
 /** Cliente empresa: el que puede tener plantas, responsables SSO y operarios. */

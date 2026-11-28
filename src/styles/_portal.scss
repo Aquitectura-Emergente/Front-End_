@@ -1,0 +1,6 @@
+// Portal industrial (SSO): estilos compartidos acotados al contenido del layout SSO.
+@use '../app/shared/styles/portal-tables' as portal;
+
+.portal {
+  @include portal.portal-page;
+}

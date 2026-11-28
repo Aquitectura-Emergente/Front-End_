@@ -9,8 +9,7 @@ import {
   emptyPage,
   queryString,
   unwrap,
-  unwrapOrNull,
-} from '../../../core/http/api-response';
+  unwrapOrNull, MutationResult, toResult } from '../../../core/http/api-response';
 import { ConfigureLimitPayload, ExposureLimit } from '../domain/exposure-limit.model';
 
 /**
@@ -49,8 +48,8 @@ export class ExposureLimitApi {
   configure(
     organizationId: number,
     payload: ConfigureLimitPayload,
-  ): Observable<ExposureLimit | null> {
-    return unwrapOrNull(
+  ): Observable<MutationResult<ExposureLimit>> {
+    return toResult(
       this.http.post<ApiResponse<ExposureLimit>>(
         `${this.base}/v1/personal-dosimetry/organizations/${organizationId}/limits`,
         payload

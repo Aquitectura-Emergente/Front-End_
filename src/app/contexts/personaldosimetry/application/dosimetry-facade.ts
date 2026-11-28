@@ -1,3 +1,4 @@
+import { MutationResult } from '../../../core/http/api-response';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PageResponse } from '../../../core/http/api-response';
@@ -41,7 +42,7 @@ export class DosimetryFacade {
   configureLimit(
     organizationId: number,
     payload: ConfigureLimitPayload,
-  ): Observable<ExposureLimit | null> {
+  ): Observable<MutationResult<ExposureLimit>> {
     return this.limitsApi.configure(organizationId, payload);
   }
 
